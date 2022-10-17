@@ -9,6 +9,7 @@ This example deploys Aerospike Kafka Outbound connectors and an Aerospike cluste
  - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
    The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
    Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+ - Aerospike Kafka Connector Helm chart [installed](../../README.md#install-the-helm-chart)
 
 ## Clone this repository.
  - A clone of this git repository
@@ -24,11 +25,11 @@ kubectl create namespace aerospike
 ```
 
 ### Deploy the connectors.
-Update the [clear-text-values.yaml](clear-text-values.yaml) file to change connector configuration to use your Kafka cluster's server endpoints as bootstrap servers.
+Update the [as-kafka-outbound-values.yaml](as-kafka-outbound-values.yaml) file to change connector configuration to use your Kafka cluster's server endpoints as bootstrap servers.
 
-Deploy the connectors using configuration from [clear-text-values.yaml](clear-text-values.yaml)
+Deploy the connectors using configuration from [as-kafka-outbound-values.yaml](as-kafka-outbound-values.yaml)
 ```shell
-helm install --namespace aerospike as-kafka-outbound -f clear-text-values.yaml ../..
+helm install --namespace aerospike as-kafka-outbound -f as-kafka-outbound-values.yaml aerospike/aerospike-kafka-outbound
 ```
 
 ## Deploy the Aerospike cluster
