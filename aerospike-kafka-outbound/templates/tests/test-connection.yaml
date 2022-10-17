@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "aerospike-kafka-outbound.fullname" . }}-test-connection"
+  labels:
+    {{- include "aerospike-kafka-outbound.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: netcat
+      image: busybox
+      command: ['nc']
+      args:
+        - '-zv'
+        - '{{ include "aerospike-kafka-outbound.fullname" . }}'
+        - '{{ (((.Values.connectorConfig).service).port) | default 8080 }}'
+  restartPolicy: Never

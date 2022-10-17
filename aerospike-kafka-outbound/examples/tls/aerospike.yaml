@@ -1,0 +1,76 @@
+# This is a simple example for demonstration only, that launches an in-memory,
+# non-secure Aerospike cluster, with no dependencies.
+#
+#  This is not recommended for production use.
+#
+# Visit https://docs.aerospike.com/cloud/kubernetes/operator for details.
+#
+# Before creating this cluster,
+# - Prepare the aerospike namespace by following instruction here
+#
+# https://docs.aerospike.com/cloud/kubernetes/operator/create-cluster-kubectl#prepare-the-namespace
+apiVersion: asdb.aerospike.com/v1beta1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster
+  namespace: aerospike
+
+spec:
+  size: 2
+  image: aerospike/aerospike-server-enterprise:6.1.0.1
+  podSpec:
+    multiPodPerHost: true
+
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+      - name: tls-certs
+        source:
+          secret:
+            secretName: tls-certs
+        aerospike:
+          path: /etc/aerospike/tls-certs
+
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        port: 3000
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+      tls:
+        - name: aerospike.svc.cluster.local
+          cert-file: /etc/aerospike/tls-certs/svc.cluster.local.crt
+          key-file: /etc/aerospike/tls-certs/svc.cluster.local.key
+          ca-file: /etc/aerospike/tls-certs/svc.cluster.local.crt
+
+    namespaces:
+      - name: test
+        memory-size: 3000000000
+        replication-factor: 1
+        storage-engine:
+          type: memory
+
+    xdr:
+      dcs:
+        - name: kafka
+          connector: true
+          tls-name: aerospike.svc.cluster.local
+          namespaces:
+            - name: test
+          node-address-ports:
+            - as-kafka-outbound-tls-aerospike-kafka-outbound-0.as-kafka-outbound-tls-aerospike-kafka-outbound 8443 aerospike.svc.cluster.local
+            - as-kafka-outbound-tls-aerospike-kafka-outbound-1.as-kafka-outbound-tls-aerospike-kafka-outbound 8443 aerospike.svc.cluster.local
+            - as-kafka-outbound-tls-aerospike-kafka-outbound-2.as-kafka-outbound-tls-aerospike-kafka-outbound 8443 aerospike.svc.cluster.local

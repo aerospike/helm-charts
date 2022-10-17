@@ -1,0 +1,39 @@
+replicaCount: 3
+
+secrets:
+  - tls-certs
+
+connectorConfig:
+  service:
+    # TLS setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # Use the TLS certificates and keys specific to your setup.
+    # See: https://docs.aerospike.com/connect/kafka/from-asdb/configuring/service#configuring-tls
+    tls:
+      port: 8443
+      key-store:
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        store-password-file: secrets/tls-certs/storepass
+    manage:
+      port: 8081
+
+  # Format of the Kafka destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Kafka destination.
+  routing:
+    mode: static
+    destination: aerospike
+
+  # Kafka producer initialization properties.
+  # See: https://docs.aerospike.com/connect/kafka/from-asdb/configuring/producer-props
+  producer-props:
+    bootstrap.servers:
+      - kafka-broker-1:9092
+      - kafka-broker-2:9092
+      - kafka-broker-3:9092
+    # Update with the relevant keystore for your setup.
+    ssl.truststore.location: secrets/tls-certs/svc.cluster.local.keystore.jks
+    ssl.truststore.password: aerospike

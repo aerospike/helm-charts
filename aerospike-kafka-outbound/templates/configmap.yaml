@@ -1,0 +1,10 @@
+# Configuration for the connectors.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-kafka-outbound.fullname" . }}
+  labels:
+    {{- include "aerospike-kafka-outbound.labels" . | nindent 4 }}
+data:
+  aerospike-kafka-outbound.yml: |-
+    {{- toYaml $.Values.connectorConfig | nindent 4 }}

@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aerospike-kafka-outbound.fullname" . }}
+  labels:
+    app: {{ include "aerospike-kafka-outbound.fullname" . }}
+    {{- include "aerospike-kafka-outbound.labels" . | nindent 4 }}
+
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  serviceName: {{ include "aerospike-kafka-outbound.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-kafka-outbound.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ toYaml $.Values.connectorConfig | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app: {{ include "aerospike-kafka-outbound.fullname" . }}
+        {{- include "aerospike-kafka-outbound.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-kafka-outbound.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: aerospike-kafka-oubound-configmap
+          configMap:
+            name: {{ include "aerospike-kafka-outbound.fullname" . }}
+            optional: false
+        {{- if and .Values.secrets (not (kindIs "slice" .Values.secrets)) }}
+        {{- fail "secrets should be a list of strings"}}
+        {{- end}}
+        {{- if and .Values.secrets (kindIs "slice" .Values.secrets) }}
+        {{- range $secret := .Values.secrets }}
+        - name: {{ $secret }}
+          secret:
+            secretName: {{ $secret }}
+            optional: false
+        {{- end}}
+        {{- end}}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: aerospike-kafka-oubound-configmap
+              mountPath: /etc/aerospike-kafka-outbound
+            {{- if and .Values.secrets (not (kindIs "slice" .Values.secrets)) }}
+            {{- fail "secrets should be a list of strings" }}
+            {{- end }}
+            {{- if and .Values.secrets (kindIs "slice" .Values.secrets) }}
+            {{- range $secret := .Values.secrets }}
+            - name: {{ $secret }}
+              mountPath: /etc/aerospike-kafka-outbound/secrets/{{ $secret }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-kafka-outbound.servicePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-kafka-outbound.servicePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

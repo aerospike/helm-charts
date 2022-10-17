@@ -1,0 +1,92 @@
+# Default values for aerospike-kafka-outbound.
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: aerospike/aerospike-kafka-outbound
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Default Connector configuration.
+# Visit: https://docs.aerospike.com/connect/kafka/to-asdb/configuring
+connectorConfig:
+  service:
+    port: 8080
+    manage:
+      port: 8081
+
+  # Format of the Kafka destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Kafka destination.
+  routing:
+    mode: static
+    destination: aerospike
+
+  # Kafka producer initialization properties.
+  producer-props:
+    bootstrap.servers:
+      - localhost:9092
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# List of secrets mounted to /etc/aerospike-kafka-outbound/secrets for each connector pod.
+# Can be used for TLS certificates and credentials
+connectorSecrets: []
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

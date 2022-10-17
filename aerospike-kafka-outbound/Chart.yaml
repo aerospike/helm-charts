@@ -1,0 +1,19 @@
+apiVersion: v2
+name: aerospike-kafka-outbound
+description: A Helm chart for Aerospike Connect for Kafka - Outbound
+type: application
+icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+keywords:
+  - Aerospike
+  - Kafka
+  - Connector
+  - Source
+maintainers:
+  - name: Aerospike
+    email: developers@aerospike.com
+
+# The helm chart version
+version: 1.0.0
+
+# The default version of Aerospike Kafka Outbound Connector
+appVersion: "5.0.0"
