@@ -62,7 +62,7 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Connector service/listening port, prefer TLS port if set.
+Connector service/listening port, prefers TLS port if set.
 */}}
 {{- define "aerospike-kafka-outbound.servicePort" -}}
 {{- if ((((.Values.connectorConfig).service).tls).port) }}
@@ -70,4 +70,12 @@ Connector service/listening port, prefer TLS port if set.
 {{- else }}
 {{- (((.Values.connectorConfig).service).port) | default 8080 }}
 {{- end }}
+{{- end }}
+
+{{/*
+Connector configuration with required and static values fixed.
+*/}}
+{{- define "aerospike-kafka-outbound.connectorConfig" -}}
+{{- $merged := dict "connectorConfig" (dict "service" (dict "cluster-name" .Release.Name)) }}
+{{- toYaml (merge $merged .Values).connectorConfig }}
 {{- end }}

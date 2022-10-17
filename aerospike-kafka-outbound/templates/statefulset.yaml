@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configmap: {{ toYaml $.Values.connectorConfig | sha256sum }}
+        checksum/configmap: {{ include "aerospike-kafka-outbound.connectorConfig" . | sha256sum }}
         {{- with .Values.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
