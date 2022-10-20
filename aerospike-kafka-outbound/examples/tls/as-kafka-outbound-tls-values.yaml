@@ -1,4 +1,4 @@
-hreplicaCount: 3
+replicaCount: 3
 
 secrets:
   - tls-certs
