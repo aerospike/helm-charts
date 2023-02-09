@@ -50,7 +50,7 @@ Verify installation:
 kubectl --namespace ingress-nginx get services -o wide -w ingress-nginx-controller
 ```
 ### Create ServiceAccount for S3 bucket
-Create S3 bucket `pitr-backup-bucket` </br>
+Create S3 bucket `aerospike-pitr-bucket` </br>
 Create IAM OIDC provider for your EKS cluster for more information please refer to a following page: [Creating an IAM OIDC provider](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)</br>
 Create aerospike namespace: 
 ```shell
@@ -68,7 +68,7 @@ cat >storage-provider-policy.json <<EOF
             ],
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::pitr-backup-bucket"
+                "arn:aws:s3:::aerospike-pitr-bucket"
             ],
             "Sid": "ListObjectsInBucket"
         },
@@ -76,7 +76,7 @@ cat >storage-provider-policy.json <<EOF
             "Action": "s3:*Object",
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::pitr-backup-bucket/*"
+                "arn:aws:s3:::aerospike-pitr-bucket/*"
             ],
             "Sid": "AllObjectActions"
         },
@@ -163,7 +163,7 @@ helm install RELEASE_NAME . \
 --set backupcluster.address.ip=BACKUP_IP \
 --set backupcluster.auth.username=tester \
 --set backupcluster.auth.password=psw \
---set storageprovider.config.bucketname=pitr-backup-bucket \
+--set storageprovider.config.bucketname=aerospike-pitr-bucket \
 --namespace aerospike
 ```
 List pods for the PITR:
