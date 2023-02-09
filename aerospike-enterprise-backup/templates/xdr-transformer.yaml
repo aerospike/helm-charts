@@ -1,0 +1,68 @@
+{{- if .Values.xdrtransformer.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.xdrtransformer.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 4 }}
+spec:
+  replicas: {{ default .Values.replicas .Values.xdrtransformer.replicas }}
+  selector:
+    matchLabels:
+            {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.annotations }}
+      annotations:
+        {{- toYaml (merge $.Values.xdrtransformer.annotations .) | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 8 }}
+        {{- with .Values.xdrtransformer.labels }}
+        {{- . | toYaml | nindent 8}}
+        {{- end }}
+    spec:
+      {{- include "imagePullSecrets" . | nindent 6}}
+      volumes:
+        - name: "configmap-volume"
+          configMap:
+            name: {{ .Values.xdrtransformer.name }}-configmap
+        - name: "mysecret"
+          secret:
+            secretName: {{ .Values.backupcluster.name }}-secret
+      containers:
+        - name: {{ .Values.xdrtransformer.name }}
+          image: {{ include "get-image" (merge (dict "component" .Values.xdrtransformer) .) }}
+          imagePullPolicy: {{ default .Values.image.pullPolicy .Values.xdrtransformer.image.pullPolicy }}
+          resources:
+            requests:
+              {{- default .Values.resources .Values.xdrtransformer.resources | toYaml | nindent 12 }}
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: "/etc/aerospike-xdr-proxy"
+              name: "configmap-volume"
+            - mountPath: "/etc/config"
+              name: "mysecret"
+          ports:
+            - name: {{ .Values.xdrtransformer.config.service.name | quote }}
+              containerPort: {{ .Values.xdrtransformer.config.service.port }}
+              protocol: TCP
+            - name: {{ .Values.xdrtransformer.config.service.manage.name | quote }}
+              protocol: TCP
+              containerPort: {{ .Values.xdrtransformer.config.service.manage.port }}
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /manage/rest/v1/logging
+              port: {{ .Values.xdrtransformer.config.service.manage.port }}
+          readinessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /manage/rest/v1/logging
+              port: {{ .Values.xdrtransformer.config.service.manage.port }}
+{{- end }}

@@ -1,0 +1,42 @@
+{{- if .Values.restbackend.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ .Values.restbackend.name }}-role
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.restbackend) .) | nindent 4 }}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "services" ]
+    resourceNames: [{{ .Values.xdrtransformer.name }}]
+    verbs: [ "get", "watch", "list" ]
+{{- end }}
+
+{{- if .Values.aws.ecrtokenissuer.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ .Values.aws.ecrtokenissuer.issuer.name }}-role
+  labels:
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/instance: {{ $.Release.Name | quote }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service | quote }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name | trunc 63 | trimSuffix "-" | quote }}
+  annotations:
+    "helm.sh/hook": pre-install, post-delete
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    resourceNames: [{{ .Values.aws.ecrtokenissuer.secretname }}]
+    verbs: [ "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "create" ]
+{{- end }}

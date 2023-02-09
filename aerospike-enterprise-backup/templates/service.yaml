@@ -1,0 +1,293 @@
+{{- if .Values.authenticator.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.authenticator.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.authenticator) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.authenticator) .) | nindent 6 }}
+  ports:
+    - name: {{ .Values.authenticator.port.name }}
+      protocol: TCP
+      port: {{ .Values.authenticator.port.number }}
+      targetPort: {{ .Values.authenticator.port.number }}
+{{- end }}
+
+{{- if .Values.compactor.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.compactor.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.compactor) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.compactor) .) | nindent 4 }}
+  ports:
+    - name: {{ .Values.compactor.port.name }}
+      protocol: TCP
+      port: {{ .Values.compactor.port.number }}
+      targetPort: {{ .Values.compactor.port.name | quote }}
+    {{- if .Values.compactor.serviceMonitor.enabled }}
+    - name: {{ .Values.compactor.serviceMonitor.port.name | quote }}
+      protocol: TCP
+      port: {{ .Values.compactor.serviceMonitor.port.number }}
+      targetPort: {{ .Values.compactor.serviceMonitor.port.number }}
+     {{- end }}
+{{- end }}
+
+{{- if .Values.queuehandler.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.queuehandler.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.queuehandler) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.queuehandler) .) | nindent 4 }}
+  ports:
+    - name: {{ .Values.queuehandler.port.name }}
+      protocol: TCP
+      port: {{ .Values.queuehandler.port.number }}
+      targetPort: {{ .Values.queuehandler.port.number }}
+    {{- if .Values.queuehandler.serviceMonitor.enabled}}
+    - name: {{ .Values.queuehandler.serviceMonitor.port.name | quote }}
+      protocol: TCP
+      port: {{ .Values.queuehandler.serviceMonitor.port.number }}
+      targetPort: {{ .Values.queuehandler.serviceMonitor.port.number }}
+    {{- end }}
+{{- end }}
+
+{{- if .Values.smdhandler.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.smdhandler.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.smdhandler) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.smdhandler) .) | nindent 4 }}
+  ports:
+    - name: {{ .Values.smdhandler.port.name }}
+      protocol: TCP
+      port: {{ .Values.smdhandler.port.number }}
+      targetPort: {{ .Values.smdhandler.port.number }}
+    {{- if .Values.smdhandler.serviceMonitor.enabled}}
+    - name: {{ .Values.smdhandler.serviceMonitor.port.name }}
+      protocol: "TCP"
+      port: {{.Values.smdhandler.serviceMonitor.port.number  }}
+      targetPort: {{ .Values.smdhandler.serviceMonitor.port.number  }}
+    {{- end }}
+{{- end }}
+
+{{- if .Values.xdrscheduler.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.xdrscheduler.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.xdrscheduler) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrscheduler) .) | nindent 4 }}
+  ports:
+    - name: {{ .Values.xdrscheduler.port.name }}
+      protocol: TCP
+      port: {{ .Values.xdrscheduler.port.number }}
+      targetPort: {{ .Values.xdrscheduler.port.number }}
+    {{- if .Values.xdrscheduler.serviceMonitor.enabled}}
+    - name: {{ .Values.xdrscheduler.serviceMonitor.port.name | quote }}
+      protocol: TCP
+      port: {{ .Values.xdrscheduler.serviceMonitor.port.number }}
+      targetPort: {{ .Values.xdrscheduler.serviceMonitor.port.number }}
+    {{- end }}
+{{- end }}
+
+{{- if .Values.restbackend.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.restbackend.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.restbackend) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.restbackend) .) | nindent 6 }}
+  ports:
+    - name: {{ .Values.restbackend.port.name }}
+      protocol: TCP
+      port: {{ .Values.restbackend.port.number }}
+      targetPort: {{ .Values.restbackend.port.number }}
+{{- end }}
+
+{{- if .Values.storageprovider.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.storageprovider.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.storageprovider) .) | nindent 4 }}
+spec:
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.storageprovider) .) | nindent 6 }}
+  ports:
+    - name: {{ .Values.storageprovider.port.name }}
+      protocol: TCP
+      port: {{ .Values.storageprovider.port.number }}
+      targetPort: {{ .Values.storageprovider.port.number }}
+{{- end }}
+
+{{- if .Values.xdrtransformer.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.xdrtransformer.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 4 }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-ip-address-type: ipv4
+spec:
+  type: LoadBalancer
+  selector:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 6 }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.xdrtransformer.config.service.port }}
+      targetPort: {{ .Values.xdrtransformer.config.service.port }}
+      name: {{.Values.xdrtransformer.config.service.name }}
+    - protocol: TCP
+      port: {{ .Values.xdrtransformer.config.service.manage.port }}
+      targetPort: {{ .Values.xdrtransformer.config.service.manage.port }}
+      name: {{.Values.xdrtransformer.config.service.manage.name }}
+{{- end }}
+
+{{- if .Values.minio.enabled }}
+---
+kind: Service
+apiVersion: "v1"
+metadata:
+  name: {{ .Values.minio.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.minio) .) | nindent 6 }}
+spec:
+  clusterIP: "None"
+  ports:
+    - name: {{.Values.minio.address.name }}
+      protocol: "TCP"
+      port: {{ .Values.minio.address.port }}
+      targetPort: {{ .Values.minio.address.port }}
+      nodePort: 0
+  selector: { }
+{{- end }}
+
+{{- if .Values.backupcluster.address.ip }}
+---
+kind: Service
+apiVersion: "v1"
+metadata:
+  name: {{ .Values.backupcluster.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.backupcluster) .) | nindent 4 }}
+spec:
+  clusterIP: "None"
+  ports:
+    - name: {{ .Values.backupcluster.address.port.name }}
+      protocol: "TCP"
+      port: {{ .Values.backupcluster.address.port.number }}
+      targetPort: {{ .Values.backupcluster.address.port.number }}
+      nodePort: 0
+  selector: { }
+{{- end}}
+
+{{- if .Values.backupcluster.address.dnsname }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backupcluster.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.backupcluster) .) | nindent 4 }}
+spec:
+  type: ExternalName
+  externalName: {{ .Values.backupcluster.address.dnsname | quote }}
+  ports:
+    - name: {{ .Values.backupcluster.address.port.name }}
+      port: {{ .Values.backupcluster.address.port.number }}
+{{- end }}
+
+
+{{- range $index, $ip := .Values.sourceclusters.addresses.ips -}}
+{{ $name :=(printf "%s-%d" $.Values.sourceclusters.nameprefix $index) }}
+---
+kind: Service
+apiVersion: "v1"
+metadata:
+  name: {{ $name | quote }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/name: {{ $name | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/instance: {{ $.Release.Name | quote }}
+    app.kubernetes.io/version: {{ default $.Chart.AppVersion $.Values.image.tag | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service | quote }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name | trunc 63 | trimSuffix "-" | quote }}
+spec:
+  clusterIP: "None"
+  ports:
+    - name: {{ $.Values.sourceclusters.port.name | quote }}
+      protocol: "TCP"
+      port: {{ $.Values.sourceclusters.port.number }}
+      targetPort: {{ $.Values.sourceclusters.port.number }}
+      nodePort: 0
+  selector: { }
+{{- end }}
+
+
+{{- range $index, $dnsname := .Values.sourceclusters.addresses.dnsnames }}
+{{ $name :=(printf "%s-%d" $.Values.sourceclusters.nameprefix $index) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name | quote }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/name: {{ $name | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/instance: {{ $.Release.Name | quote }}
+    app.kubernetes.io/version: {{ default $.Chart.AppVersion $.Values.image.tag | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service | quote }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name | trunc 63 | trimSuffix "-" | quote }}
+spec:
+  type: ExternalName
+  externalName: {{ $dnsname | quote }}
+  ports:
+    - name: {{ $.Values.sourceclusters.port.name }}
+      port: {{ $.Values.sourceclusters.port.number }}
+{{- end }}
+
+

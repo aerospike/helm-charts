@@ -1,0 +1,23 @@
+service:
+  port: {{ $.Values.xdrtransformer.config.service.port }}
+  address: {{ $.Values.xdrtransformer.service.address }}
+  manage:
+    address: {{ $.Values.xdrtransformer.config.service.manage.address }}
+    port: {{ $.Values.xdrtransformer.config.service.manage.port }}
+  io-threads: {{ $.Values.xdrtransformer.config.service.ioThreads }}
+  worker-threads: {{ $.Values.xdrtransformer.config.service.workerThreads }}
+  max-concurrent-records: {{ $.Values.xdrtransformer.config.service.maxConcurrentRecords }}
+  cluster-name: {{ $.Values.xdrtransformer.config.service.clusterName }}
+aerospike:
+  seeds:
+    - {{ $.Values.backupcluster.address.ip | quote }}:
+        port: {{ $.Values.backupcluster.address.port }}
+  credentials:
+    username: {{ $.Values.backupcluster.auth.username | quote }}:
+    password-file: "/etc/config/pswd.txt"
+logging:
+  enable-console-logging: {{ $.Values.xdrtransformer.config.enableConsoleLogging | quote }}
+  file: {{ $.Values.xdrtransformer.config.logging.file | quote }}
+  ticker-interval: {{ $.Values.xdrtransformer.config.logging.tickerInterval | quote }}
+message-transformer:
+  class: com.aerospike.pitr.transformer.RecordTransformer

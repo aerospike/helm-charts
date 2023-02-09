@@ -1,0 +1,21 @@
+backendUri: http://{{ $.Values.restbackend.name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.restbackend.port.number }}
+storageProviderUri: http://{{ $.Values.storageprovider.name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.storageprovider.port.number }}
+backendTimeoutMs: {{ $.Values.smdhandler.config.backendTimeoutMs }}
+authenticatorUri: http://{{ $.Values.authenticator.name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.authenticator.port.number }}
+auth:
+  enabled: {{ $.Values.smdhandler.config.auth.enabled }}
+  tokenRefreshSeconds: {{ $.Values.smdhandler.config.auth.tokenRefreshSeconds }}
+  username: {{ $.Values.smdhandler.config.auth.username }}
+  password: {{ $.Values.smdhandler.config.auth.password }}
+backupIntervalSeconds: {{ $.Values.smdhandler.config.backupIntervalSeconds }}
+httpHost: {{ $.Values.smdhandler.config.host }}
+httpPort: {{ $.Values.smdhandler.port.number }}
+retryIntervalMs: {{ $.Values.smdhandler.config.retryIntervalMs }}
+meterRegistryStepSeconds: {{ $.Values.smdhandler.config.meterRegistryStepSeconds }}
+circuitBreakerConfiguration:
+  slidingWindowSize: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.slidingWindowSize }}
+  minimumNumberOfCalls: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.minimumNumberOfCalls }}
+  slowCallDurationThreshold: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.slowCallDurationThreshold }}
+  permittedNumberOfCallsInHalfOpenState: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.permittedNumberOfCallsInHalfOpenState }}
+  automaticTransitionFromOpenToHalfOpenEnabled: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.automaticTransitionFromOpenToHalfOpenEnabled | quote }}
+  waitDurationInOpenState: {{ $.Values.smdhandler.config.circuitBreakerConfiguration.waitDurationInOpenState }}
