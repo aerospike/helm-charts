@@ -214,7 +214,7 @@ Port forward prometheus service:
 ```shell
 kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
 ```
-Access prometheus by calling: http://127.0.0.1:9090 in your browser
+Access prometheus by calling: http://127.0.0.1:9090 in your browser</br>
 Port forward grafana service:
 ```shell
 kubectl port-forward -n aerospike svc/test-release-grafana 8080:80
