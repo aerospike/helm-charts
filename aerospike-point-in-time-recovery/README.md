@@ -1,6 +1,6 @@
 # Aerospike Point In Time Recovery (PITR)
 ## Description
-For more info please refer to [Point-in-Time Recovery Documentation](https://refactored-adventure-ovvko14.pages.github.io)
+Refer to [Point-in-Time Recovery Documentation](https://aerospike.github.io/point-in-time-recovery) for more information.
 
 ## Prerequisites
 * Aerospike backup cluster
@@ -9,7 +9,7 @@ For more info please refer to [Point-in-Time Recovery Documentation](https://ref
 * Kubernetes cluster (EKS/Kind)
 
 ## Examples
-For configuration examples please refer to: [examples directory](examples)
+See the [examples](./examples) directory for configuration samples.
 
 ## Configuration
 
