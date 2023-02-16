@@ -1,0 +1,46 @@
+{{- if .Values.aws.ecrtokenissuer.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.aws.ecrtokenissuer.issuer.name }}-job
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ printf "%s-%s" $.Chart.Name $.Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/name: "ecr-token-issuer-job"
+    app.kubernetes.io/instance: {{ $.Release.Name | quote }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | trunc 63 | trimSuffix "-" | quote }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service | quote }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name | trunc 63 | trimSuffix "-" | quote }}
+  annotations:
+    "helm.sh/hook": pre-install, post-delete
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Values.aws.ecrtokenissuer.issuer.name }}-serviceaccount
+      containers:
+        - name: {{ .Values.aws.ecrtokenissuer.issuer.name }}-job
+          image: {{ include "get-k8s-cli-image" . }}
+          imagePullPolicy: "Always"
+          envFrom:
+            - secretRef:
+                name: {{ .Values.aws.ecrtokenissuer.issuer.name }}-secret
+            - configMapRef:
+                name: {{ .Values.aws.ecrtokenissuer.issuer.name }}-configmap
+          command:
+            - /bin/sh
+            - -c
+            - |-
+              ECR_TOKEN=`aws ecr get-login-password --region ${AWS_REGION}`
+              kubectl delete secret --ignore-not-found $DOCKER_SECRET_NAME -n {{ $.Release.Namespace }}
+              kubectl create secret docker-registry $DOCKER_SECRET_NAME \
+              --docker-server=https://${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+              --docker-username=AWS \
+              --docker-password="${ECR_TOKEN}" \
+              --namespace={{ $.Release.Namespace }}
+              echo "Secret was successfully updated at $(date)"
+      restartPolicy: Never
+  backoffLimit: 4
+{{- end }}

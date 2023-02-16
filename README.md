@@ -2,9 +2,9 @@
 
 This is a public Helm repository for [Aerospike](https://aerospike.com/) products.
 
-
- ## Helm charts
+## Helm charts
 
 The following helm charts are provided
 
 - [Aerospike Kafka Outbound](aerospike-kafka-outbound)
+- [Aerospike Point in Time Recovery](aerospike-point-in-time-recovery)

@@ -1,0 +1,78 @@
+{{- if .Values.compactor.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.compactor.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.compactor) .) | nindent 4 }}
+spec:
+  replicas: {{ default .Values.replicas .Values.compactor.replicas }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.compactor) .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.annotations }}
+      annotations:
+        {{- toYaml (merge $.Values.compactor.annotations .) | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.compactor) .) | nindent 8 }}
+        {{- with .Values.compactor.labels }}
+        {{- . | toYaml | nindent 8}}
+        {{- end }}
+    spec:
+      {{- include "imagePullSecrets" . | nindent 6 }}
+      volumes:
+        - name: "configmap-volume"
+          configMap:
+            name: {{ .Values.compactor.name }}-configmap
+      initContainers:
+        {{- include "initContainer.wait.rest-backend" . | nindent 10 }}
+        {{- include "initContainer.wait.authenticator" . | nindent 10 }}
+        {{- include "initContainer.wait.storage-provider" . | nindent 10 }}
+      containers:
+        - name: {{ .Values.compactor.name }}
+          image: {{ include "get-image" (merge (dict "component" .Values.compactor) .) }}
+          imagePullPolicy: {{ default .Values.image.pullPolicy .Values.compactor.image.pullPolicy }}
+          resources:
+            {{- default .Values.resources .Values.compactor.resources | toYaml | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/config
+              name: "configmap-volume"
+          ports:
+            - name: {{ .Values.compactor.port.name }}
+              containerPort: {{ .Values.compactor.port.number }}
+              protocol: TCP
+            {{- if .Values.compactor.serviceMonitor.enabled }}
+            - name: {{ .Values.compactor.serviceMonitor.port.name }}
+              containerPort: {{ .Values.compactor.serviceMonitor.port.number }}
+              protocol: TCP
+            {{- end }}
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.compactor.port.number }}
+          readinessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.compactor.port.number }}
+    {{- with .Values.compactor.affinity }}
+      affinity:
+        {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{- with .Values.compactor.nodeSelector }}
+      nodeSelector:
+       {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{- with .Values.compactor.tolerations }}
+      tolerations:
+       {{- . | nindent 8 }}
+    {{- end }}
+{{- end }}

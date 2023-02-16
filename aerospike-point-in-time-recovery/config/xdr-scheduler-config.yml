@@ -1,0 +1,21 @@
+backendUri: http://{{ $.Values.restbackend.name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.restbackend.port.number }}
+backendTimeoutMs: {{ $.Values.xdrscheduler.config.backendTimeoutMs }}
+authenticatorUri: http://{{ $.Values.authenticator.name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.authenticator.port.number }}
+auth:
+  enabled: {{ $.Values.xdrscheduler.config.auth.enabled }}
+  tokenRefreshSeconds: {{ $.Values.xdrscheduler.config.auth.tokenRefreshSeconds }}
+  username: {{ $.Values.xdrscheduler.config.auth.username }}
+  password: {{ $.Values.xdrscheduler.config.auth.password }}
+xdrSchedulerIntervalMs: {{ $.Values.xdrscheduler.config.xdrSchedulerIntervalMs }}
+xdrSchedulerCheckLagIntervalMs: {{ $.Values.xdrscheduler.config.xdrSchedulerCheckLagIntervalMs }}
+httpHost: {{ $.Values.xdrscheduler.config.host }}
+httpPort: {{ $.Values.xdrscheduler.port.number }}
+retryIntervalMs: {{ $.Values.xdrscheduler.config.retryIntervalMs }}
+meterRegistryStepSeconds: {{ $.Values.xdrscheduler.config.meterRegistryStepSeconds }}
+circuitBreakerConfiguration:
+  slidingWindowSize: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.slidingWindowSize }}
+  minimumNumberOfCalls: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.minimumNumberOfCalls }}
+  slowCallDurationThreshold: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.slowCallDurationThreshold }}
+  permittedNumberOfCallsInHalfOpenState: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.permittedNumberOfCallsInHalfOpenState }}
+  automaticTransitionFromOpenToHalfOpenEnabled: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.automaticTransitionFromOpenToHalfOpenEnabled | quote }}
+  waitDurationInOpenState: {{ $.Values.xdrscheduler.config.circuitBreakerConfiguration.waitDurationInOpenState }}

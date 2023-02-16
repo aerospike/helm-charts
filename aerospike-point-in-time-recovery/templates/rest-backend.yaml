@@ -1,0 +1,73 @@
+{{- if .Values.restbackend.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.restbackend.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.restbackend) .) | nindent 4 }}
+spec:
+  replicas: {{ default .Values.replicas .Values.restbackend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.restbackend) .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.annotations }}
+      annotations:
+        {{- toYaml (merge $.Values.restbackend.annotations .) | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.restbackend) .) | nindent 8 }}
+        {{- with .Values.restbackend.labels }}
+        {{- . | toYaml | nindent 8}}
+        {{- end }}
+    spec:
+      {{- include "imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Values.restbackend.name }}-serviceaccount
+      initContainers:
+        {{- include "initContainer.wait.xdr-transformer" . | nindent 10 }}
+      containers:
+        - name: {{ .Values.restbackend.name }}
+          image: {{ include "get-image" (merge (dict "component" .Values.restbackend) .) }}
+          imagePullPolicy: {{ default .Values.image.pullPolicy .Values.restbackend.image.pullPolicy }}
+          resources:
+            requests:
+              {{- default .Values.resources .Values.restbackend.resources | toYaml | nindent 12 }}
+          ports:
+            - name: {{ .Values.restbackend.port.name }}
+              containerPort: {{ .Values.restbackend.port.number }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.restbackend.name }}-configmap
+         {{- if .Values.restbackend.config.auth.enabled }}
+            - secretRef:
+                name: {{ .Values.restbackend.name }}-secret
+         {{- end }}
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.restbackend.port.number }}
+          readinessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.restbackend.port.number }}
+    {{ with .Values.restbackend.affinity }}
+      affinity:
+        {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{ with .Values.restbackend.nodeSelector }}
+      nodeSelector:
+       {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{- with .Values.restbackend.tolerations }}
+      tolerations:
+       {{- . | nindent 8 }}
+    {{- end }}
+{{- end }}

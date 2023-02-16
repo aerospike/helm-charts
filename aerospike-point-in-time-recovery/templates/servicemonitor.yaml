@@ -1,0 +1,163 @@
+{{- if and .Values.prometheus.enable .Values.authenticator.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.authenticator.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.authenticator) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.authenticator) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.authenticator.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/actuator/prometheus"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.compactor.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.compactor.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.compactor) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.compactor) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.compactor.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/prometheus"
+    - port: {{ .Values.compactor.serviceMonitor.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/metrics"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.queuehandler.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.queuehandler.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.queuehandler) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.queuehandler) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.queuehandler.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/prometheus"
+    - port: {{ .Values.queuehandler.serviceMonitor.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/metrics"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.smdhandler.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.smdhandler.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.smdhandler) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.smdhandler) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.smdhandler.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/prometheus"
+    - port: {{ .Values.smdhandler.serviceMonitor.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/metrics"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.xdrscheduler.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.xdrscheduler.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.xdrscheduler) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrscheduler) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.xdrscheduler.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/prometheus"
+    - port: {{ .Values.xdrscheduler.serviceMonitor.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/metrics"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.restbackend.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.restbackend.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.restbackend) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.restbackend) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.restbackend.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/actuator/prometheus"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.storageprovider.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.storageprovider.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.storageprovider) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.storageprovider) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.storageprovider.port.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/actuator/prometheus"
+{{- end }}
+
+{{- if and .Values.prometheus.enable .Values.xdrtransformer.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.xdrtransformer.name }}-service-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.xdrtransformer) .) | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.xdrtransformer.config.service.manage.name | quote }}
+      interval: {{ .Values.prometheus.interval }}
+      path: "/manage/rest/v1/prometheus"
+{{- end }}

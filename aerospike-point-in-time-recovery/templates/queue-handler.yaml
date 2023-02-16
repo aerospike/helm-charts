@@ -1,0 +1,78 @@
+{{- if .Values.queuehandler.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.queuehandler.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "aerospike-enterprise-backup.labels" (merge (dict "component" .Values.queuehandler) .) | nindent 4 }}
+spec:
+  replicas: {{ default .Values.replicas .Values.queuehandler.replicas }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.queuehandler) .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.annotations }}
+      annotations:
+        {{- toYaml (merge $.Values.queuehandler.annotations .) | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "aerospike-enterprise-backup.selectorLabels" (merge (dict "component" .Values.queuehandler) .) | nindent 8 }}
+        {{- with .Values.queuehandler.labels }}
+        {{- . | toYaml | nindent 8}}
+        {{- end }}
+    spec:
+      {{ include "imagePullSecrets" . | indent 6 }}
+      volumes:
+        - name: "configmap-volume"
+          configMap:
+            name: {{ .Values.queuehandler.name }}-configmap
+      initContainers:
+        {{- include "initContainer.wait.rest-backend" . | nindent 10 }}
+        {{- include "initContainer.wait.authenticator" . | nindent 10 }}
+        {{- include "initContainer.wait.storage-provider" . | nindent 10 }}
+      containers:
+        - name: {{ .Values.queuehandler.name }}
+          image: {{ include "get-image" (merge (dict "component" .Values.queuehandler) .) }}
+          imagePullPolicy: {{ default .Values.image.pullPolicy .Values.queuehandler.image.pullPolicy }}
+          resources:
+            {{- default .Values.resources .Values.queuehandler.resources | toYaml | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/config
+              name: "configmap-volume"
+          ports:
+            - name: {{ .Values.queuehandler.port.name }}
+              containerPort: {{ .Values.queuehandler.port.number }}
+              protocol: TCP
+          {{- if .Values.queuehandler.serviceMonitor.enabled}}
+            - name: {{ .Values.queuehandler.serviceMonitor.port.name }}
+              protocol: TCP
+              containerPort: {{ .Values.queuehandler.serviceMonitor.port.number }}
+          {{- end }}
+          livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.queuehandler.port.number }}
+          readinessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            httpGet:
+              path: /health
+              port: {{ .Values.queuehandler.port.number }}
+    {{- with .Values.queuehandler.affinity }}
+      affinity:
+        {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{- with .Values.queuehandler.nodeSelector }}
+      nodeSelector:
+       {{- . | toYaml | nindent 8 }}
+    {{- end }}
+    {{- with .Values.queuehandler.tolerations }}
+      tolerations:
+       {{- . | nindent 8 }}
+    {{- end }}
+{{- end }}
