@@ -1,0 +1,38 @@
+{{- if .Values.ingress.enabled -}}
+{{- $dot := . }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "aerospike-rest-gateway.fullname" . }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "aerospike-rest-gateway.labels" . | nindent 4 }}
+    release: {{ .Release.Name }}
+spec:
+  {{- if .Values.ingress.tls }}
+  tls:
+  {{- range $tls := .Values.ingress.tls }}
+  - hosts:
+    {{- range $host := $tls.hosts }}
+    - {{ $host | quote }}
+    {{- end }}
+    secretName: {{ $tls.secretName }}
+  {{- end }}
+  {{- end }}
+  rules:
+  {{- range $rule := .Values.ingress.rules }}
+  - http:
+      paths:
+        {{- range $path := $rule.paths }}
+        - path: {{ $path | quote }}
+          backend:
+            serviceName: {{ include "aerospike-rest-gateway.fullname" $dot }}
+            servicePort: {{ $.Values.service.port }}
+        {{- end }}
+    {{- if $rule.host }}
+    host: $rule.host
+    {{- end }}
+  {{- end }}
+{{- end }}
