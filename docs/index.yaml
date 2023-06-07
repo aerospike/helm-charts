@@ -3,7 +3,7 @@ entries:
   aerospike-kafka-outbound:
   - apiVersion: v2
     appVersion: 5.0.0
-    created: "2022-10-17T23:07:11.125420937+05:30"
+    created: "2023-06-07T15:36:43.743316-07:00"
     description: A Helm chart for Aerospike Connect for Kafka - Outbound
     digest: 46b6cff86371f5cf40c64a93eacd5eea402f9c572d4144ad50f174129479de77
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
@@ -20,4 +20,18 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-kafka-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2022-10-17T23:07:11.124527788+05:30"
+  aerospike-rest-gateway:
+  - apiVersion: v2
+    appVersion: 2.1.1
+    created: "2023-06-07T15:36:43.743788-07:00"
+    description: Helm Chart For Aerospike REST Gateway On Kubernetes
+    digest: f056156e0895688a486bb5082c10a3551581ef5d4ad909152f955d0d1508568b
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    name: aerospike-rest-gateway
+    sources:
+    - https://github.com/aerospike/helm-charts
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-rest-gateway-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-06-07T15:36:43.74228-07:00"
