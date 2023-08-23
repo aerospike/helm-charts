@@ -1,0 +1,10 @@
+# Configuration for the connector.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-pulsar-outbound.fullname" . }}
+  labels:
+    {{- include "aerospike-pulsar-outbound.labels" . | nindent 4 }}
+data:
+  aerospike-pulsar-outbound.yml: |-
+    {{- include "aerospike-pulsar-outbound.connectorConfig" . | nindent 4 }}
