@@ -1,0 +1,147 @@
+# Default values for aerospike-jms-inbound.
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: aerospike/aerospike-jms-inbound
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Default Connector configuration.
+# Visit: https://docs.aerospike.com/connect/jms/to-asdb/configuring
+connectorConfig:
+  # # Uncomment the following lines, adjust them as necessary as per your environment, and remove the curly braces after 'connectorConfig:'.
+  # # Optional HTTP Server configuration to expose Manage API and Prometheus metrics
+  # service:
+  #   manage:
+  #     port: 8081
+
+  # # JMS sources to consume messages from.
+  # queues:
+  #   MyJmsQueue:
+  #     aerospike-operation:
+  #       type: write
+  #     parsing:
+  #       format: json
+  #     mapping:
+  #       bins:
+  #         type: multi-bins
+  #         all-value-fields: true
+  #       key-field:
+  #         source: value-field
+  #         field-name: key
+  #       namespace:
+  #         mode: static
+  #         value: test
+
+  # # topics: {}
+
+  # # The connection properties to the JMS message broker.
+  # jms:
+  #  # RabbitMQ example.
+  #   factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+  #   config:
+  #     host: rabbitmq.rabbitmq-system
+  #     port: 5672
+  #     username: guest
+  #     password: guest
+
+  #  # ActiveMQ example.
+  #  factory: org.apache.activemq.artemis.jndi.ActiveMQInitialContextFactory
+  #  jndi-cf-name: ConnectionFactory
+  #  config:
+  #    java.naming.provider.url: tcp://127.0.0.1:61616
+  #    java.naming.security.principal: admin
+  #    java.naming.security.credentials: password
+
+  #  # IBM MQ example.
+  #  factory: com.ibm.mq.jms.MQConnectionFactory
+  #  config:
+  #    hostName: 127.0.0.1
+  #    port: 1414
+  #    queueManager: QM1
+  #    transportType: 1
+  #    channel: DEV.APP.SVRCONN
+
+  # # The Aerospike cluster connection properties.
+  # aerospike:
+  #   seeds:
+  #     - aerocluster.aerospike:
+  #         port: 3000
+
+  # # The logging properties.
+  # logging:
+  #   enable-console-logging: true
+
+
+# List of secrets mounted to /etc/aerospike-jms-inbound/secrets for each connector pod.
+# Can be used for TLS certificates and credentials
+connectorSecrets: []
+
+# List of initContainers to be added for each connector pod.
+# Can be used to copy custom code plugins jars to /etc/aerospike-jms-inbound-init
+initContainers: []
+  # - name: aerospike-jms-inbound-init
+  #   image: "" # Image containing custom code plugins jars
+  #   imagePullPolicy: IfNotPresent
+  #   command: ["/bin/sh", "-c"]
+  # Update args to copy all the jars to emptyDir volume path
+  #   args:
+  #     - |
+  #       set -e
+  #       cp -r /etc/aerospike-jms-inbound/* /opt/aerospike-jms-inbound-init
+  #   volumeMounts:
+  #     - name: aerospike-jms-inbound-init
+  #       mountPath: /opt/aerospike-jms-inbound-init
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

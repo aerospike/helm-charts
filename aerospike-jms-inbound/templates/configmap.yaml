@@ -1,0 +1,10 @@
+# Configuration for the connector.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-jms-inbound.fullname" . }}
+  labels:
+    {{- include "aerospike-jms-inbound.labels" . | nindent 4 }}
+data:
+  aerospike-jms-inbound.yml: |-
+    {{- include "aerospike-jms-inbound.connectorConfig" . | nindent 4 }}

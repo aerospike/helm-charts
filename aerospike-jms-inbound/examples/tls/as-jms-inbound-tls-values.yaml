@@ -1,0 +1,80 @@
+replicaCount: 3
+
+connectorSecrets:
+  - tls-certs
+
+connectorConfig:
+  # Optional HTTP Server configuration to expose Manage API and Prometheus metrics
+  service:
+    manage:
+      port: 8081
+
+  # JMS sources to consume messages from.
+  queues:
+    MyJmsQueue:
+      aerospike-operation:
+        type: write
+      parsing:
+        format: json
+      mapping:
+        bins:
+          type: multi-bins
+          all-value-fields: true
+        key-field:
+          source: value-field
+          field-name: key
+        namespace:
+          mode: static
+          value: test
+
+  # topics: {}
+
+  # The connection properties to the JMS message broker.
+  jms:
+    #  # RabbitMQ example.
+    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+    config:
+      host: rabbitmq.rabbitmq-system
+      port: 5672
+      username: guest
+      password: guest
+
+  #  # ActiveMQ example.
+  #  factory: org.apache.activemq.artemis.jndi.ActiveMQInitialContextFactory
+  #  jndi-cf-name: ConnectionFactory
+  #  config:
+  #    java.naming.provider.url: tcp://127.0.0.1:61616
+  #    java.naming.security.principal: admin
+  #    java.naming.security.credentials: password
+
+  #  # IBM MQ example.
+  #  factory: com.ibm.mq.jms.MQConnectionFactory
+  #  config:
+  #    hostName: 127.0.0.1
+  #    port: 1414
+  #    queueManager: QM1
+  #    transportType: 1
+  #    channel: DEV.APP.SVRCONN
+
+  # The Aerospike cluster connection properties.
+  aerospike:
+    seeds:
+      - aerocluster.aerospike: # Aerospike Headless Service name or seed node address.
+          port: 4333
+          tls-name: aerospike.svc.cluster.local  # The TLS name of the Aerospike database.
+    tls:
+      key-store:
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        store-password-file: secrets/tls-certs/storepass
+        store-type: JKS
+      trust-store:
+        store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
+        store-password-file: secrets/tls-certs/storepass
+        store-type: JKS
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+    levels:
+      root: DEBUG
+
