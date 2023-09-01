@@ -23,9 +23,9 @@ entries:
   aerospike-pulsar-outbound:
   - apiVersion: v2
     appVersion: 3.2.1
-    created: "2023-08-27T16:54:03.241542+05:30"
+    created: "2023-09-01T23:26:26.212076+05:30"
     description: A Helm chart for Aerospike Connect for Pulsar - Outbound
-    digest: 7293b8c1177fb92d25cb16ad92d33461cda3737c78048abbf8a35084bed64b7f
+    digest: 1540f57a5498585d03cb1dccc48388dd53e8c702e4b3e25cf7258c9cb70c7713
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
@@ -40,4 +40,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-08-27T16:54:03.236054+05:30"
+generated: "2023-09-01T23:26:26.205565+05:30"

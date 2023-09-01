@@ -7,9 +7,8 @@ This example deploys Aerospike Pulsar Outbound connectors and an Aerospike clust
  - Helm v3
  - A Pulsar cluster with brokers reachable from the pods in the Kubernetes cluster
  - An Aerospike cluster - That can connect to Pods in the Kubernetes cluster
-   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
-   Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
- - Aerospike Pulsar Connector Helm chart [installed](../../README.md#install-the-helm-chart) 
+   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+ - Aerospike Pulsar Connector [Helm chart](../../README.md#adding-the-helm-chart-repository) 
 
 ## Clone this repository.
  - A clone of this git repository

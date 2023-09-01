@@ -13,10 +13,9 @@ deployed connector pods.
 - Helm v3
 - A Pulsar cluster with brokers reachable from the pods in the Kubernetes cluster
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
-  The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
-  Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+  The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
 
-## Install the helm chart
+## Adding the helm chart repository
 
 Add the `aerospike` helm repository if not already done
 
@@ -24,15 +23,9 @@ Add the `aerospike` helm repository if not already done
 helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
-Install the Aerospike Pulsar Outbound connector helm chart
-
-```shell
-helm install aerospike-pulsar-outbound aerospike/aerospike-pulsar-outbound
-```
-
 ## Supported configuration
 
-## Configuration
+### Configuration
 
 | Parameter            | Description                                                                                                                                                                          | Default                        |
 |----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
@@ -182,7 +175,6 @@ as-pulsar-outbound-aerospike-pulsar-outbound-1.as-pulsar-outbound-aerospike-puls
 as-pulsar-outbound-aerospike-pulsar-outbound-2.as-pulsar-outbound-aerospike-pulsar-outbound 8080
 ```
 
- 
 If you are using [Aerospike Kubernetes Operator](https://docs.aerospike.com/connect/pulsar/from-asdb/configuring), 
 see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
 
@@ -194,7 +186,7 @@ see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
 kubectl -n aerospike logs -f statefulset/as-pulsar-outbound-aerospike-pulsar-outbound
 ```
 
-## Get logs for all one connector pod
+## Get logs for one connector pod
 
 ```shell
 # kubectl -n aerospike logs -f <helm release name>-aerospike-pulsar-outbound-0
