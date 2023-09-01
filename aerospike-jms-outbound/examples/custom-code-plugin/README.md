@@ -7,9 +7,8 @@ This example deploys Aerospike JMS Outbound connectors with custom code plugin a
  - Helm v3
  - A JMS cluster with brokers reachable from the pods in the Kubernetes cluster
  - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
-   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
-   Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
- - Aerospike JMS Connector Helm chart [installed](../../README.md#install-the-helm-chart)
+   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+ - Aerospike JMS Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
  - A container image containing custom code plugin jars. See [Custom Code Plugin](https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin) for more details.
 
 ## Clone this repository.

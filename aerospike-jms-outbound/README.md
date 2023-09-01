@@ -13,10 +13,9 @@ deployed connector pods.
 - Helm v3
 - A JMS cluster with brokers reachable from the pods in the Kubernetes cluster
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
-  The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
-  Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+  The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
 
-## Install the helm chart
+## Adding the helm chart repository
 
 Add the `aerospike` helm repository if not already done
 
@@ -24,15 +23,9 @@ Add the `aerospike` helm repository if not already done
 helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
-Install the Aerospike JMS Outbound connector helm chart
-
-```shell
-helm install aerospike-jms-outbound aerospike/aerospike-jms-outbound
-```
-
 ## Supported configuration
 
-## Configuration
+### Configuration
 
 | Parameter            | Description                                                                                                                                                                          | Default                        |
 |----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
@@ -206,7 +199,6 @@ as-jms-outbound-aerospike-jms-outbound-1.as-jms-outbound-aerospike-jms-outbound 
 as-jms-outbound-aerospike-jms-outbound-2.as-jms-outbound-aerospike-jms-outbound 8080
 ```
 
- 
 If you are using [Aerospike Kubernetes Operator](https://docs.aerospike.com/connect/jms/from-asdb/configuring), 
 see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
 
@@ -218,7 +210,7 @@ see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
 kubectl -n aerospike logs -f statefulset/as-jms-outbound-aerospike-jms-outbound
 ```
 
-## Get logs for all one connector pod
+## Get logs for one connector pod
 
 ```shell
 # kubectl -n aerospike logs -f <helm release name>-aerospike-jms-outbound-0
