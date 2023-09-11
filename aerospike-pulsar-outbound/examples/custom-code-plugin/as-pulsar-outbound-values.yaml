@@ -44,7 +44,7 @@ initContainers:
     args:
       - |
         set -e
-        cp -r /etc/aerospike-pulsar-outbound/* /opt/aerospike-pulsar-outbound-init
+        cp -r /etc/aerospike-connector-custom-transformers/* /opt/aerospike-pulsar-outbound-init
     volumeMounts:
       - name: aerospike-pulsar-outbound-init
         mountPath: /opt/aerospike-pulsar-outbound-init
