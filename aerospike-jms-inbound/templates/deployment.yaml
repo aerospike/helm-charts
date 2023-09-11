@@ -73,7 +73,8 @@ spec:
             {{- end }}
             {{- if .Values.initContainers }}
             - name: aerospike-jms-inbound-init
-              mountPath: /opt/aerospike-jms-inbound/usr-lib
+              mountPath: /opt/aerospike-jms-inbound/usr-lib/aerospike-jms-inbound-custom-transformers.jar
+              subPath: aerospike-jms-inbound-custom-transformers.jar
             {{- end }}
           {{- if (include "aerospike-jms-inbound.serviceManagePort" . ) }}
           livenessProbe:

@@ -13,10 +13,7 @@ connectorConfig:
     MyJmsQueue:
       message-transformer:
         # custom message transformer class to be used for the JMS message.
-        class: com.aerospike.connect.inbound.CasCDTCustomTransformer
-        params:
-          cdtListLimit: 10
-          fieldNamePrefix: 'cdt_impl'
+        class: com.aerospike.connect.jms.inbound.transformer.JmsRowTypeInboundMessageTransformer
       aerospike-operation:
         type: write
       parsing:
@@ -76,14 +73,14 @@ connectorConfig:
 # Can be used to copy custom code plugins jars to /opt/aerospike-jms-inbound-init
 initContainers:
   - name: aerospike-jms-inbound-init
-    image: "" # Image containing custom code plugins jars
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
     imagePullPolicy: IfNotPresent
     command: ["/bin/sh", "-c"]
     # Update args to copy all the jars from init container to emptyDir volume path
     args:
       - |
         set -e
-        cp -r /etc/aerospike-jms-inbound/* /opt/aerospike-jms-inbound-init
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-jms-inbound-custom-transformers.jar /opt/aerospike-jms-inbound-init
     volumeMounts:
       - name: aerospike-jms-inbound-init
         mountPath: /opt/aerospike-jms-inbound-init
