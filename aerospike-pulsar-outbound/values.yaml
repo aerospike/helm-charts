@@ -49,14 +49,14 @@ connectorSecrets: []
 # Can be used to copy custom code plugins jars to /etc/aerospike-pulsar-outbound-init
 initContainers: []
   # - name: aerospike-pulsar-outbound-init
-  #   image: "" # Image containing custom code plugins jars
+  #   image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
   #   imagePullPolicy: IfNotPresent
   #   command: ["/bin/sh", "-c"]
     # Update args to copy all the jars to emptyDir volume path
   #   args:
   #     - |
   #       set -e
-  #       cp -r /etc/aerospike-pulsar-outbound/* /opt/aerospike-pulsar-outbound-init
+  #       cp -r /etc/aerospike-connector-custom-transformers/aerospike-pulsar-outbound-custom-transformers.jar /opt/aerospike-pulsar-outbound-init
   #   volumeMounts:
   #     - name: aerospike-pulsar-outbound-init
   #       mountPath: /opt/aerospike-pulsar-outbound-init

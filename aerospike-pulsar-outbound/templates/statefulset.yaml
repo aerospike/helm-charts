@@ -83,7 +83,8 @@ spec:
             {{- end }}
             {{- if .Values.initContainers }}
             - name: aerospike-pulsar-outbound-init
-              mountPath: /opt/aerospike-pulsar-outbound/usr-lib
+              mountPath: /opt/aerospike-pulsar-outbound/usr-lib/aerospike-pulsar-outbound-custom-transformers.jar
+              subPath: aerospike-pulsar-outbound-custom-transformers.jar
             {{- end }}
           livenessProbe:
             tcpSocket:

@@ -18,16 +18,19 @@ connectorConfig:
 
   # Format of the Pulsar destination message.
   format:
-    mode: custom
-    # custom formatter class to be used for formatting the Pulsar message.
-    class: com.aerospike.connect.outbound.transformer.examples.pulsar.PulsarKeyValueFormatter
-    params:
-      separator: ":"
+    mode: flat-json
+    metadata-key: metadata
 
   # Aerospike record routing to a Pulsar destination.
   routing:
     mode: static
     destination: persistent://apache/pulsar/test-topic   # <--- Change this to your topic
+
+  namespaces:
+    test:
+      custom-transformer:
+        # custom transformer class to be used for the Pulsar message.
+        class: com.aerospike.connect.outbound.TestOutboundCustomTransformer
 
   # The logging properties.
   logging:
@@ -37,14 +40,14 @@ connectorConfig:
 # Can be used to copy custom code plugins jars to /opt/aerospike-pulsar-outbound-init
 initContainers:
   - name: aerospike-pulsar-outbound-init
-    image: "" # Image containing custom code plugins jars
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
     imagePullPolicy: IfNotPresent
     command: ["/bin/sh", "-c"]
     # Update args to copy all the jars from init container to emptyDir volume path
     args:
       - |
         set -e
-        cp -r /etc/aerospike-connector-custom-transformers/* /opt/aerospike-pulsar-outbound-init
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-pulsar-outbound-custom-transformers.jar /opt/aerospike-pulsar-outbound-init
     volumeMounts:
       - name: aerospike-pulsar-outbound-init
         mountPath: /opt/aerospike-pulsar-outbound-init
