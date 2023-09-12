@@ -3,9 +3,9 @@ entries:
   aerospike-jms-outbound:
   - apiVersion: v2
     appVersion: 4.1.1
-    created: "2023-09-01T23:16:56.792087+05:30"
+    created: "2023-09-12T15:15:46.278624+05:30"
     description: A Helm chart for Aerospike Connect for JMS - Outbound
-    digest: 1a7cc0c7797fb705a40ae6d553c595d7b8ba32c1f5dc8329e16b17464b4655f4
+    digest: d3f9f3cdd9bc57eaa945336f5c1c28c164b1c8a2c41f97eda9806276077c0a2c
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
@@ -40,4 +40,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-kafka-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-09-01T23:16:56.790336+05:30"
+generated: "2023-09-12T15:15:46.272017+05:30"

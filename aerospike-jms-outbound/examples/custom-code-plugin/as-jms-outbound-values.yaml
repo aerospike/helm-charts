@@ -41,11 +41,8 @@ connectorConfig:
 
   # Format of the JMS destination message.
   format:
-    mode: custom
-    # custom formatter class to be used for formatting the JMS message.
-    class: com.aerospike.connect.outbound.transformer.examples.jms.JMSKeyValueFormatter
-    params:
-      separator: ":"
+    mode: flat-json
+    metadata-key: metadata
 
   # Aerospike record routing to a JMS destination.
   routing:
@@ -53,6 +50,10 @@ connectorConfig:
     type: queue
     destination: aerospike  # <---- Change this to the name of the JMS destination.
 
+  namespaces:
+    test:
+      custom-transformer:
+        class: com.aerospike.connect.outbound.TestOutboundCustomTransformer
   # The logging properties.
   logging:
     enable-console-logging: true
@@ -61,14 +62,14 @@ connectorConfig:
 # Can be used to copy custom code plugins jars to /opt/aerospike-jms-outbound-init
 initContainers:
   - name: aerospike-jms-outbound-init
-    image: "" # Image containing custom code plugins jars
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
     imagePullPolicy: IfNotPresent
     command: ["/bin/sh", "-c"]
     # Update args to copy all the jars from init container to emptyDir volume path
     args:
       - |
         set -e
-        cp -r /etc/aerospike-jms-outbound/* /opt/aerospike-jms-outbound-init
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-jms-outbound-custom-transformers.jar /opt/aerospike-jms-outbound-init
     volumeMounts:
       - name: aerospike-jms-outbound-init
         mountPath: /opt/aerospike-jms-outbound-init

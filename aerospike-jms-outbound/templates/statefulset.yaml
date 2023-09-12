@@ -83,7 +83,8 @@ spec:
             {{- end }}
             {{- if .Values.initContainers }}
             - name: aerospike-jms-outbound-init
-              mountPath: /opt/aerospike-jms-outbound/usr-lib
+              mountPath: /opt/aerospike-jms-outbound/usr-lib/aerospike-jms-outbound-custom-transformers.jar
+              subPath: aerospike-jms-outbound-custom-transformers.jar
             {{- end }}
           livenessProbe:
             tcpSocket:
