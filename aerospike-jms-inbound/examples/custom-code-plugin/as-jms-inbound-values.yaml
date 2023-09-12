@@ -13,21 +13,10 @@ connectorConfig:
     MyJmsQueue:
       message-transformer:
         # custom message transformer class to be used for the JMS message.
-        class: com.aerospike.connect.jms.inbound.transformer.JmsRowTypeInboundMessageTransformer
-      aerospike-operation:
-        type: write
+        class: com.aerospike.connect.jms.inbound.transformer.CompositeRecordOperationInboundMessageTransformer
+        unsafe-composite-record-operations: true
       parsing:
         format: json
-      mapping:
-        bins:
-          type: multi-bins
-          all-value-fields: true
-        key-field:
-          source: value-field
-          field-name: key
-        namespace:
-          mode: static
-          value: test
 
   # topics: {}
 
