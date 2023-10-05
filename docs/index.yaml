@@ -1,5 +1,25 @@
 apiVersion: v1
 entries:
+  aerospike-jms-inbound:
+  - apiVersion: v2
+    appVersion: 3.0.0
+    created: "2023-09-12T18:28:21.401435+05:30"
+    description: A Helm chart for Aerospike Connect for JMS - Inbound
+    digest: f664bee76244a49c19dabea859581e1d668e46f6aa2e0973c3e5ee6d8f689ba3
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - JMS
+    - Connector
+    - Inbound
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-jms-inbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-jms-inbound-1.0.0.tgz
+    version: 1.0.0
   aerospike-jms-outbound:
   - apiVersion: v2
     appVersion: 4.1.1
@@ -60,4 +80,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-10-05T19:02:16.438904+05:30"
+generated: "2023-10-05T19:07:58.39062+05:30"

@@ -1,0 +1,75 @@
+# This is a simple example for demonstration only, that launches an in-memory,
+# non-secure Aerospike cluster, with no dependencies.
+#
+#  This is not recommended for production use.
+#
+# Visit https://docs.aerospike.com/cloud/kubernetes/operator for details.
+#
+# Before creating this cluster,
+# - Prepare the aerospike namespace by following instruction here
+#
+# https://docs.aerospike.com/cloud/kubernetes/operator/create-cluster-kubectl#prepare-the-namespace
+apiVersion: asdb.aerospike.com/v1beta1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster
+  namespace: aerospike
+
+spec:
+  size: 2
+  image: aerospike/aerospike-server-enterprise:6.1.0.1
+  podSpec:
+    multiPodPerHost: true
+
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+      - name: tls-certs
+        source:
+          secret:
+            secretName: tls-certs
+        aerospike:
+          path: /etc/aerospike/tls-certs
+
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+
+  operatorClientCert:
+    tlsClientName: aerospike.svc.cluster.local
+    secretCertSource:
+      secretName: tls-certs
+      caCertsFilename: svc.cluster.local.crt
+      clientCertFilename: svc.cluster.local.crt
+      clientKeyFilename: svc.cluster.local.key
+
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        tls-name: aerospike.svc.cluster.local
+        tls-authenticate-client:
+          - aerospike.svc.cluster.local
+        tls-port: 4333
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+      tls:
+        - name: aerospike.svc.cluster.local   # Subject name for which the certificate is issued for
+          cert-file: /etc/aerospike/tls-certs/svc.cluster.local.crt
+          key-file: /etc/aerospike/tls-certs/svc.cluster.local.key
+          ca-file: /etc/aerospike/tls-certs/svc.cluster.local.crt
+
+    namespaces:
+      - name: test
+        memory-size: 3000000000
+        replication-factor: 1
+        storage-engine:
+          type: memory

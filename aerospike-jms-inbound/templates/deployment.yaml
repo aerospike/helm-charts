@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aerospike-jms-inbound.fullname" . }}
+  labels:
+    {{- include "aerospike-jms-inbound.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-jms-inbound.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include "aerospike-jms-inbound.connectorConfig" . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app: {{ include "aerospike-jms-inbound.fullname" . }}
+        {{- include "aerospike-jms-inbound.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-jms-inbound.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        {{- if .Values.initContainers }}
+        - name: aerospike-jms-inbound-init
+          emptyDir: {}
+        {{- end }}
+        - name: aerospike-jms-inbound-configmap
+          configMap:
+            name: {{ include "aerospike-jms-inbound.fullname" . }}
+            optional: false
+        {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
+        {{- fail "secrets should be a list of strings"}}
+        {{- end}}
+        {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+        {{- range $secret := .Values.connectorSecrets }}
+        - name: {{ $secret }}
+          secret:
+            secretName: {{ $secret }}
+            optional: false
+        {{- end}}
+        {{- end}}
+      {{ if .Values.initContainers }}
+      initContainers:
+      {{- toYaml .Values.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: aerospike-jms-inbound-configmap
+              mountPath: /etc/aerospike-jms-inbound
+            {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
+            {{- fail "secrets should be a list of strings" }}
+            {{- end }}
+            {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+            {{- range $secret := .Values.connectorSecrets }}
+            - name: {{ $secret }}
+              mountPath: /etc/aerospike-jms-inbound/secrets/{{ $secret }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.initContainers }}
+            - name: aerospike-jms-inbound-init
+              mountPath: /opt/aerospike-jms-inbound/usr-lib/aerospike-jms-inbound-custom-transformers.jar
+              subPath: aerospike-jms-inbound-custom-transformers.jar
+            {{- end }}
+          {{- if (include "aerospike-jms-inbound.serviceManagePort" . ) }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-jms-inbound.serviceManagePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-jms-inbound.serviceManagePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
