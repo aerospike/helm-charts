@@ -1,0 +1,14 @@
+# Headless service for stable DNS entries for the pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-jms-outbound.fullname" . }}
+  labels:
+    {{- include "aerospike-jms-outbound.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: {{ include "aerospike-jms-outbound.fullname" . }}
+      port: {{ include "aerospike-jms-outbound.servicePort" . }}
+  clusterIP: None
+  selector:
+    {{- include "aerospike-jms-outbound.selectorLabels" . | nindent 4 }}

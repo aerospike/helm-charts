@@ -1,5 +1,25 @@
 apiVersion: v1
 entries:
+  aerospike-jms-outbound:
+  - apiVersion: v2
+    appVersion: 4.1.1
+    created: "2023-09-12T15:15:46.278624+05:30"
+    description: A Helm chart for Aerospike Connect for JMS - Outbound
+    digest: d3f9f3cdd9bc57eaa945336f5c1c28c164b1c8a2c41f97eda9806276077c0a2c
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - JMS
+    - Connector
+    - Outbound
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-jms-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-jms-outbound-1.0.0.tgz
+    version: 1.0.0
   aerospike-kafka-outbound:
   - apiVersion: v2
     appVersion: 5.0.0
@@ -23,7 +43,7 @@ entries:
   aerospike-pulsar-outbound:
   - apiVersion: v2
     appVersion: 3.2.1
-    created: "2023-09-13T00:05:34.84682+05:30"
+    created: "2023-10-05T19:02:16.443545+05:30"
     description: A Helm chart for Aerospike Connect for Pulsar - Outbound
     digest: 8fdf247a0abb72026178a316419c83e1929043bf913b962a984d42f7b8cfdb6b
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
@@ -40,4 +60,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-09-13T00:05:34.844049+05:30"
+generated: "2023-10-05T19:02:16.438904+05:30"
