@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aerospike-pulsar-outbound.fullname" . }}
+  labels:
+    app: {{ include "aerospike-pulsar-outbound.fullname" . }}
+    {{- include "aerospike-pulsar-outbound.labels" . | nindent 4 }}
+
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  serviceName: {{ include "aerospike-pulsar-outbound.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-pulsar-outbound.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include "aerospike-pulsar-outbound.connectorConfig" . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app: {{ include "aerospike-pulsar-outbound.fullname" . }}
+        {{- include "aerospike-pulsar-outbound.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-pulsar-outbound.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        {{- if .Values.initContainers }}
+        - name: aerospike-pulsar-outbound-init
+          emptyDir: {}
+        {{- end }}
+        - name: aerospike-pulsar-outbound-configmap
+          configMap:
+            name: {{ include "aerospike-pulsar-outbound.fullname" . }}
+            optional: false
+        {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
+        {{- fail "secrets should be a list of strings"}}
+        {{- end}}
+        {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+        {{- range $secret := .Values.connectorSecrets }}
+        - name: {{ $secret }}
+          secret:
+            secretName: {{ $secret }}
+            optional: false
+        {{- end}}
+        {{- end}}
+      {{ if .Values.initContainers }}
+      initContainers:
+      {{- toYaml .Values.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: aerospike-pulsar-outbound-configmap
+              mountPath: /etc/aerospike-pulsar-outbound
+            {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
+            {{- fail "secrets should be a list of strings" }}
+            {{- end }}
+            {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+            {{- range $secret := .Values.connectorSecrets }}
+            - name: {{ $secret }}
+              mountPath: /etc/aerospike-pulsar-outbound/secrets/{{ $secret }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.initContainers }}
+            - name: aerospike-pulsar-outbound-init
+              mountPath: /opt/aerospike-pulsar-outbound/usr-lib/aerospike-pulsar-outbound-custom-transformers.jar
+              subPath: aerospike-pulsar-outbound-custom-transformers.jar
+            {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-pulsar-outbound.servicePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            tcpSocket:
+              port: {{ include "aerospike-pulsar-outbound.servicePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

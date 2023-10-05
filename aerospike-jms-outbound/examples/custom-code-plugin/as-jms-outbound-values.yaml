@@ -1,0 +1,75 @@
+replicaCount: 3
+
+connectorConfig:
+  service:
+    # TLS setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # Use the TLS certificates and keys specific to your setup.
+    # See: https://docs.aerospike.com/connect/jms/from-asdb/configuring/service#configuring-tls
+    port: 8080
+
+    manage:
+      port: 8081
+
+  # See: https://docs.aerospike.com/connect/jms/from-asdb/configuring/jms
+  # The connection properties for the JMS message broker.
+  jms:
+    #  # RabbitMQ example.
+    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+    config:
+      host: rabbitmq.rabbitmq-system
+      port: 5672
+      username: guest
+      password: guest
+
+  #  # ActiveMQ example.
+  #  factory: org.apache.activemq.artemis.jndi.ActiveMQInitialContextFactory
+  #  jndi-cf-name: ConnectionFactory
+  #  config:
+  #    java.naming.provider.url: tcp://127.0.0.1:61616
+  #    java.naming.security.principal: admin
+  #    java.naming.security.credentials: password
+
+  #  # IBM MQ example.
+  #  factory: com.ibm.mq.jms.MQConnectionFactory
+  #  config:
+  #    hostName: 127.0.0.1
+  #    port: 1414
+  #    queueManager: QM1
+  #    transportType: 1
+  #    channel: DEV.APP.SVRCONN
+
+  # Format of the JMS destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a JMS destination.
+  routing:
+    mode: static
+    type: queue
+    destination: aerospike  # <---- Change this to the name of the JMS destination.
+
+  namespaces:
+    test:
+      custom-transformer:
+        class: com.aerospike.connect.outbound.TestOutboundCustomTransformer
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# List of initContainers to be added for each connector pod.
+# Can be used to copy custom code plugins jars to /opt/aerospike-jms-outbound-init
+initContainers:
+  - name: aerospike-jms-outbound-init
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "-c"]
+    # Update args to copy all the jars from init container to emptyDir volume path
+    args:
+      - |
+        set -e
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-jms-outbound-custom-transformers.jar /opt/aerospike-jms-outbound-init
+    volumeMounts:
+      - name: aerospike-jms-outbound-init
+        mountPath: /opt/aerospike-jms-outbound-init

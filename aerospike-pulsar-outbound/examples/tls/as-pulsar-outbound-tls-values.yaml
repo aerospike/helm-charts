@@ -1,0 +1,41 @@
+replicaCount: 3
+
+connectorSecrets:
+  - tls-certs
+
+connectorConfig:
+  service:
+    # TLS setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # Use the TLS certificates and keys specific to your setup.
+    # See: https://docs.aerospike.com/connect/pulsar/from-asdb/configuring/service#configuring-tls
+    tls:
+      port: 8443
+      key-store:
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        store-password-file: secrets/tls-certs/storepass
+    manage:
+      port: 8081
+
+  # Pulsar connector client  configuration.
+  # See: https://docs.aerospike.com/connect/pulsar/from-asdb/configuring/client-props
+  client-configuration:
+    serviceUrl: pulsar+ssl://pulsar-broker.pulsar:6651
+    useTls: true
+    # Update with the relevant CA path for your setup.
+    tlsTrustCertsFilePath: /etc/aerospike-pulsar-outbound/secrets/tls-certs/svc.cluster.local.crt # CA path
+    tlsAllowInsecureConnection: false
+
+  # Format of the Pulsar destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Pulsar destination.
+  routing:
+    mode: static
+    destination: persistent://apache/pulsar/test-topic  # <--- Change this to your topic
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true

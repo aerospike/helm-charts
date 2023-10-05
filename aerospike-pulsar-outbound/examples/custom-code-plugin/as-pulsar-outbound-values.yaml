@@ -1,0 +1,53 @@
+replicaCount: 3
+
+connectorConfig:
+  service:
+    # TLS setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # Use the TLS certificates and keys specific to your setup.
+    # See: https://docs.aerospike.com/connect/pulsar/from-asdb/configuring/service#configuring-tls
+    port: 8080
+
+    manage:
+      port: 8081
+
+  # Pulsar connector client  configuration.
+  # See: https://docs.aerospike.com/connect/pulsar/from-asdb/configuring/client-props
+  client-configuration:
+    serviceUrl: pulsar://pulsar-broker.pulsar:6650
+
+  # Format of the Pulsar destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Pulsar destination.
+  routing:
+    mode: static
+    destination: persistent://apache/pulsar/test-topic   # <--- Change this to your topic
+
+  namespaces:
+    test:
+      custom-transformer:
+        # custom transformer class to be used for the Pulsar message.
+        class: com.aerospike.connect.outbound.TestOutboundCustomTransformer
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# List of initContainers to be added for each connector pod.
+# Can be used to copy custom code plugins jars to /opt/aerospike-pulsar-outbound-init
+initContainers:
+  - name: aerospike-pulsar-outbound-init
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "-c"]
+    # Update args to copy all the jars from init container to emptyDir volume path
+    args:
+      - |
+        set -e
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-pulsar-outbound-custom-transformers.jar /opt/aerospike-pulsar-outbound-init
+    volumeMounts:
+      - name: aerospike-pulsar-outbound-init
+        mountPath: /opt/aerospike-pulsar-outbound-init
