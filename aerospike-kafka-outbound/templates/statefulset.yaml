@@ -40,11 +40,11 @@ spec:
           configMap:
             name: {{ include "aerospike-kafka-outbound.fullname" . }}
             optional: false
-        {{- if and .Values.secrets (not (kindIs "slice" .Values.secrets)) }}
+        {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
         {{- fail "secrets should be a list of strings"}}
         {{- end}}
-        {{- if and .Values.secrets (kindIs "slice" .Values.secrets) }}
-        {{- range $secret := .Values.secrets }}
+        {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+        {{- range $secret := .Values.connectorSecrets }}
         - name: {{ $secret }}
           secret:
             secretName: {{ $secret }}
@@ -64,11 +64,11 @@ spec:
           volumeMounts:
             - name: aerospike-kafka-oubound-configmap
               mountPath: /etc/aerospike-kafka-outbound
-            {{- if and .Values.secrets (not (kindIs "slice" .Values.secrets)) }}
+            {{- if and .Values.connectorSecrets (not (kindIs "slice" .Values.connectorSecrets)) }}
             {{- fail "secrets should be a list of strings" }}
             {{- end }}
-            {{- if and .Values.secrets (kindIs "slice" .Values.secrets) }}
-            {{- range $secret := .Values.secrets }}
+            {{- if and .Values.connectorSecrets (kindIs "slice" .Values.connectorSecrets) }}
+            {{- range $secret := .Values.connectorSecrets }}
             - name: {{ $secret }}
               mountPath: /etc/aerospike-kafka-outbound/secrets/{{ $secret }}
             {{- end }}

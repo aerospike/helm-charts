@@ -1,6 +1,6 @@
 replicaCount: 3
 
-secrets:
+connectorSecrets:
   - tls-certs
 
 connectorConfig:

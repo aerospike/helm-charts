@@ -14,7 +14,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 # Default Connector configuration.
-# Visit: https://docs.aerospike.com/connect/kafka/to-asdb/configuring
+# Visit: https://docs.aerospike.com/connect/kafka/from-asdb/configuring
 connectorConfig:
   service:
     port: 8080

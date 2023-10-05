@@ -5,6 +5,7 @@ metadata:
   name: {{ include "aerospike-kafka-outbound.fullname" . }}
   labels:
     app: {{ include "aerospike-kafka-outbound.fullname" . }}
+    {{- include "aerospike-kafka-outbound.labels" . | nindent 4 }}
 spec:
   ports:
   - name: {{ include "aerospike-kafka-outbound.fullname" . }}

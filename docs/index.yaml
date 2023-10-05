@@ -42,6 +42,25 @@ entries:
     version: 1.0.0
   aerospike-kafka-outbound:
   - apiVersion: v2
+    appVersion: 5.1.2
+    created: "2023-10-05T19:16:29.603425+05:30"
+    description: A Helm chart for Aerospike Connect for Kafka - Outbound
+    digest: c4b04092fe2c0857d26957c6b95b317c46063add104777b481cb9291c20b85ae
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Kafka
+    - Connector
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-kafka-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-kafka-outbound-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
     appVersion: 5.0.0
     created: "2022-10-17T23:07:11.125420937+05:30"
     description: A Helm chart for Aerospike Connect for Kafka - Outbound
@@ -80,4 +99,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-10-05T19:07:58.39062+05:30"
+generated: "2023-10-05T19:16:29.599463+05:30"
