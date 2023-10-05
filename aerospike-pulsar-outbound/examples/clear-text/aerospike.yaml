@@ -1,0 +1,64 @@
+# This is a simple example for demonstration only, that launches an in-memory,
+# non-secure Aerospike cluster, with no dependencies.
+#
+#  This is not recommended for production use.
+#
+# Visit https://docs.aerospike.com/cloud/kubernetes/operator for details.
+#
+# Before creating this cluster,
+# - Prepare the aerospike namespace by following instruction here
+#
+# https://docs.aerospike.com/cloud/kubernetes/operator/create-cluster-kubectl#prepare-the-namespace
+apiVersion: asdb.aerospike.com/v1beta1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster
+  namespace: aerospike
+
+spec:
+  size: 2
+  image: aerospike/aerospike-server-enterprise:6.1.0.1
+  podSpec:
+    multiPodPerHost: true
+
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        port: 3000
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+
+    namespaces:
+      - name: test
+        memory-size: 3000000000
+        replication-factor: 1
+        storage-engine:
+          type: memory
+
+    xdr:
+      dcs:
+        - name: pulsar
+          connector: true
+          namespaces:
+            - name: test
+          node-address-ports:
+            - as-pulsar-outbound-aerospike-pulsar-outbound-0.as-pulsar-outbound-aerospike-pulsar-outbound 8080
+            - as-pulsar-outbound-aerospike-pulsar-outbound-1.as-pulsar-outbound-aerospike-pulsar-outbound 8080
+            - as-pulsar-outbound-aerospike-pulsar-outbound-2.as-pulsar-outbound-aerospike-pulsar-outbound 8080

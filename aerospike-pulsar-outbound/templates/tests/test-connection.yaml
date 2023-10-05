@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "aerospike-pulsar-outbound.fullname" . }}-test-connection"
+  labels:
+    {{- include "aerospike-pulsar-outbound.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: netcat
+      image: busybox
+      command: ['nc']
+      args:
+        - '-zv'
+        - '{{ include "aerospike-pulsar-outbound.fullname" . }}'
+        - '{{ include "aerospike-pulsar-outbound.servicePort" . }}'
+  restartPolicy: Never
