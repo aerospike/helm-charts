@@ -1,0 +1,19 @@
+apiVersion: v2
+name: aerospike-pulsar-outbound
+description: A Helm chart for Aerospike Connect for Pulsar - Outbound
+type: application
+icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+keywords:
+  - Aerospike
+  - Pulsar
+  - Connector
+  - Outbound
+maintainers:
+  - name: Aerospike
+    email: developers@aerospike.com
+
+# The helm chart version
+version: 1.0.0
+
+# The default version of Aerospike Pulsar Outbound Connector
+appVersion: "3.2.1"
