@@ -14,7 +14,7 @@ The arguments you pass to the `helm` command depend on your Aerospike Server
 network and namespace configuration. The prototype form of the command is as
 follows:
 ```bash noCopy
-$ helm [INSTALL|UPGRADE] [POD-NAME] helm/graphservice \
+$ helm [INSTALL|UPGRADE] [RELEASE-NAME] helm/graphservice \
     --set 'env[0].name=[GRAPH-CONFIG-NAME]' \
     --set 'env[1].name=[GRAPH-CONFIG-NAME]' \
     ...
