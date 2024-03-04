@@ -8,20 +8,20 @@ with [Kubernetes](https://kubernetes.io/) and [Helm](https://helm.sh/).
 - A running instance of [Aerospike Database Server](https://aerospike.com/docs/database)
   with an accessible IP address and port.
 - [Kubernetes](https://kubernetes.io/) and [Helm](https://helm.sh/).
-- The scripts in the `helm/graphservice` directory.
+- The scripts in the `aerospike-graph` directory.
 ## Usage
 The arguments you pass to the `helm` command depend on your Aerospike Server
 network and namespace configuration. The prototype form of the command is as
 follows:
 ```bash noCopy
-$ helm [INSTALL|UPGRADE] [RELEASE-NAME] helm/graphservice \
+$ helm [INSTALL|UPGRADE] [RELEASE-NAME] aerospike-graph \
     --set 'env[0].name=[GRAPH-CONFIG-NAME]' \
     --set 'env[1].name=[GRAPH-CONFIG-NAME]' \
     ...
 ```
 All the [configuration options](https://aerospike.com/docs/graph/configuring/options)
 listed in the Graph documentation are available to pass in as environment variables.
-You can also edit the file `helm/graphservice/values.yaml` to specify environment
+You can also edit the file `aerospike-graph/values.yaml` to specify environment
 variables.
 ## Example commands
 The following example command:
@@ -30,7 +30,7 @@ The following example command:
   database server.
 - Specifies `test` as the namespace to use on the Aerospike database.
 ```bash
-$ helm install test-pod helm/graphservice \
+$ helm install test-pod aerospike-graph \
   --set 'env[0].name=aerospike.client.host' \
   --set 'env[0].value=10.32.32.77:3000' \
   --set 'env[1].name=aerospike.client.namespace' \
@@ -67,7 +67,7 @@ aerospike-graph-pod-graphservice   LoadBalancer   10.107.38.223   10.107.38.223 
 You can alter your pod configuration with the `helm upgrade command`. Use the `replicaCount`
 argument to adjust the number of running pods:
 ```ascii
-$ helm upgrade test-pod helm/graphservice \
+$ helm upgrade test-pod aerospike-graph \
   --set 'env[0].name=aerospike.client.host' \
   --set 'env[0].value=10.32.32.77:3000' \
   --set 'env[1].name=aerospike.client.namespace' \
