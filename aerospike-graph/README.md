@@ -52,7 +52,7 @@ your pods.
 ```ascii
 $ kubectl get pods
 NAME                                                READY   STATUS    RESTARTS   AGE
-aerospike-graph-pod-graphservice-6d8c8b77fd-zjfpg   1/1     Running   0          31s
+test-pod-graphservice-6d8c8b77fd-zjfpg   1/1     Running   0          31s
 ```
 Once your AGS instance is up and running, you can connect to it over
 the [Gremlin websocket port](https://tinkerpop.apache.org/docs/3.6.4/reference/#connecting-gremlin-server).
@@ -62,7 +62,7 @@ You can get networking information about your active pods with the `get services
 ```ascii
 $ kubectl get services
 NAME                               TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
-aerospike-graph-pod-graphservice   LoadBalancer   10.107.38.223   10.107.38.223   8182:32330/TCP   5m22s
+test-pod-graphservice   LoadBalancer   10.107.38.223   10.107.38.223   8182:32330/TCP   5m22s
 ```
 You can alter your pod configuration with the `helm upgrade command`. Use the `replicaCount`
 argument to adjust the number of running pods:
