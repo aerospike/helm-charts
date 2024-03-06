@@ -36,7 +36,7 @@ The following example command:
   database server.
 - Specifies `test` as the namespace to use on the Aerospike database.
 ```bash
-$ helm install test-pod aerospike-graph \
+$ helm install test-pod aerospike/aerospike-graph \
   --set 'env[0].name=aerospike.client.host' \
   --set 'env[0].value=10.32.32.77:3000' \
   --set 'env[1].name=aerospike.client.namespace' \

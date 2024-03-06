@@ -3,9 +3,9 @@ entries:
   aerospike-graph:
   - apiVersion: v2
     appVersion: 2.0.0
-    created: "2024-03-06T14:14:30.519816+05:30"
+    created: "2024-03-06T14:28:12.727593+05:30"
     description: Aerospike Graph Service
-    digest: 10fc84ae6b1ff36a6a7f3ccc46c059b10c399dddff86fb48ec43c5add5db7b9b
+    digest: 00e954c2ec6fe44c90cda43476070280e9c5d8bd0a4f875984928dfb2c3cbe05
     keywords:
     - graph
     - database
@@ -114,4 +114,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2024-03-06T14:14:30.514321+05:30"
+generated: "2024-03-06T14:28:12.725536+05:30"
