@@ -46,6 +46,19 @@ service:
   port: 8182
 ingress:
   enabled: false
+  className: ""
+  annotations: {}
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    # nginx.ingress.kubernetes.io/websocket-services: "websocket-service"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+  hosts: []
+    # - host: graph-service.aerospike.demo
+    #   paths:
+    #     - path: /gremlin
+    #       pathType: ImplementationSpecific
+  tls: []
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
