@@ -1,5 +1,20 @@
 apiVersion: v1
 entries:
+  aerospike-graph:
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2024-03-06T14:28:12.727593+05:30"
+    description: Aerospike Graph Service
+    digest: 00e954c2ec6fe44c90cda43476070280e9c5d8bd0a4f875984928dfb2c3cbe05
+    keywords:
+    - graph
+    - database
+    - aerospike
+    name: aerospike-graph
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-graph-2.0.0.tgz
+    version: 2.0.0
   aerospike-jms-inbound:
   - apiVersion: v2
     appVersion: 3.0.0
@@ -99,4 +114,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-generated: "2023-10-05T19:16:29.599463+05:30"
+generated: "2024-03-06T14:28:12.725536+05:30"
