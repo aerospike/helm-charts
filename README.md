@@ -10,5 +10,4 @@ The following helm charts are provided
 - [Aerospike Pulsar Outbound](aerospike-pulsar-outbound#readme)
 - [Aerospike JMS Outbound](aerospike-jms-outbound#readme)
 - [Aerospike JMS Inbound](aerospike-jms-inbound#readme)
-- [Aerospike Point in Time Recovery](aerospike-point-in-time-recovery#readme)
 - [Aerospike Graph](aerospike-graph#readme)
