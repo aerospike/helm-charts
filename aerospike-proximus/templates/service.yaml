@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-proximus.fullname" . }}
+  labels:
+    {{- include "aerospike-proximus.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    {{- range $k := .Values.proximusConfig.service.ports | keys }}
+    - name: {{ printf "svc-%s" $k }}
+      port: {{ $k }}
+      {{- end -}}
+    {{- range $k := .Values.proximusConfig.manage.ports | keys }}
+    - name: {{ printf "manage-%s" $k }}
+      port: {{ $k }}
+      {{- end -}}
+    {{- range $k := .Values.proximusConfig.interconnect.ports | keys }}
+    - name: {{ printf "interc-%s" $k }}
+      port: {{ $k }}
+      {{- end }}
+  selector:
+    {{- include "aerospike-proximus.selectorLabels" . | nindent 4 }}

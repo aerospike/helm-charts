@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aerospike-proximus.fullname" . }}
+  labels:
+    app: {{ include "aerospike-proximus.fullname" . }}
+    {{- include "aerospike-proximus.labels" . | nindent 4 }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  serviceName: {{ include "aerospike-proximus.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-proximus.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ .Values.proximusConfig | toString | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app:  {{ include "aerospike-proximus.fullname" . }}
+        {{- include "aerospike-proximus.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-proximus.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          {{- range $k := .Values.proximusConfig.service.ports | keys }}
+            - name: {{ printf "svc-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+              {{- end -}}
+          {{- range $k := .Values.proximusConfig.manage.ports | keys }}
+            - name: {{ printf "manage-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+            {{- end -}}
+          {{- range $k := .Values.proximusConfig.interconnect.ports | keys }}
+            - name: {{ printf "interc-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+            {{- end }}
+          volumeMounts:
+            - name: aerospike-proximus-configmap
+              mountPath: /etc/aerospike-proximus/aerospike-proximus.yml
+              subPath: aerospike-proximus.yml
+              readOnly: true
+            - name: aerospike-proximus-secret
+              mountPath: {{ index .Values.proximusConfig "feature-key-file" }}
+              subPath: {{ index .Values.proximusConfig "feature-key-file" | base }}
+              readOnly: true
+            {{- if .Values.extraVolumeMounts }}
+            {{- range .Values.extraVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.extraSecretVolumeMounts }}
+            {{- range .Values.extraSecretVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              port: 5040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: 5040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: aerospike-proximus-configmap
+          configMap:
+            name: {{ include "aerospike-proximus.fullname" . }}
+            optional: false
+        - name: aerospike-proximus-secret
+          secret:
+            secretName: {{ include "aerospike-proximus.fullname" . }}
+            optional: false
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

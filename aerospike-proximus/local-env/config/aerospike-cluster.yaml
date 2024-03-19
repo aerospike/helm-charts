@@ -1,0 +1,82 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: aerospike-cluster
+  namespace: aerospike
+spec:
+  size: 1
+  image: aerospike/aerospike-server-enterprise:7.0.0.0
+
+  podSpec:
+    multiPodPerHost: true
+
+  storage:
+    filesystemVolumePolicy:
+      cascadeDelete: true
+      initMethod: deleteFiles
+    volumes:
+      - name: workdir
+        source:
+          persistentVolume:
+            storageClass: standard
+            volumeMode: Filesystem
+            size: 3Gi
+        aerospike:
+          path: /opt/aerospike
+      - name: nsvol1
+        aerospike:
+          path: /mnt/disks/test
+        source:
+          persistentVolume:
+            storageClass: standard
+            volumeMode: Filesystem
+            size: 5Gi
+      - name: nsvol2
+        aerospike:
+          path: /mnt/disks/proximus
+        source:
+          persistentVolume:
+            storageClass: standard
+            volumeMode: Filesystem
+            size: 5Gi
+      - name: aerospike-config-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secret
+
+#  aerospikeAccessControl:
+#    users:
+#      - name: admin
+#        secretName: auth-secret
+#        roles:
+#          - sys-admin
+#          - user-admin
+
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secret/features.conf
+#    security: {}
+    network:
+      service:
+        port: 3000
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+    namespaces:
+      - name: test
+        replication-factor: 1
+        storage-engine:
+          type: device
+          filesize: 5368709120
+          files:
+            - /mnt/disks/test/test.dat
+      - name: proximus-meta
+        replication-factor: 1
+        storage-engine:
+          type: device
+          filesize: 5368709120
+          files:
+            - /mnt/disks/proximus/proximus.dat
