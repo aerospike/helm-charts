@@ -22,3 +22,26 @@ spec:
       {{- end }}
   selector:
     {{- include "aerospike-proximus.selectorLabels" . | nindent 4 }}
+
+{{- if .Values.ingress.enabled -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-proximus.fullname" . }}-ingress
+  labels:
+    {{- include "aerospike-proximus.labels" . | nindent 4 }}
+spec:
+  ports:
+    {{- range $k := .Values.proximusConfig.service.ports | keys }}
+    - name: {{ printf "svc-%s" $k }}
+      port: {{ $k }}
+      {{- end -}}
+    {{- range $k := .Values.proximusConfig.manage.ports | keys }}
+    - name: {{ printf "manage-%s" $k }}
+      port: {{ $k }}
+      {{- end }}
+  selector:
+    {{- include "aerospike-proximus.selectorLabels" . | nindent 4 }}
+
+{{- end }}

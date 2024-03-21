@@ -1,6 +1,5 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "aerospike-proximus.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
   {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
   {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
@@ -38,8 +37,7 @@ spec:
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    - http:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
@@ -49,13 +47,16 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ $fullName }}
+                name: {{ $fullName }}-ingress
                 port:
-                  number: {{ $svcPort }}
+                  number: {{ .port }}
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+              serviceName: {{ $fullName }}-ingress
+              servicePort: {{ .port }}
               {{- end }}
           {{- end }}
+      {{- with .host }}
+      host: {{ . | quote }}
+      {{- end }}
     {{- end }}
 {{- end }}

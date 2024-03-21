@@ -22,11 +22,5 @@
 *.tmproj
 .vscode/
 local-env
-templates/hpa.yaml
-templates/ingress.yaml
-#templates/statefulset.yaml
 templates/serviceaccount.yaml
-#templates/service.yaml
-#templates/secret.yaml
-#templates/configmap.yaml
 templates/tests/test-connection.yaml

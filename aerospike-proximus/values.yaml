@@ -14,7 +14,6 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-featuresConfFilePath: "features.conf"
 proximusConfig:
   cluster:
     # TODO Figure out how to Add node-id field
@@ -32,17 +31,17 @@ proximusConfig:
         addresses:
           "0.0.0.0"
 #    cluster-name: "product-name"
-    max-inbound-message-size: 8388608
-    flow-control:
+    #max-inbound-message-size: 8388608
+    #flow-control:
       # TODO Give reasonable example values for io-threads
       # io-threads: 4
       # TODO Give reasonable example values for worker-threads
       # worker-threads: 4
-      memory-high-water-mark-percentage: 80
-      memory-low-water-mark-percentage: 60
-      period: 10
-      stream-ready-timeout: 10000
-      minimum-enable-time: 10000
+      #memory-high-water-mark-percentage: 80
+      #memory-low-water-mark-percentage: 60
+      #period: 10
+      #stream-ready-timeout: 10000
+      #minimum-enable-time: 10000
   manage:
     ports:
       5040: {}
@@ -51,45 +50,45 @@ proximusConfig:
       5001:
         addresses:
           "0.0.0.0"
-  heartbeat:
+  #heartbeat:
     # TODO Not clear how seeds should be look like
     # seeds:
     # - address: "127.0.0.1"
     #   port: 5001
-    interval: 500
-    timeout: 5000
+    #interval: 500
+    #timeout: 5000
   aerospike:
     metadata-namespace: "proximus-meta"
     seeds:
       - 127.0.0.1:
           port: 3000
-    client-policy:
+    #client-policy:
       # TODO Give reasonable name for cluster-name
-      cluster-name: "aerospike-cluster"
+      #cluster-name: "aerospike-cluster"
       # TODO Give reasonable value for unary-event-loops
       #            unary-event-loops: 4
-      batch-event-loops: 2
-      query-event-loops: 4
-      auth-mode: "INTERNAL"
-      timeout: 1000
-      login-timeout: 5000
-      close-timeout: 0
-      min-conns-per-node: 0
-      max-conns-per-node: 100
-      conn-pools-per-node: 1
-      max-socket-idle: 0
-      max-error-rate: 0
-      error-rate-window: 1
-      tend-interval: 1000
-      use-services-alternate: false
+      #batch-event-loops: 1
+      #query-event-loops: 1
+      #auth-mode: "INTERNAL"
+      #timeout: 1000
+      #login-timeout: 5000
+      #close-timeout: 0
+      #min-conns-per-node: 0
+      #max-conns-per-node: 100
+      #conn-pools-per-node: 1
+      #max-socket-idle: 0
+      #max-error-rate: 0
+      #error-rate-window: 1
+      #tend-interval: 1000
+      #use-services-alternate: false
   #      keep-alive: ""
   #      ip-map: ""
   #      rack-aware: ""
   #      rack-id: ""
   #      rack-ids: ""
-  indexing:
-    cache:
-      max-entries: 5000000
+  #indexing:
+    #cache:
+      #max-entries: 5000000
   #     TODO Set some resonable value for expiry-millis field
   #      expiry-millis: 300000
   logging:
@@ -140,6 +139,7 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
+          port: ServicePort
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -157,21 +157,6 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
 volumes: []

@@ -9,9 +9,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   serviceName: {{ include "aerospike-proximus.fullname" . }}
   selector:
     matchLabels:
@@ -103,7 +101,7 @@ spec:
             optional: false
         - name: aerospike-proximus-secret
           secret:
-            secretName: {{ include "aerospike-proximus.fullname" . }}
+            secretName: aerospike-proximus-secret
             optional: false
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}

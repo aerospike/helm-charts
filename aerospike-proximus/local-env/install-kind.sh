@@ -1,15 +1,16 @@
 #!/bin/bash -e
+WORKSPACE="$(git rev-parse --show-toplevel)"
 GITHUB_TOKEN=""
 FEATURES_CONF_URL=""
 DOCKER_SERVER="https://aerospike.jfrog.io"
 DOCKER_USERNAME=""
 DOCKER_PASSWORD=""
 
-mkdir -p "$(pwd)/secrets"
-mkdir -p "$(pwd)/kind/volume"
+mkdir -p "$WORKSPACE/aerospike-proximus/local-env/secrets"
+mkdir -p "$WORKSPACE/aerospike-proximus/local-env/kind/volume"
 
 echo "Downloading features.conf"
-if [ ! -f "$(pwd)/secrets/features.conf" ]; then
+if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" ]; then
   if [ -z "$GITHUB_TOKEN" ]; then
       echo "GITHUB_TOKEN env variable is not set, unable to download features.conf"
       exit 1
@@ -20,13 +21,14 @@ if [ ! -f "$(pwd)/secrets/features.conf" ]; then
       exit 1
     fi
 
-  curl -s -H "Authorization: token $GITHUB_TOKEN" "$FEATURES_CONF_URL" \
-  | tee "$(pwd)/secrets/features.conf" > "$(git rev-parse --show-toplevel)/aerospike-proximus/features.conf"
+  curl -H "Authorization: token $GITHUB_TOKEN" "$FEATURES_CONF_URL" \
+  -o "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" \
+
 fi
 
 echo "Installing Kind"
-terraform -chdir="$(pwd)/kind" init -no-color -upgrade
-terraform -chdir="$(pwd)/kind" apply -no-color -compact-warnings -auto-approve
+terraform -chdir="$WORKSPACE/aerospike-proximus/local-env/kind" init -no-color -upgrade
+terraform -chdir="$WORKSPACE/aerospike-proximus/local-env/kind" apply -no-color -compact-warnings -auto-approve
 
 echo "Deploying AKO"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.25.0/install.sh \
@@ -48,7 +50,8 @@ kubectl create clusterrolebinding aerospike-cluster \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike:aerospike-operator-controller-manager
 
 echo "Set Secrets for Aerospike Cluster"
-kubectl --namespace aerospike create secret generic aerospike-secret --from-file="$(pwd)/secrets"
+kubectl --namespace aerospike create secret generic aerospike-secret \
+--from-file="$WORKSPACE/aerospike-proximus/local-env/secrets"
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
 kubectl --namespace aerospike create secret docker-registry regcred \
 --docker-server="$DOCKER_SERVER" \
@@ -58,7 +61,7 @@ kubectl --namespace aerospike create secret docker-registry regcred \
 
 sleep 5s
 echo "Deploy Aerospike Cluster"
-kubectl apply -f "$(pwd)/config/aerospike-cluster.yaml"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/aerospike-cluster.yaml"
 
 sleep 5s
 echo "Waiting for Aerospike Cluster"
@@ -69,3 +72,10 @@ while true; do
     break
   fi
 done
+
+echo "Deploy nginx"
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
