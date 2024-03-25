@@ -73,9 +73,16 @@ while true; do
   fi
 done
 
-echo "Deploy nginx"
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
+#echo "Deploy nginx"
+#kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+#kubectl wait --namespace ingress-nginx \
+#  --for=condition=ready pod \
+#  --selector=app.kubernetes.io/component=controller \
+#  --timeout=90s
+echo "Deploy MetalLB"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
