@@ -18,21 +18,21 @@ imagePullSecrets:
 podLabels:
   app-name: aerospike-proximus-cluster
 
-#ingress:
-#  enabled: true
-#  className: "nginx"
-#  annotations:
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
 #    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-##    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
-##    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-##    kubernetes.io/ingress.class: nginx
-#  # kubernetes.io/tls-acme: "true"
-#  hosts:
-#    - paths:
-#        - path: /
+#    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+#    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+#    kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+    - paths:
+        - path: /
+          pathType: Prefix
+          port: 5000
+#        - path: /manage/rest/v1
 #          pathType: Prefix
-#          port: 5000
-##        - path: /manage/rest/v1
-##          pathType: Prefix
-##          port: 5040
-#  tls: []
+#          port: 5040
+  tls: []
