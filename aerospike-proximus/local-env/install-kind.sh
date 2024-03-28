@@ -2,12 +2,8 @@
 WORKSPACE="$(git rev-parse --show-toplevel)"
 GITHUB_TOKEN=""
 FEATURES_CONF_URL=""
-DOCKER_SERVER="https://aerospike.jfrog.io"
-DOCKER_USERNAME=""
-DOCKER_PASSWORD=""
 
 mkdir -p "$WORKSPACE/aerospike-proximus/local-env/secrets"
-mkdir -p "$WORKSPACE/aerospike-proximus/local-env/kind/volume"
 
 echo "Downloading features.conf"
 if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" ]; then
@@ -27,8 +23,8 @@ if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" ]; the
 fi
 
 echo "Installing Kind"
-terraform -chdir="$WORKSPACE/aerospike-proximus/local-env/kind" init -no-color -upgrade
-terraform -chdir="$WORKSPACE/aerospike-proximus/local-env/kind" apply -no-color -compact-warnings -auto-approve
+kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
+kubectl cluster-info --context kind-kind
 
 echo "Deploying AKO"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.25.0/install.sh \
@@ -53,10 +49,6 @@ echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike create secret generic aerospike-secret \
 --from-file="$WORKSPACE/aerospike-proximus/local-env/secrets"
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
-kubectl --namespace aerospike create secret docker-registry regcred \
---docker-server="$DOCKER_SERVER" \
---docker-username="$DOCKER_USERNAME" \
---docker-password="$DOCKER_PASSWORD"
 
 
 sleep 5s
@@ -73,16 +65,17 @@ while true; do
   fi
 done
 
-echo "Deploy nginx"
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-#echo "Deploy MetalLB"
-#kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
-#kubectl wait --namespace metallb-system \
-#                --for=condition=ready pod \
-#                --selector=app=metallb \
-#                --timeout=90s
-#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+echo "Deploy MetalLB"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+
+sleep 30s
+echo "Deploy Proximus"
+kubectl --namespace aerospike create secret generic aerospike-proximus-secret \
+--from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf"
+helm install proximus "$WORKSPACE/aerospike-proximus" \
+--values "$WORKSPACE/aerospike-proximus/local-env/config/values.yaml" --namespace aerospike
