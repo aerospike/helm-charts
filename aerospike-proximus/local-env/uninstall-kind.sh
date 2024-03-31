@@ -26,4 +26,3 @@ kubectl delete clusterserviceversion "$(kubectl get clusterserviceversion -o=jso
 kubectl delete crd aerospikeclusters.asdb.aerospike.com
 kind delete cluster
 docker network rm kind
-rm -f "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf"

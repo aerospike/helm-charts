@@ -1,25 +1,9 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-GITHUB_TOKEN=""
-FEATURES_CONF_URL=""
 
-mkdir -p "$WORKSPACE/aerospike-proximus/local-env/secrets"
-
-echo "Downloading features.conf"
 if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" ]; then
-  if [ -z "$GITHUB_TOKEN" ]; then
-      echo "GITHUB_TOKEN env variable is not set, unable to download features.conf"
-      exit 1
-    fi
-
-  if [ -z "$FEATURES_CONF_URL" ]; then
-      echo "FEATURES_CONF_URL env variable is not set, unable to download features.conf"
-      exit 1
-    fi
-
-  curl -H "Authorization: token $GITHUB_TOKEN" "$FEATURES_CONF_URL" \
-  -o "$WORKSPACE/aerospike-proximus/local-env/secrets/features.conf" \
-
+  echo "features.conf Not found"
+  exit 1
 fi
 
 echo "Installing Kind"
