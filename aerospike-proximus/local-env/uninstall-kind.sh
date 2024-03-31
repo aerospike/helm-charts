@@ -7,15 +7,13 @@ if [ ! -z "$container_exists" ]; then
     docker stop quote-search
     docker rm quote-search
   fi
-if [ -d "$WORKSPACE/aerospike-proximus/proximus-examples" ]; then
-    rm -rf "$WORKSPACE/aerospike-proximus/proximus-examples"
-  fi
 
-helm delete proximus --namespace aerospike
+rm -rf "$WORKSPACE/aerospike-proximus/local-env/data"
+helm delete as-quote-search --namespace aerospike
 kubectl --namespace aerospike delete secret aerospike-proximus-secret
 kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
 kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
-kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/aerospike-cluster.yaml"
+kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
 kubectl --namespace aerospike delete secret auth-secret
 kubectl --namespace aerospike delete secret aerospike-secret
 kubectl delete clusterrolebinding aerospike-cluster

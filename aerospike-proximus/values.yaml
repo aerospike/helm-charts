@@ -102,6 +102,7 @@ proximusConfig:
     ticker-interval: 10
 
 
+initContainers: []
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -148,6 +149,13 @@ service:
       port: 80
       targetPort: 5000
 
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -162,7 +170,7 @@ resources: {}
 
 
 # Additional volumes on the output Deployment definition.
-volumes: []
+extraVolumes: []
 # - name: foo
 #   secret:
 #     secretName: mysecret
