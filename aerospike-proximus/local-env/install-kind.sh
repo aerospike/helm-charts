@@ -29,37 +29,37 @@ kubectl --namespace aerospike create serviceaccount aerospike-operator-controlle
 kubectl create clusterrolebinding aerospike-cluster \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike:aerospike-operator-controller-manager
 
-#echo "Set Secrets for Aerospike Cluster"
-#kubectl --namespace aerospike create secret generic aerospike-secret \
-#--from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/config/features.conf"
-#kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
-#
-#
-#sleep 5s
-#echo "Deploy Aerospike Cluster"
-#kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
-#
-#sleep 5s
-#echo "Waiting for Aerospike Cluster"
-#while true; do
-#  if  kubectl --namespace aerospike get pods --selector=statefulset.kubernetes.io/pod-name &> /dev/null; then
-#    kubectl --namespace aerospike wait pods \
-#    --selector=statefulset.kubernetes.io/pod-name --for=condition=ready --timeout=180s
-#    break
-#  fi
-#done
-#
-#echo "Deploy MetalLB"
-#kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
-#kubectl wait --namespace metallb-system \
-#                --for=condition=ready pod \
-#                --selector=app=metallb \
-#                --timeout=90s
-#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
-#
-#sleep 30s
-#echo "Deploy Proximus"
-#kubectl --namespace aerospike create secret generic aerospike-proximus-secret \
-#--from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/config/features.conf"
-#helm install as-quote-search "$WORKSPACE/aerospike-proximus" \
-#--values "$WORKSPACE/aerospike-proximus/examples/quote-search/as-quote-search-values.yaml" --namespace aerospike
+echo "Set Secrets for Aerospike Cluster"
+kubectl --namespace aerospike create secret generic aerospike-secret \
+--from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/config/features.conf"
+kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
+
+
+sleep 5s
+echo "Deploy Aerospike Cluster"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
+
+sleep 5s
+echo "Waiting for Aerospike Cluster"
+while true; do
+  if  kubectl --namespace aerospike get pods --selector=statefulset.kubernetes.io/pod-name &> /dev/null; then
+    kubectl --namespace aerospike wait pods \
+    --selector=statefulset.kubernetes.io/pod-name --for=condition=ready --timeout=180s
+    break
+  fi
+done
+
+echo "Deploy MetalLB"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+
+sleep 30s
+echo "Deploy Proximus"
+kubectl --namespace aerospike create secret generic aerospike-proximus-secret \
+--from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/config/features.conf"
+helm install as-quote-search "$WORKSPACE/aerospike-proximus" \
+--values "$WORKSPACE/aerospike-proximus/examples/quote-search/as-quote-search-values.yaml" --namespace aerospike
