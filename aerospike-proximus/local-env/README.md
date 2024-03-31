@@ -1,6 +1,6 @@
 # Local Env Installation
 ## Prerequisites
-### Build `qoute-serch`
+### Build `quote-serch`
 ```shell
 git clone --branch VEC-95  https://github.com/aerospike/proximus-examples.git
 cd ./proximus-examples/quote-semantic-search
