@@ -1,7 +1,7 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT="aerospike-dev"
-ZONE="me-west1-a"
+PROJECT=""
+ZONE=""
 
 if [ -z "$PROJECT" ]; then
     echo "Set Project"

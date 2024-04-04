@@ -1,6 +1,6 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-ZONE="me-west1-a"
+ZONE=""
 
 gcloud compute instances delete proximus-app --zone="$ZONE" --quiet
 kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/gke/aerospike.yaml"
