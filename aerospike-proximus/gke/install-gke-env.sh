@@ -1,15 +1,32 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
+PROJECT="aerospike-dev"
+ZONE="me-west1-a"
 
-if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/config/features.conf" ]; then
+if [ -z "$PROJECT" ]; then
+    echo "Set Project"
+    exit 1
+fi
+
+if [ -z "$ZONE" ]; then
+    echo "set Zone"
+    exit 1
+fi
+
+if [ ! -f "$WORKSPACE/aerospike-proximus/gke/config/features.conf" ]; then
   echo "features.conf Not found"
   exit 1
 fi
 
-echo "Installing Kind"
-kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
-kubectl cluster-info --context kind-kind
+echo "Install GKE "
+gcloud config set project "$PROJECT"
+gcloud container clusters create proximus-gke-cluster \
+--zone "$ZONE" \
+--num-nodes 3 \
+--machine-type e2-standard-4
+gcloud container clusters get-credentials proximus-gke-cluster --zone="$ZONE"
 
+sleep 1m
 echo "Deploying AKO"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.25.0/install.sh \
 | bash -s v0.25.0
@@ -31,13 +48,15 @@ kubectl create clusterrolebinding aerospike-cluster \
 
 echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike create secret generic aerospike-secret \
---from-file=features.conf="$WORKSPACE/aerospike-proximus/local-env/config/features.conf"
+--from-file=features.conf="$WORKSPACE/aerospike-proximus/gke/config/features.conf"
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
 
+echo "Add Storage Class"
+kubectl apply -f https://raw.githubusercontent.com/aerospike/aerospike-kubernetes-operator/master/config/samples/storage/gce_ssd_storage_class.yaml
 
 sleep 5s
 echo "Deploy Aerospike Cluster"
-kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/gke/aerospike.yaml"
 
 sleep 5s
 echo "Waiting for Aerospike Cluster"
@@ -49,15 +68,7 @@ while true; do
   fi
 done
 
-echo "Deploy MetalLB"
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
-kubectl wait --namespace metallb-system \
-                --for=condition=ready pod \
-                --selector=app=metallb \
-                --timeout=90s
-kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
-
 sleep 30s
 echo "Deploy Proximus"
-helm install as-quote-search "$WORKSPACE/aerospike-proximus" \
---values "$WORKSPACE/aerospike-proximus/examples/quote-search/as-quote-search-values.yaml" --namespace aerospike
+helm install as-proximus-gke "$WORKSPACE/aerospike-proximus" \
+--values "$WORKSPACE/aerospike-proximus/examples/gke/as-proximus-gke-values.yaml" --namespace aerospike

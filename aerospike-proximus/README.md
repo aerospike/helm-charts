@@ -13,10 +13,12 @@ deployed proximus pods.
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
 - Ability to deploy a LoadBalancer on K8s in case proximus app runs outside the Kubernetes cluster
 
-## Cloning the helm chart repository
+## Adding the helm chart repository
+
+Add the `aerospike` helm repository if not already done
+
 ```shell
-git clone https://github.com/aerospike/helm-charts.git
-cd helm-charts
+helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
 ## Supported configuration
