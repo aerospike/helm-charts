@@ -1,0 +1,35 @@
+replicaCount: 3
+proximusConfig:
+  heartbeat:
+    seeds:
+      - address: as-proximus-eks-aerospike-proximus-0.as-proximus-eks-aerospike-proximus.aerospike.svc.cluster.local
+        port: 5001
+  interconnect:
+    ports:
+      5001:
+        addresses:
+          0.0.0.0
+  aerospike:
+    metadata-namespace: "proximus-meta"
+    seeds:
+      - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
+          port: 3000
+  logging:
+    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
+    enable-console-logging: false
+    format: simple
+    max-history: 30
+    levels:
+      metrics-ticker: info
+      root: info
+    ticker-interval: 10
+
+service:
+  enabled: true
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  ports:
+    - name: "svc-port"
+      port: 5000
+      targetPort: 5000
+      

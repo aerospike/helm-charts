@@ -1,32 +1,45 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT=""
-ZONE=""
+REGION=""
 
-if [ -z "$PROJECT" ]; then
-    echo "Set Project"
+if [ -z "$REGION" ]; then
+    echo "Set Region"
     exit 1
 fi
 
-if [ -z "$ZONE" ]; then
-    echo "set Zone"
-    exit 1
-fi
-
-if [ ! -f "$WORKSPACE/aerospike-proximus/gke/config/features.conf" ]; then
+if [ ! -f "$WORKSPACE/aerospike-proximus/eks/config/features.conf" ]; then
   echo "features.conf Not found"
   exit 1
 fi
 
-echo "Install GKE "
-gcloud config set project "$PROJECT"
-gcloud container clusters create proximus-gke-cluster \
---zone "$ZONE" \
---num-nodes 3 \
---machine-type e2-standard-4
-gcloud container clusters get-credentials proximus-gke-cluster --zone="$ZONE"
+eksctl create cluster \
+--region="$REGION" \
+--name=proximus-eks-cluster \
+--nodes=3 \
+--node-type=t3.xlarge \
+--with-oidc \
+--set-kubeconfig-context
 
-sleep 1m
+eksctl create iamserviceaccount \
+--region="$REGION" \
+--name ebs-csi-controller-sa \
+--namespace kube-system \
+--cluster proximus-eks-cluster \
+--role-name AmazonEKS_EBS_CSI_DriverRole \
+--role-only \
+--attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
+--approve
+
+eksctl create addon \
+--region="$REGION" \
+--name aws-ebs-csi-driver \
+--cluster proximus-eks-cluster \
+--service-account-role-arn arn:aws:iam::"$(aws sts get-caller-identity \
+--query "Account" \
+--output text)":role/AmazonEKS_EBS_CSI_DriverRole \
+--force
+
+sleep 30s
 echo "Deploying AKO"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.25.0/install.sh \
 | bash -s v0.25.0
@@ -48,15 +61,15 @@ kubectl create clusterrolebinding aerospike-cluster \
 
 echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike create secret generic aerospike-secret \
---from-file=features.conf="$WORKSPACE/aerospike-proximus/gke/config/features.conf"
+--from-file=features.conf="$WORKSPACE/aerospike-proximus/eks/config/features.conf"
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
 
 echo "Add Storage Class"
-kubectl apply -f https://raw.githubusercontent.com/aerospike/aerospike-kubernetes-operator/master/config/samples/storage/gce_ssd_storage_class.yaml
+kubectl apply -f https://raw.githubusercontent.com/aerospike/aerospike-kubernetes-operator/master/config/samples/storage/eks_ssd_storage_class.yaml
 
 sleep 5s
 echo "Deploy Aerospike Cluster"
-kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/gke/aerospike.yaml"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/eks/aerospike.yaml"
 
 sleep 5s
 echo "Waiting for Aerospike Cluster"
@@ -70,5 +83,5 @@ done
 
 sleep 30s
 echo "Deploy Proximus"
-helm install as-proximus-gke "$WORKSPACE/aerospike-proximus" \
---values "$WORKSPACE/aerospike-proximus/examples/gke/as-proximus-gke-values.yaml" --namespace aerospike --wait
+helm install as-proximus-eks "$WORKSPACE/aerospike-proximus" \
+--values "$WORKSPACE/aerospike-proximus/examples/eks/as-proximus-eks-values.yaml" --namespace aerospike --wait
