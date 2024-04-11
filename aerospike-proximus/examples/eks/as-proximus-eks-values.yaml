@@ -32,4 +32,14 @@ service:
     - name: "svc-port"
       port: 5000
       targetPort: 5000
-      
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: "kubernetes.io/hostname"
+        labelSelector:
+          matchExpressions:
+            - key: "app.kubernetes.io/name"
+              operator: In
+              values:
+                - "aerospike-proximus"
