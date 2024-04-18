@@ -16,7 +16,7 @@ sh get-docker.sh
 rm -f get-docker.sh
 EOF
 )"
-sleep 2m
+sleep 120
 
 gcloud compute ssh proximus-app \
 --zone="$ZONE" \

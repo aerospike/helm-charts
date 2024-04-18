@@ -39,7 +39,7 @@ eksctl create addon \
 --output text)":role/AmazonEKS_EBS_CSI_DriverRole \
 --force
 
-sleep 30s
+sleep 30
 echo "Deploying AKO"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.25.0/install.sh \
 | bash -s v0.25.0
@@ -67,11 +67,11 @@ kubectl --namespace aerospike create secret generic auth-secret --from-literal=p
 echo "Add Storage Class"
 kubectl apply -f https://raw.githubusercontent.com/aerospike/aerospike-kubernetes-operator/master/config/samples/storage/eks_ssd_storage_class.yaml
 
-sleep 5s
+sleep 5
 echo "Deploy Aerospike Cluster"
 kubectl apply -f "$WORKSPACE/aerospike-proximus/examples/eks/aerospike.yaml"
 
-sleep 5s
+sleep 5
 echo "Waiting for Aerospike Cluster"
 while true; do
   if  kubectl --namespace aerospike get pods --selector=statefulset.kubernetes.io/pod-name &> /dev/null; then
@@ -81,7 +81,7 @@ while true; do
   fi
 done
 
-sleep 30s
+sleep 30
 echo "Deploy Proximus"
 helm install as-proximus-eks "$WORKSPACE/aerospike-proximus" \
 --values "$WORKSPACE/aerospike-proximus/examples/eks/as-proximus-eks-values.yaml" --namespace aerospike --wait
