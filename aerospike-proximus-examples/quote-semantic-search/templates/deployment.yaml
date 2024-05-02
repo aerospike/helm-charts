@@ -50,15 +50,17 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: PROXIMUS_HOST
-              value: ""
+              value: "as-quote-search-aerospike-proximus.aerospike.svc.cluster.local"
             - name: PROXIMUS_PORT
-              value: "80"
+              value: "5000"
             - name: APP_NUM_QUOTES
               value: "5000"
             - name: GRPC_DNS_RESOLVER
               value: "native"
             - name: PROXIMUS_IS_LOADBALANCER
               value: "True"
+            - name: DATASET_FILE_PATH
+              value: "/data/quotes.csv"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
