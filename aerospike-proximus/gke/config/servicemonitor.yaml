@@ -1,0 +1,14 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: aerospike-proximus-service-monitor
+  namespace: aerospike
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aerospike-proximus
+  endpoints:
+    - port: "manage-5040"
+      interval: 10s
+      path: "/manage/rest/v1/prometheus"
