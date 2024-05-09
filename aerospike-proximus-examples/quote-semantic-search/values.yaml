@@ -28,7 +28,7 @@ quoteSearchConfig:
   proximusVerifyTls: "True"
   proximusMaxResults: 5
   indexerParallelism: 1
-  maxContentLength: 10485760
+#  maxContentLength: 10485760 have some issues passing this param
   proximusIsLoadbalancer: "False"
   datasetFilePath: "/data/quotes.csv"
 

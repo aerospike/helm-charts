@@ -38,7 +38,7 @@ spec:
             - "-L"
             - "-o"
             - "/data/quotes.csv.tgz"
-            - "https://github.com/aerospike/proximus-examples/raw/main/quote-semantic-search/container-volumes/quote-search/data/quotes.csv.tgz"
+            - "https://github.com/aerospike/aerospike-vector-search-examples/raw/main/quote-semantic-search/container-volumes/quote-search/data/quotes.csv.tgz"
           volumeMounts:
             - mountPath: /data
               name: data
@@ -50,37 +50,37 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRPC_DNS_RESOLVER
-              value: {{ .Values.quoteSearchConfig.grpcDnsResolver }}
+              value: {{ .Values.quoteSearchConfig.grpcDnsResolver | quote }}
             - name: BASIC_AUTH_USERNAME
-              value: {{ .Values.quoteSearchConfig.basicAutUsername }}
+              value: {{ .Values.quoteSearchConfig.basicAutUsername | quote }}
             - name: BASIC_AUTH_PASSWORD
-              value: {{ .Values.quoteSearchConfig.basicAuthPassword }}
+              value: {{ .Values.quoteSearchConfig.basicAuthPassword | quote }}
             - name: NUM_QUOTES
-              value: {{ .Values.quoteSearchConfig.numQuotes }}
+              value: {{ .Values.quoteSearchConfig.numQuotes | quote }}
             - name: PROXIMUS_HOST
-              value: {{ .Values.quoteSearchConfig.proximusHost }}
+              value: {{ .Values.quoteSearchConfig.proximusHost | quote }}
             - name: PROXIMUS_PORT
-              value: {{ .Values.quoteSearchConfig.proximusPort }}
+              value: {{ .Values.quoteSearchConfig.proximusPort | quote }}
             - name: PROXIMUS_ADVERTISED_LISTENER
-              value: {{ .Values.quoteSearchConfig.proximusAdvertisedListener }}
+              value: {{ .Values.quoteSearchConfig.proximusAdvertisedListener | quote }}
             - name: PROXIMUS_INDEX_NAME
-              value: {{ .Values.quoteSearchConfig.proximusIndexName }}
+              value: {{ .Values.quoteSearchConfig.proximusIndexName | quote }}
             - name: PROXIMUS_NAMESPACE
-              value: {{ .Values.quoteSearchConfig.proximusNamespace }}
+              value: {{ .Values.quoteSearchConfig.proximusNamespace | quote }}
             - name: PROXIMUS_SET
-              value: {{ .Values.quoteSearchConfig.proximusSet }}
+              value: {{ .Values.quoteSearchConfig.proximusSet | quote }}
             - name: PROXIMUS_VERIFY_TLS
-              value: {{ .Values.quoteSearchConfig.proximusVerifyTls }}
-            - name: PROXIMUS_MAX_RESULTS
-              value: {{ .Values.quoteSearchConfig.proximusMaxResults }}
+              value: {{ .Values.quoteSearchConfig.proximusVerifyTls | quote }}
+{{/*            - name: PROXIMUS_MAX_RESULTS*/}}
+{{/*              value: {{ .Values.quoteSearchConfig.proximusMaxResults | quote }}*/}}
             - name: INDEXER_PARALLELISM
-              value: {{ .Values.quoteSearchConfig.indexerParallelism }}
+              value: {{ .Values.quoteSearchConfig.indexerParallelism | quote }}
             - name: MAX_CONTENT_LENGTH
-              value: {{ .Values.quoteSearchConfig.maxContentLength }}
+              value: {{ .Values.quoteSearchConfig.maxContentLength | quote }}
             - name: PROXIMUS_IS_LOADBALANCER
-              value: {{ .Values.quoteSearchConfig.proximusIsLoadbalancer }}
+              value: {{ .Values.quoteSearchConfig.proximusIsLoadbalancer | quote }}
             - name: DATASET_FILE_PATH
-              value: {{ .Values.quoteSearchConfig.datasetFilePath }}
+              value: {{ .Values.quoteSearchConfig.datasetFilePath | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
