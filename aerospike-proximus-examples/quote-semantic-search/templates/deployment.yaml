@@ -49,18 +49,38 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: PROXIMUS_HOST
-              value: "as-quote-search-aerospike-proximus.aerospike.svc.cluster.local"
-            - name: PROXIMUS_PORT
-              value: "5000"
-            - name: APP_NUM_QUOTES
-              value: "5000"
             - name: GRPC_DNS_RESOLVER
-              value: "native"
+              value: {{ .Values.quoteSearchConfig.grpcDnsResolver }}
+            - name: BASIC_AUTH_USERNAME
+              value: {{ .Values.quoteSearchConfig.basicAutUsername }}
+            - name: BASIC_AUTH_PASSWORD
+              value: {{ .Values.quoteSearchConfig.basicAuthPassword }}
+            - name: NUM_QUOTES
+              value: {{ .Values.quoteSearchConfig.numQuotes }}
+            - name: PROXIMUS_HOST
+              value: {{ .Values.quoteSearchConfig.proximusHost }}
+            - name: PROXIMUS_PORT
+              value: {{ .Values.quoteSearchConfig.proximusPort }}
+            - name: PROXIMUS_ADVERTISED_LISTENER
+              value: {{ .Values.quoteSearchConfig.proximusAdvertisedListener }}
+            - name: PROXIMUS_INDEX_NAME
+              value: {{ .Values.quoteSearchConfig.proximusIndexName }}
+            - name: PROXIMUS_NAMESPACE
+              value: {{ .Values.quoteSearchConfig.proximusNamespace }}
+            - name: PROXIMUS_SET
+              value: {{ .Values.quoteSearchConfig.proximusSet }}
+            - name: PROXIMUS_VERIFY_TLS
+              value: {{ .Values.quoteSearchConfig.proximusVerifyTls }}
+            - name: PROXIMUS_MAX_RESULTS
+              value: {{ .Values.quoteSearchConfig.proximusMaxResults }}
+            - name: INDEXER_PARALLELISM
+              value: {{ .Values.quoteSearchConfig.indexerParallelism }}
+            - name: MAX_CONTENT_LENGTH
+              value: {{ .Values.quoteSearchConfig.maxContentLength }}
             - name: PROXIMUS_IS_LOADBALANCER
-              value: "True"
+              value: {{ .Values.quoteSearchConfig.proximusIsLoadbalancer }}
             - name: DATASET_FILE_PATH
-              value: "/data/quotes.csv"
+              value: {{ .Values.quoteSearchConfig.datasetFilePath }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
