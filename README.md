@@ -11,3 +11,4 @@ The following helm charts are provided
 - [Aerospike JMS Outbound](aerospike-jms-outbound#readme)
 - [Aerospike JMS Inbound](aerospike-jms-inbound#readme)
 - [Aerospike Graph](aerospike-graph#readme)
+- [Aerospike Proximus](aerospike-proximus#readme)
