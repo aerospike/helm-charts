@@ -94,7 +94,7 @@ kubectl --namespace aerospike create secret generic aerospike-secret --from-file
 
 ```shell
 # helm install --namespace <target namespace> <helm release name/cluster name> -f <path to custom values yaml> aerospike/aerospike-proximus
-helm install --namespace aerospike as-proximus -f as-proximus-values.yaml aerospike/as-proximus
+helm install --namespace aerospike as-proximus -f as-proximus-values.yaml aerospike/aerospike-proximus
 ```
 
 Here `as-proximus` is the release name for the proximus cluster and also its cluster name.
