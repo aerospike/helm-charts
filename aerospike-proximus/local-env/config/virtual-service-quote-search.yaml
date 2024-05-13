@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: quote-search-vs
+  namespace: aerospike
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - quote-search-gw
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            port:
+              number: 8080
+            host:
+              "quote-semantic-search.aerospike.svc.cluster.local"

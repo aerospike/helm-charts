@@ -2,7 +2,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "aerospike-proximus.fullnamee" . }}
+  name: {{ include "aerospike-proximus.fullname" . }}
   labels:
     {{- include "aerospike-proximus.labels" . | nindent 4 }}
 spec:

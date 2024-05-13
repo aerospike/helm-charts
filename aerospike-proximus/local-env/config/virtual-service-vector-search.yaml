@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: quote-search-vs
+  namespace: aerospike
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - quote-search-gw
+  tcp:
+    - match:
+        - port: 5000
+      route:
+        - destination:
+            port:
+              number: 5000
+            host:
+              "as-quote-search-aerospike-proximus.aerospike.svc.cluster.local"

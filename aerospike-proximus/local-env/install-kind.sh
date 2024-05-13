@@ -16,7 +16,8 @@ if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/config/features.conf" ]; then
 fi
 
 echo "Installing Kind"
-kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
+#kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
+kind create cluster
 kubectl cluster-info --context kind-kind
 
 echo "Deploying AKO"
@@ -58,13 +59,34 @@ while true; do
   fi
 done
 
-echo "Deploy Nginx"
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
 
+#echo "Deploy MetalLB"
+#kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
+#kubectl wait --namespace metallb-system \
+#                --for=condition=ready pod \
+#                --selector=app=metallb \
+#                --timeout=90s
+#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+
+echo "Deploying Istio"
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo update
+
+helm install istio-base istio/base --namespace istio-system --set defaultRevision=default --create-namespace --wait
+helm install istiod istio/istiod --namespace istio-system --create-namespace --wait
+helm install istio-ingress istio/gateway --namespace istio-ingress --create-namespace --wait
+
+#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service.yaml"
+#echo "Deploy Nginx"
+#kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+#kubectl wait --namespace ingress-nginx \
+#  --for=condition=ready pod \
+#  --selector=app.kubernetes.io/component=controller \
+#  --timeout=90s
+
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/gateway.yaml"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service-quote-search.yaml"
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service-vector-search.yaml"
 
 sleep 30
 echo "Deploy Proximus"

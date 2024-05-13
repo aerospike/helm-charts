@@ -2,7 +2,7 @@
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
 
-helm uninstall quote-semantic-search --namespace aerospike
+#helm uninstall quote-semantic-search --namespace aerospike
 helm uninstall as-quote-search --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
 kubectl --namespace aerospike delete secret auth-secret

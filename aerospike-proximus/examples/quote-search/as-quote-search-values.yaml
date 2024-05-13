@@ -20,3 +20,20 @@ securityContext:
 
 service:
   enabled: false
+  type: ClusterIP
+  ports:
+    - name: "svc-port"
+      port: 5000
+      targetPort: 5000
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  hosts:
+    - paths:
+        - path: /
+          pathType: Prefix
+          host: "as-quote-search-aerospike-proximus.aerospike.svc.cluster.local"

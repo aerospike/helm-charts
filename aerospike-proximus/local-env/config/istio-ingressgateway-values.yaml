@@ -1,0 +1,12 @@
+service:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 443
+    - name: status-port
+      port: 15021
+      targetPort: 15021
