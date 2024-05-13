@@ -1,5 +1,5 @@
 apiVersion: v2
-name:  aerospike-proximus
+name:  quote-semantic-search
 description: A Helm chart for Aerospike Proximus
 type: application
 icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
@@ -14,4 +14,4 @@ maintainers:
 version:  0.1.0
 
 # The default version of Aerospike Kafka Outbound Connector
-appVersion: "0.3.1"
+appVersion: "0.1.0"

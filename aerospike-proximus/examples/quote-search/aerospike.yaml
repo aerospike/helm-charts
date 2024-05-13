@@ -31,7 +31,7 @@ spec:
           persistentVolume:
             storageClass: standard
             volumeMode: Filesystem
-            size: 5Gi
+            size: 16G
       - name: nsvol2
         aerospike:
           path: /mnt/disks/proximus
@@ -39,7 +39,7 @@ spec:
           persistentVolume:
             storageClass: standard
             volumeMode: Filesystem
-            size: 5Gi
+            size: 16G
       - name: aerospike-config-secret
         source:
           secret:
@@ -71,7 +71,7 @@ spec:
         replication-factor: 1
         storage-engine:
           type: device
-          filesize: 5368709120
+          filesize: 17179869184
           files:
             - /mnt/disks/test/test.dat
       - name: proximus-meta
@@ -81,6 +81,6 @@ spec:
         replication-factor: 1
         storage-engine:
           type: device
-          filesize: 5368709120
+          filesize: 17179869184
           files:
             - /mnt/disks/proximus/proximus.dat

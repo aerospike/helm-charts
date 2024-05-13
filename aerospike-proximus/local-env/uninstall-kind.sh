@@ -2,16 +2,8 @@
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
 
-container_exists="$(docker ps -a -q -f name=^quote-search$)"
-if [ ! -z "$container_exists" ]; then
-    docker stop quote-search
-    docker rm quote-search
-  fi
-
-rm -rf "$WORKSPACE/aerospike-proximus/local-env/data"
-helm delete as-quote-search --namespace aerospike
-kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
-kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
+helm uninstall quote-semantic-search --namespace aerospike
+helm uninstall as-quote-search --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
 kubectl --namespace aerospike delete secret auth-secret
 kubectl --namespace aerospike delete secret aerospike-secret
