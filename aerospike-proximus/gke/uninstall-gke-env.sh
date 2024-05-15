@@ -1,6 +1,6 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-ZONE="me-west1-a"
+ZONE=""
 
 helm uninstall quote-semantic-search --namespace aerospike
 helm uninstall as-proximus-gke --namespace aerospike
