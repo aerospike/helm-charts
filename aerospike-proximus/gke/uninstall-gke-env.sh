@@ -1,11 +1,16 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-ZONE=""
+ZONE="me-west1-a"
 
-gcloud compute instances delete proximus-app --zone="$ZONE" --quiet
+helm uninstall quote-semantic-search --namespace aerospike
+helm uninstall as-proximus-gke --namespace aerospike
+kubectl delete -f "$WORKSPACE/aerospike-proximus/gke/config/gateway.yaml"
+kubectl delete -f "$WORKSPACE/aerospike-proximus/gke/config/virtual-service-vector-search.yaml"
+helm uninstall istio-ingress --namespace istio-ingress
+helm uninstall istiod --namespace istio-system
+helm uninstall istio-base --namespace istio-system
 kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/gke/aerospike.yaml"
 kubectl delete -f https://raw.githubusercontent.com/aerospike/aerospike-kubernetes-operator/master/config/samples/storage/gce_ssd_storage_class.yaml
-helm uninstall as-proximus-gke -n aerospike
 kubectl --namespace aerospike delete secret auth-secret
 kubectl --namespace aerospike delete secret aerospike-secret
 kubectl delete clusterrolebinding aerospike-cluster

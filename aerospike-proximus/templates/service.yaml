@@ -11,10 +11,12 @@ spec:
   ports:
     {{- range $k := .Values.proximusConfig.service.ports | keys }}
     - name: {{ printf "svc-%s" $k }}
+      appProtocol: grpc
       port: {{ $k }}
       {{- end -}}
     {{- range $k := .Values.proximusConfig.manage.ports | keys }}
     - name: {{ printf "manage-%s" $k }}
+      appProtocol: http
       port: {{ $k }}
       {{- end -}}
     {{- range $k := .Values.proximusConfig.interconnect.ports | keys }}

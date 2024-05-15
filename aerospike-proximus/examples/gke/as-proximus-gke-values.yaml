@@ -25,9 +25,11 @@ proximusConfig:
     ticker-interval: 10
 
 service:
-  enabled: true
+  enabled: false
+  tyoe: LoadBalancer
   annotations:
-    networking.gke.io/load-balancer-type: "Internal"
+    cloud.google.com/l4-rbs: "enabled"
+#    networking.gke.io/load-balancer-type: "Internal"
   ports:
     - name: "svc-port"
       port: 5000
