@@ -16,8 +16,7 @@ if [ ! -f "$WORKSPACE/aerospike-proximus/local-env/config/features.conf" ]; then
 fi
 
 echo "Installing Kind"
-#kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
-kind create cluster
+kind create cluster --config "$WORKSPACE/aerospike-proximus/local-env/config/kind-cluster.yaml"
 kubectl cluster-info --context kind-kind
 
 echo "Deploying AKO"
@@ -60,32 +59,27 @@ while true; do
 done
 
 
-#echo "Deploy MetalLB"
-#kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
-#kubectl wait --namespace metallb-system \
-#                --for=condition=ready pod \
-#                --selector=app=metallb \
-#                --timeout=90s
-#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+echo "Deploy MetalLB"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+
 
 echo "Deploying Istio"
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
-
 helm install istio-base istio/base --namespace istio-system --set defaultRevision=default --create-namespace --wait
 helm install istiod istio/istiod --namespace istio-system --create-namespace --wait
-helm install istio-ingress istio/gateway --namespace istio-ingress --create-namespace --wait
-
-#kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service.yaml"
-#echo "Deploy Nginx"
-#kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-#kubectl wait --namespace ingress-nginx \
-#  --for=condition=ready pod \
-#  --selector=app.kubernetes.io/component=controller \
-#  --timeout=90s
+helm install istio-ingress istio/gateway \
+--values "$WORKSPACE/aerospike-proximus/local-env/config/istio-ingressgateway-values.yaml" \
+--namespace istio-ingress \
+--create-namespace \
+--wait
 
 kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/gateway.yaml"
-kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service-quote-search.yaml"
 kubectl apply -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service-vector-search.yaml"
 
 sleep 30
@@ -95,4 +89,7 @@ helm install as-quote-search "$WORKSPACE/aerospike-proximus" \
 
 echo "Deploying Quote-Search"
 helm install quote-semantic-search "$WORKSPACE/aerospike-proximus-examples/quote-semantic-search" \
---values "$WORKSPACE/aerospike-proximus/local-env/config/quote-semantic-search-values.yaml" --namespace aerospike --wait
+--values "$WORKSPACE/aerospike-proximus/local-env/config/quote-semantic-search-values.yaml" \
+--namespace aerospike \
+--wait \
+--timeout 7m0s

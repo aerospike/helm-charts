@@ -9,6 +9,9 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
-      - containerPort: 31400
-        hostPort: 31400
+      - containerPort: 15021
+        hostPort: 15021
+        protocol: TCP
+      - containerPort: 5000
+        hostPort: 5000
         protocol: TCP

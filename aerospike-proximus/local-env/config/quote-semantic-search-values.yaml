@@ -1,13 +1,3 @@
-ingress:
-  enabled: false
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-  hosts:
-    - paths:
-        - path: /quote-search(/|$)(.*)
-          pathType: ImplementationSpecific
 quoteSearchConfig:
-#  proximusHost: "as-quote-search-aerospike-proximus.aerospike.svc.cluster.local"
-  proximusHost: "172.19.0.3"
+  proximusHost: "istio-ingress.istio-ingress.svc.cluster.local"
+  proximusIsLoadbalancer: "True"

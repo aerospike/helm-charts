@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: quote-search-gw
+  name: vector-search-gw
   namespace: aerospike
 spec:
   selector:
@@ -19,3 +19,5 @@ spec:
         protocol: GRPC
       hosts:
         - "*"
+      tls:
+        mode: PASSTHROUGH

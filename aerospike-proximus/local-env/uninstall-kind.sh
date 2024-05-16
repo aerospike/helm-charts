@@ -2,8 +2,17 @@
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
 
-#helm uninstall quote-semantic-search --namespace aerospike
+helm uninstall quote-semantic-search --namespace aerospike
 helm uninstall as-quote-search --namespace aerospike
+kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/virtual-service-vector-search.yaml"
+kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/gateway.yaml"
+helm uninstall istio-ingress --namespace istio-ingress
+kubectl delete namespace istio-ingress
+helm uninstall istiod --namespace istio-system
+helm uninstall istio-base --namespace istio-system
+kubectl delete namespace istio-system
+kubectl delete -f "$WORKSPACE/aerospike-proximus/local-env/config/metallb-config.yaml"
+kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
 kubectl delete -f "$WORKSPACE/aerospike-proximus/examples/quote-search/aerospike.yaml"
 kubectl --namespace aerospike delete secret auth-secret
 kubectl --namespace aerospike delete secret aerospike-secret
