@@ -15,7 +15,7 @@ kubectl cluster-info --context kind-kind
 
 echo "Deploy Aerospike Cluster And Minio"
 docker compose --file "$WORKSPACE/aerospike-backup-service/examples/kind/docker-compose.yaml" up -d
-docker compose --file "$WORKSPACE/aerospike-backup-service/examples/kind/config/credentials" up -d
+
 
 kubectl create namespace aerospike
 kubectl create secret generic credentials \
