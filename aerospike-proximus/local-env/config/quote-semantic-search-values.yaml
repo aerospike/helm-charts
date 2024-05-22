@@ -1,3 +1,0 @@
-quoteSearchConfig:
-  proximusHost: "istio-ingress.istio-ingress.svc.cluster.local"
-  proximusIsLoadbalancer: "True"
