@@ -34,7 +34,7 @@ spec:
             size: 5Gi
       - name: nsvol2
         aerospike:
-          path: /mnt/disks/proximus
+          path: /mnt/disks/avs
         source:
           persistentVolume:
             storageClass: ssd
@@ -74,7 +74,7 @@ spec:
           filesize: 5368709120
           files:
             - /mnt/disks/test/test.dat
-      - name: proximus-meta
+      - name: avs-meta
         nsup-period: 600
         nsup-threads: 2
         evict-tenths-pct: 5
@@ -83,4 +83,4 @@ spec:
           type: device
           filesize: 5368709120
           files:
-            - /mnt/disks/proximus/proximus.dat
+            - /mnt/disks/avs/avs-meta.dat

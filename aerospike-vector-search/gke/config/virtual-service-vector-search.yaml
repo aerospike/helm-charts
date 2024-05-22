@@ -1,13 +1,13 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: vector-search-vs
+  name: avs-vs
   namespace: aerospike
 spec:
   hosts:
     - "*"
   gateways:
-    - vector-search-gw
+    - avs-gw
   http:
     - match:
         - uri:
@@ -17,7 +17,7 @@ spec:
         - destination:
             port:
               number: 8080
-            host: quote-semantic-search.aerospike.svc.cluster.local
+            host: quote-search-quote-semantic-search.aerospike.svc.cluster.local
     - match:
         - uri:
             prefix: /
@@ -26,4 +26,4 @@ spec:
         - destination:
             port:
               number: 5000
-            host: as-proximus-gke-aerospike-proximus.aerospike.svc.cluster.local
+            host: avs-gke-aerospike-vector-search.aerospike.svc.cluster.local

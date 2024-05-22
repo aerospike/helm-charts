@@ -1,4 +1,5 @@
 quoteSearchConfig:
-  proximusHost: "istio-ingress.istio-ingress.svc.cluster.local"
-  proximusIsLoadbalancer: "True"
+  avsHost: "istio-ingress.istio-ingress.svc.cluster.local"
+  avsIsLoadbalancer: "True"
+  avsNamespace: "avs-meta"
 

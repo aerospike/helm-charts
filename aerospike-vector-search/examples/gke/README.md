@@ -44,10 +44,10 @@ kubectl create namespace aerospike
 In this example we configure internal facing L4 LoadBalancer for more details please refer to GCP [documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer).
 
 ### Deploy Proximus.
-Update the [as-proximus-gke-values.yaml](as-proximus-gke-values.yaml) file to change Proximus configuration.
+Update the [avs-gke-values.yaml](avs-gke-values.yaml) file to change Proximus configuration.
 
 
-Deploy the Proximus cluster using configuration from [as-proximus-gke-values.yaml](as-proximus-gke-values.yaml)
+Deploy the Proximus cluster using configuration from [avs-gke-values.yaml](avs-gke-values.yaml)
 ```shell
-helm install --namespace aerospike as-proximus-gke -f as-proximus-gke-values.yaml ../../../aerospike-proximus
+helm install --namespace aerospike as-proximus-gke -f avs-gke-values.yaml ../../../aerospike-proximus
 ```

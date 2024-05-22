@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: vector-search-gw
+  name: avs-gw
   namespace: aerospike
 spec:
   selector:
