@@ -85,7 +85,7 @@ kubectl apply -f "$WORKSPACE/aerospike-vector-search/kind/config/virtual-service
 sleep 30
 echo "Deploy AVS"
 helm install avs "$WORKSPACE/aerospike-vector-search" \
---values "$WORKSPACE/aerospike-vector-search/examples/kind/avs-values.yaml" --namespace aerospike
+--values "$WORKSPACE/aerospike-vector-search/examples/kind/avs-kind-values.yaml" --namespace aerospike
 
 echo "Deploying Quote-Search"
 helm install quote-search "$WORKSPACE/aerospike-vector-search-examples/quote-semantic-search" \
