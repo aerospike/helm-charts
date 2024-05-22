@@ -47,6 +47,6 @@ extraSecretVolumeMounts:
     subPath: psw.txt
     readOnly: true
   - name: credentials
-    mountPath: /.aws/credentials
+    mountPath: /root/.aws/credentials
     subPath: credentials
     readOnly: true
