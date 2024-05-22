@@ -30,3 +30,4 @@ helm install abs "$WORKSPACE/aerospike-backup-service/" \
 --values "$WORKSPACE/aerospike-backup-service/examples/values/minio-values.yaml" \
 --create-namespace \
 --wait
+
