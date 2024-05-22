@@ -27,4 +27,6 @@ kubectl create secret generic psw-cm \
 
 helm install backup-service "$WORKSPACE/aerospike-backup-service/" \
 --namespace aerospike \
---values "$WORKSPACE/aerospike-backup-service/examples/kind/config/minio-values.yaml"
+--values "$WORKSPACE/aerospike-backup-service/examples/kind/config/minio-values.yaml" \
+--create-namespace \
+--wait
