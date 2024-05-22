@@ -2,8 +2,8 @@
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
 
-#helm uninstall quote-search --namespace aerospike
-#helm uninstall avs --namespace aerospike
+helm uninstall quote-search --namespace aerospike
+helm uninstall avs --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/kind/config/virtual-service-vector-search.yaml"
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/kind/config/gateway.yaml"
 helm uninstall istio-ingress --namespace istio-ingress
