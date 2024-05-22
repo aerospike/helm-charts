@@ -58,27 +58,27 @@ spec:
             - name: NUM_QUOTES
               value: {{ .Values.quoteSearchConfig.numQuotes | quote }}
             - name: AVS_HOST
-              value: {{ .Values.quoteSearchConfig.proximusHost | quote }}
+              value: {{ .Values.quoteSearchConfig.avsHost | quote }}
             - name: AVS_PORT
-              value: {{ .Values.quoteSearchConfig.proximusPort | quote }}
+              value: {{ .Values.quoteSearchConfig.avsPort | quote }}
             - name: AVS_ADVERTISED_LISTENER
-              value: {{ .Values.quoteSearchConfig.proximusAdvertisedListener | quote }}
+              value: {{ .Values.quoteSearchConfig.avsAdvertisedListener | quote }}
             - name: AVS_INDEX_NAME
-              value: {{ .Values.quoteSearchConfig.proximusIndexName | quote }}
+              value: {{ .Values.quoteSearchConfig.avsIndexName | quote }}
             - name: AVS_NAMESPACE
-              value: {{ .Values.quoteSearchConfig.proximusNamespace | quote }}
+              value: {{ .Values.quoteSearchConfig.avsNamespace | quote }}
             - name: AVS_SET
-              value: {{ .Values.quoteSearchConfig.proximusSet | quote }}
+              value: {{ .Values.quoteSearchConfig.avsSet | quote }}
             - name: AVS_VERIFY_TLS
-              value: {{ .Values.quoteSearchConfig.proximusVerifyTls | quote }}
+              value: {{ .Values.quoteSearchConfig.avsVerifyTls | quote }}
             - name: AVS_MAX_RESULTS
-              value: {{ .Values.quoteSearchConfig.proximusMaxResults | quote }}
+              value: {{ .Values.quoteSearchConfig.avsMaxResults | quote }}
             - name: INDEXER_PARALLELISM
               value: {{ .Values.quoteSearchConfig.indexerParallelism | quote }}
             - name: MAX_CONTENT_LENGTH
               value: {{ .Values.quoteSearchConfig.maxContentLength | quote }}
             - name: AVS_IS_LOADBALANCER
-              value: {{ .Values.quoteSearchConfig.proximusIsLoadbalancer | quote }}
+              value: {{ .Values.quoteSearchConfig.avsIsLoadbalancer | quote }}
             - name: DATASET_FILE_PATH
               value: {{ .Values.quoteSearchConfig.datasetFilePath | quote }}
           ports:
