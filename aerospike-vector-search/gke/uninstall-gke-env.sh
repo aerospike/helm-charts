@@ -1,7 +1,7 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT="aerospike-dev"
-ZONE="me-west1-a"
+PROJECT=""
+ZONE=""
 
 helm uninstall quote-search --namespace aerospike
 helm uninstall avs-gke --namespace aerospike
