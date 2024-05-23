@@ -26,7 +26,7 @@ aerospikeVectorSearchConfig:
 
 service:
   enabled: false
-  tyoe: LoadBalancer
+  type: LoadBalancer
   annotations:
     cloud.google.com/l4-rbs: "enabled"
 #    networking.gke.io/load-balancer-type: "Internal"
