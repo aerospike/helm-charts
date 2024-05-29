@@ -1,9 +1,9 @@
 # Aerospike Backup Service
 
-This Helm chart allows you to configure and run our official [Aerospike Backup Service]()
+This Helm chart allows you to configure and run our official [Aerospike Backup Service](https://github.com/aerospike/aerospike-backup-service)
 docker image on a Kubernetes cluster.
 
-This helm chart sets up a `Deployment` Aerospike Backup Service.
+This helm chart sets up a `Deployment` for Aerospike Backup Service.
 
 
 ## Prerequisites
