@@ -1,7 +1,7 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT=""
-ZONE=""
+PROJECT="aerospike-dev"
+ZONE="me-west1-a"
 
 if [ -z "$PROJECT" ]; then
     echo "Set Project"
@@ -68,7 +68,7 @@ while true; do
   fi
 done
 
-sleep 30
-echo "Deploy Proximus"
-helm install as-proximus-gke "$WORKSPACE/aerospike-proximus" \
---values "$WORKSPACE/aerospike-proximus/examples/gke/as-proximus-gke-values.yaml" --namespace aerospike --wait
+#sleep 30
+#echo "Deploy Proximus"
+#helm install as-proximus-gke "$WORKSPACE/aerospike-proximus" \
+#--values "$WORKSPACE/aerospike-proximus/examples/gke/as-proximus-gke-values.yaml" --namespace aerospike --wait
