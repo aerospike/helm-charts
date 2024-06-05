@@ -1,8 +1,8 @@
 replicaCount: 3
-proximusConfig:
+aerospikeVectorSearchConfig:
   heartbeat:
     seeds:
-      - address: as-proximus-eks-aerospike-proximus-0.as-proximus-eks-aerospike-proximus.aerospike.svc.cluster.local
+      - address: avs-eks-aerospike-vector-search-0.avs-eks-aerospike-vector-search.aerospike.svc.cluster.local
         port: 5001
   interconnect:
     ports:
@@ -10,7 +10,7 @@ proximusConfig:
         addresses:
           0.0.0.0
   aerospike:
-    metadata-namespace: "proximus-meta"
+    metadata-namespace: "avs-meta"
     seeds:
       - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
           port: 3000
@@ -25,7 +25,8 @@ proximusConfig:
     ticker-interval: 10
 
 service:
-  enabled: true
+  enabled: false
+  type: LoadBalancer
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
   ports:
@@ -42,4 +43,4 @@ affinity:
             - key: "app.kubernetes.io/name"
               operator: In
               values:
-                - "aerospike-proximus"
+                - "aerospike-vector-search"

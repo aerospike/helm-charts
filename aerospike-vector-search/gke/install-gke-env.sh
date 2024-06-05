@@ -18,7 +18,7 @@ if [ ! -f "$WORKSPACE/aerospike-vector-search/gke/config/features.conf" ]; then
   exit 1
 fi
 
-echo "Install GKE "
+echo "Install GKE"
 gcloud config set project "$PROJECT"
 gcloud container clusters create avs-gke-cluster \
 --zone "$ZONE" \
@@ -91,12 +91,6 @@ helm install avs-gke "$WORKSPACE/aerospike-vector-search" \
 echo "Deploying Quote-Search"
 helm install quote-search "$WORKSPACE/aerospike-vector-search-examples/quote-semantic-search" \
 --values "$WORKSPACE/aerospike-vector-search/gke/config/quote-search-gke-values.yaml" \
---namespace aerospike \
---wait \
---timeout 7m0s
-
-helm install quote-search "./aerospike-vector-search-examples/quote-semantic-search" \
---values "./aerospike-vector-search/gke/config/quote-search-gke-values.yaml" \
 --namespace aerospike \
 --wait \
 --timeout 7m0s
