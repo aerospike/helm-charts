@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aerospike-vector-search.fullname" . }}
+  labels:
+    app: {{ include "aerospike-vector-search.fullname" . }}
+    {{- include "aerospike-vector-search.labels" . | nindent 4 }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "aerospike-vector-search.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-vector-search.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ .Values.aerospikeVectorSearchConfig | toString | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app:  {{ include "aerospike-vector-search.fullname" . }}
+        {{- include "aerospike-vector-search.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-vector-search.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{ if .Values.initContainers }}
+      initContainers:
+      {{- toYaml .Values.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          {{- range $k := .Values.aerospikeVectorSearchConfig.service.ports | keys }}
+            - name: {{ printf "svc-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+              {{- end -}}
+          {{- range $k := .Values.aerospikeVectorSearchConfig.manage.ports | keys }}
+            - name: {{ printf "manage-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+            {{- end -}}
+          {{- range $k := .Values.aerospikeVectorSearchConfig.interconnect.ports | keys }}
+            - name: {{ printf "interc-%s" $k }}
+              containerPort: {{ $k }}
+              protocol: TCP
+            {{- end }}
+          volumeMounts:
+            - name: aerospike-vector-search-configmap
+              mountPath: /etc/aerospike-proximus/aerospike-proximus.yml
+              subPath: aerospike-proximus.yml
+              readOnly: true
+            - name: aerospike-secret
+              mountPath: {{ index .Values.aerospikeVectorSearchConfig "feature-key-file" }}
+              subPath: {{ index .Values.aerospikeVectorSearchConfig "feature-key-file" | base }}
+              readOnly: true
+            {{- if .Values.extraVolumeMounts }}
+            {{- range .Values.extraVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.extraSecretVolumeMounts }}
+            {{- range .Values.extraSecretVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              port: 5040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: 5040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: aerospike-vector-search-configmap
+          configMap:
+            name: {{ include "aerospike-vector-search.fullname" . }}
+            optional: false
+        - name: aerospike-secret
+          secret:
+            secretName: aerospike-secret
+            optional: false
+      {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
