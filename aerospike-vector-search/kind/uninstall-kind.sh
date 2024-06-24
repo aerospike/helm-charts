@@ -2,6 +2,7 @@
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
 
+rm -rf "$PWD/aerospike-vector-search-examples"
 helm uninstall quote-search --namespace aerospike
 helm uninstall avs --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/kind/config/virtual-service-vector-search.yaml"

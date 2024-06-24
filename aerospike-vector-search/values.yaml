@@ -14,22 +14,22 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-aerospikeVectorSearchConfig:
-  cluster:
-    # TODO Figure out how to Add node-id field
-    cluster-name: "avs-db-1"
-  feature-key-file: "/etc/aerospike-proximus/features.conf"
-  service:
+aerospikeVectorSearchConfig: {}
+#  cluster:
+#    # TODO Figure out how to Add node-id field
+#    cluster-name: "avs-db-1"
+#  feature-key-file: "/etc/aerospike-proximus/features.conf"
+#  service:
     # Required when running behind NAT
     #    advertised-listeners:
     #     List of externally accessible addresses and ports for this AVS instance.
     #      default:
     #        - address: 10.0.0.1
     #          port: 5000
-    ports:
-      5000:
-        addresses:
-          "0.0.0.0"
+#    ports:
+#      5000:
+#        addresses:
+#          "0.0.0.0"
 #    cluster-name: "product-name"
     #max-inbound-message-size: 8388608
     #flow-control:
@@ -42,14 +42,14 @@ aerospikeVectorSearchConfig:
       #period: 10
       #stream-ready-timeout: 10000
       #minimum-enable-time: 10000
-  manage:
-    ports:
-      5040: {}
-  interconnect:
-    ports:
-      5001:
-        addresses:
-          "0.0.0.0"
+#  manage:
+#    ports:
+#      5040: {}
+#  interconnect:
+#    ports:
+#      5001:
+#        addresses:
+#          "0.0.0.0"
   #heartbeat:
     # TODO Not clear how seeds should be look like
     # seeds:
@@ -57,11 +57,11 @@ aerospikeVectorSearchConfig:
     #   port: 5001
     #interval: 500
     #timeout: 5000
-  aerospike:
-    metadata-namespace: "avs-meta"
-    seeds:
-      - 127.0.0.1:
-          port: 3000
+#  aerospike:
+#    metadata-namespace: "avs-meta"
+#    seeds:
+#      - 127.0.0.1:
+#          port: 3000
     #client-policy:
       # TODO Give reasonable name for cluster-name
       #cluster-name: "aerospike-cluster"
@@ -91,15 +91,15 @@ aerospikeVectorSearchConfig:
       #max-entries: 5000000
   #     TODO Set some resonable value for expiry-millis field
   #      expiry-millis: 300000
-  logging:
-    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
-    enable-console-logging: false
-    format: simple
-    max-history: 30
-    levels:
-      metrics-ticker: info
-      root: debug
-    ticker-interval: 10
+#  logging:
+#    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
+#    enable-console-logging: false
+#    format: simple
+#    max-history: 30
+#    levels:
+#      metrics-ticker: info
+#      root: debug
+#    ticker-interval: 10
 
 
 initContainers: []
