@@ -31,6 +31,27 @@ aerospikeVectorSearchConfig: {}
 #    5000:
 #      addresses:
 #        "0.0.0.0"
+#    tls-id: # Optional
+#      allowed-peer-names: <allowed-peer-names> # Optional
+#      mutual-auth: <mutual-auth> # Optional default: false
+#      key-store: # Required
+#        cert-chain-files: <certChainFiles>
+#        key-password-file: <keyPasswordFile>
+#        store-file: <storeFile>
+#        store-files: <storeFiles>
+#        store-password-file: <storePasswordFile>
+#        store-type: <storeType>
+#      trust-store: # Optional
+#        cert-chain-files: <certChainFiles>
+#        key-password-file: <keyPasswordFile>
+#        store-file: <storeFile>
+#        store-files: <storeFiles>
+#        store-password-file: <storePasswordFile>
+#        store-type: <storeType>
+#      protocols: <protocols> # Optional default: TLSv1.2"
+#      ciphers: <ciphers>
+#      cert-refresh-interval-ms: <cert-refresh-interval-ms>
+#      advertised-listeners: <advertised-listeners>
 #  advertised-listeners: # Optional
 #    default:
 #      - address: 10.0.0.1
@@ -88,13 +109,17 @@ aerospikeVectorSearchConfig: {}
 #  cache-expiry: <expiry>  # Optional default 10,000 milliseconds
 #
 #logging: # Optional
-#  enable-console-logging: false
-#  format: simple
-#  max-history: 30
-#  levels:
-#    metrics-ticker: info
-#    root: debug
-#    ticker-interval: 10
+#  enable-console-logging: <enable-console-logging> # Optional default: false
+#  levels: # Optional
+#    metrics-ticker: <metrics-ticker> # Optional
+#    root: <root> # Optional
+#    ticker-interval: <ticker-interval> # Optional
+#  log-file-path: <log-file-path> # Optional
+#  log-format: <log-format> # Optional
+#  max-history: <max-history> # Optional
+#  rolling-fileName-pattern: <rolling-fileName-pattern> # Optional
+#  ticker-interval-seconds: <ticker-interval-seconds> # Optional
+#  timezone-name: <timezoneName> # Optional
 #
 #feature-key-file: "/etc/aerospike-proximus/features.conf" # Required
 #
