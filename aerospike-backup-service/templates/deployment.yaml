@@ -47,7 +47,7 @@ spec:
             - name: aerospike-backup-service-config
               mountPath: /etc/aerospike-backup-service
       {{- end }}
-      {{ if .Values.initContainers }}
+      {{- if .Values.initContainers }}
       {{- toYaml .Values.initContainers | nindent 8 }}
       {{- end }}
       containers:
@@ -86,12 +86,12 @@ spec:
           {{- end }}
       volumes:
         - name: aerospike-backup-service-config
-        {{- if .Values.configmap.create -}}
+        {{- if .Values.configmap.create }}
           configMap:
             name: {{ include "aerospike-backup-service.fullname" . }}-cm
-        {{ else }}
+        {{- else }}
           emptyDir: {}
-        {{- end -}}
+        {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
