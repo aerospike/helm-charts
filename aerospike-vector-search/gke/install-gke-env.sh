@@ -89,7 +89,17 @@ helm install avs-gke "$WORKSPACE/aerospike-vector-search" \
 --values "$WORKSPACE/aerospike-vector-search/examples/gke/avs-gke-values.yaml" --namespace aerospike --wait
 
 echo "Deploying Quote-Search"
-helm install quote-search "$WORKSPACE/aerospike-vector-search-examples/quote-semantic-search" \
+
+git clone \
+--depth 1 \
+--branch main \
+--no-checkout https://github.com/aerospike/aerospike-vector-search-examples.git
+cd aerospike-vector-search-examples
+git sparse-checkout set kubernetes/helm/quote-semantic-search
+git checkout main
+cd -
+
+helm install quote-search "$PWD/aerospike-vector-search-examples/kubernetes/helm/quote-semantic-search" \
 --values "$WORKSPACE/aerospike-vector-search/gke/config/quote-search-gke-values.yaml" \
 --namespace aerospike \
 --wait \
