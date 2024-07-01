@@ -1,3 +1,6 @@
+configmap:
+  create: true
+namespace: "aerospike"
 backupServiceConfig:
   aerospike-clusters:
     absCluster1:

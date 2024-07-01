@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "aerospike-backup-service.fullname" . }}
+  namespace: {{ .Values.namespace | default "default" }}
   labels:
     app: {{ include "aerospike-backup-service.fullname" . }}
     {{- include "aerospike-backup-service.labels" . | nindent 4 }}
@@ -33,6 +34,7 @@ spec:
       serviceAccountName: {{ include "aerospike-backup-service.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if not .Values.configmap.create }}
       initContainers:
         - name: config-injector
           image: busybox
@@ -44,7 +46,8 @@ spec:
           volumeMounts:
             - name: aerospike-backup-service-config
               mountPath: /etc/aerospike-backup-service
-      {{ if .Values.initContainers }}
+      {{- end }}
+      {{- if .Values.initContainers }}
       {{- toYaml .Values.initContainers | nindent 8 }}
       {{- end }}
       containers:
@@ -83,7 +86,12 @@ spec:
           {{- end }}
       volumes:
         - name: aerospike-backup-service-config
+        {{- if .Values.configmap.create }}
+          configMap:
+            name: {{ include "aerospike-backup-service.fullname" . }}-cm
+        {{- else }}
           emptyDir: {}
+        {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
