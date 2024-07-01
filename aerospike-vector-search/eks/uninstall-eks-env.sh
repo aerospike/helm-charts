@@ -8,6 +8,7 @@ if [ -z "$REGION" ]; then
     exit 1
 fi
 
+rm -rf "$PWD/aerospike-vector-search-examples"
 helm uninstall quote-search --namespace aerospike
 helm uninstall avs-eks --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/eks/config/gateway.yaml"

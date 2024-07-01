@@ -14,92 +14,131 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-aerospikeVectorSearchConfig:
-  cluster:
-    # TODO Figure out how to Add node-id field
-    cluster-name: "avs-db-1"
-  feature-key-file: "/etc/aerospike-proximus/features.conf"
-  service:
-    # Required when running behind NAT
-    #    advertised-listeners:
-    #     List of externally accessible addresses and ports for this AVS instance.
-    #      default:
-    #        - address: 10.0.0.1
-    #          port: 5000
-    ports:
-      5000:
-        addresses:
-          "0.0.0.0"
-#    cluster-name: "product-name"
-    #max-inbound-message-size: 8388608
-    #flow-control:
-      # TODO Give reasonable example values for io-threads
-      # io-threads: 4
-      # TODO Give reasonable example values for worker-threads
-      # worker-threads: 4
-      #memory-high-water-mark-percentage: 80
-      #memory-low-water-mark-percentage: 60
-      #period: 10
-      #stream-ready-timeout: 10000
-      #minimum-enable-time: 10000
-  manage:
-    ports:
-      5040: {}
-  interconnect:
-    ports:
-      5001:
-        addresses:
-          "0.0.0.0"
-  #heartbeat:
-    # TODO Not clear how seeds should be look like
-    # seeds:
-    # - address: "127.0.0.1"
-    #   port: 5001
-    #interval: 500
-    #timeout: 5000
-  aerospike:
-    metadata-namespace: "avs-meta"
-    seeds:
-      - 127.0.0.1:
-          port: 3000
-    #client-policy:
-      # TODO Give reasonable name for cluster-name
-      #cluster-name: "aerospike-cluster"
-      # TODO Give reasonable value for unary-event-loops
-      #            unary-event-loops: 4
-      #batch-event-loops: 1
-      #query-event-loops: 1
-      #auth-mode: "INTERNAL"
-      #timeout: 1000
-      #login-timeout: 5000
-      #close-timeout: 0
-      #min-conns-per-node: 0
-      #max-conns-per-node: 100
-      #conn-pools-per-node: 1
-      #max-socket-idle: 0
-      #max-error-rate: 0
-      #error-rate-window: 1
-      #tend-interval: 1000
-      #use-services-alternate: false
-  #      keep-alive: ""
-  #      ip-map: ""
-  #      rack-aware: ""
-  #      rack-id: ""
-  #      rack-ids: ""
-  #indexing:
-    #cache:
-      #max-entries: 5000000
-  #     TODO Set some resonable value for expiry-millis field
-  #      expiry-millis: 300000
-  logging:
-    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
-    enable-console-logging: false
-    format: simple
-    max-history: 30
-    levels:
-      metrics-ticker: info
-      root: debug
-    ticker-interval: 10
+aerospikeVectorSearchConfig: {}
+#service: # Required
+#  io-threads: <io-threads> # Optional default: retrieved from the system
+#  worker-threads: <worker-threads> # Optional default: retrieved from the system
+#  max-inbound-message-size: <max-inbound-message-size> # Optional default: 8388608 (8MiB)
+#  max-concurrent-requests: <max-concurrent-requests> # Optional default: 32768
+#  http2-max-concurrent-streams: <http2-max-concurrent-streams> # Optional default: 128
+#  flow-control: # Optional
+#    memory-high-water-mark-percentage: <memory-high-water-mark-percentage> # Optional default: 80
+#    memory-low-water-mark-percentage: <memory-low-water-mark-percentage> # Optional default: 60
+#    period: <period> # Optional default: 10
+#    stream-ready-timeout: <stream-ready-timeout> # Optional default: 10,000 milliseconds
+#    minimum-enable-time: <minimum-enable-time> # Optional default: 10,000 milliseconds
+#  ports: # Required
+#    5000:
+#      addresses:
+#        "0.0.0.0"
+#    tls-id: # Optional
+#      allowed-peer-names: <allowed-peer-names> # Optional
+#      mutual-auth: <mutual-auth> # Optional default: false
+#      key-store: # Required
+#        cert-chain-files: <certChainFiles>
+#        key-password-file: <keyPasswordFile>
+#        store-file: <storeFile>
+#        store-files: <storeFiles>
+#        store-password-file: <storePasswordFile>
+#        store-type: <storeType>
+#      trust-store: # Optional
+#        cert-chain-files: <certChainFiles>
+#        key-password-file: <keyPasswordFile>
+#        store-file: <storeFile>
+#        store-files: <storeFiles>
+#        store-password-file: <storePasswordFile>
+#        store-type: <storeType>
+#      protocols: <protocols> # Optional default: TLSv1.2"
+#      ciphers: <ciphers>
+#      cert-refresh-interval-ms: <cert-refresh-interval-ms>
+#      advertised-listeners: <advertised-listeners>
+#  advertised-listeners: # Optional
+#    default:
+#      - address: 10.0.0.1
+#        port: 5000
+#  metadata-namespace: <metadata-namespace> # Optional default: proximus-meta
+#  graceful-shutdown-timeout: <graceful-shutdown-timeout> # Optional default: 20,000 milliseconds
+#
+#manage: # Optional
+#  ports:
+#    5040: { }
+#
+#interconnect: # Required
+#  ports:
+#    5001:
+#      addresses:
+#        "0.0.0.0"
+#  client-tls-id: <client-tls-id> # Optional
+#  max-connections: <max-connections>  # Optional
+#  max-total-connections: <max-total-connections> # Optional default: 32767
+#  connect-timeout: <connect-timeout> # Optional default: 10000
+#  io-threads: <io-threads> # Optional default: retrieved from the system
+#  worker-threads: <worker-threads> # Optional default: retrieved from the system
+#  max-inbound-message-size: <max-inbound-message-size> # Optional default: 8388608 (8MiB)
+#  max-concurrent-requests: <max-concurrent-requests> # Optional default: 32768
+#  http2-max-concurrent-streams": <http2-max-concurrent-streams> # Optional default: 128
+#  flow-control: # Optional
+#    memory-high-water-mark-percentage: <memory-high-water-mark-percentage> # Optional default: 80
+#    memory-low-water-mark-percentage: <memory-low-water-mark-percentage> # Optional default: 60
+#    period: <period> # Optional default: 10
+#    stream-ready-timeout: <stream-ready-timeout> # Optional default: 10,000 milliseconds
+#    minimum-enable-time: <minimum-enable-time> # Optional default: 10,000 milliseconds
+#  rtt-max: <rtt-max> # Optional default: 5
+#
+#heartbeat: # Optional
+#  interval: <interval> # Optional default: 500 milliseconds
+#  timeout: <timeout> # Optional default: 5000 milliseconds
+#  seeds: # Optional
+#    - address: "10.0.0.1"
+#      port: "5001"
+#
+#cluster: # Required
+#  node-id: <id> # Optional
+#  cluster-name: <cluster-name> # Required
+#  min-cluster-size: <int> # Optional minimum allowed cluster size
+#
+#aerospike: # Required
+#  seeds:  # Required
+#    - "10.0.0.1"
+#        port: 3000
+#  client-policy: <client-policy>
+#
+#security:
+#  auth-token: <auth-token> # Required
+#  timeout: <timeout> # Optional default 2000 milliseconds
+#  cache-expiry: <expiry>  # Optional default 10,000 milliseconds
+#
+#logging: # Optional
+#  enable-console-logging: <enable-console-logging> # Optional default: false
+#  levels: # Optional
+#    metrics-ticker: <metrics-ticker> # Optional
+#    root: <root> # Optional
+#    ticker-interval: <ticker-interval> # Optional
+#  log-file-path: <log-file-path> # Optional
+#  log-format: <log-format> # Optional
+#  max-history: <max-history> # Optional
+#  rolling-fileName-pattern: <rolling-fileName-pattern> # Optional
+#  ticker-interval-seconds: <ticker-interval-seconds> # Optional
+#  timezone-name: <timezoneName> # Optional
+#
+#feature-key-file: "/etc/aerospike-proximus/features.conf" # Required
+#
+#indexing: # Optional
+#  cache: # Optional
+#    max-entries: <max-entries> # Optional default: 2,000,000
+#    expiry-millis: <expiry-millis> # Optional default: 2^63-1
+#  cleanup: # Optional
+#    dropped-index-cleanup-scheduler-delay: <dropped-index-cleanup-scheduler-delay> # Optional default: 30 minutes
+#    dropped-index-cleanup-scheduler-initial-delay: <dropped-index-cleanup-scheduler-initial-delay> # Optional default: 30 minutes
+#    mark-dropped-index-clean-after: <mark-dropped-index-clean-after> # Optional default: 1 Hour
+#    deleted-index-retention-time: <deleted-index-retention-time> # Optional default: 5 Days
+#  batch-merge: # Optional
+#    parallelism: <parallelism> # Optional default: retrieved from the system
+#    executor-delay: <executor-delay> # Optional default: 1 Second
+#    executor-initial-delay: <executor-initial-delay:> # Optional default: 0
+#  enable-proxy-load-balancing: <enable-proxy-load-balancing> # Optional default: true
+#
+#tls: ""
 
 
 initContainers: []
