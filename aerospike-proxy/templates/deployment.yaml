@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aerospike-proxy.fullname" . }}
+  labels:
+    app: {{ include "aerospike-proxy.fullname" . }}
+    {{- include "aerospike-proxy.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ .Values.proxyConfig | toString | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app: {{ include "aerospike-proxy.fullname" . }}
+        {{- include "aerospike-proxy.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-proxy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              port: 4040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: 4040
+              path: /manage/rest/v1
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: aerospike-proxy-configmap
+              mountPath: /etc/aerospike-proxy/aerospike-proxy.yml
+              subPath: aerospike-proxy.yml
+              readOnly: true
+          {{- if .Values.extraVolumeMounts }}
+          {{- range .Values.extraVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.extraSecretVolumeMounts }}
+          {{- range .Values.extraSecretVolumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: {{ .readOnly | default true }}
+              subPath: {{ .subPath }}
+          {{- end }}
+          {{- end }}
+      volumes:
+        - name: aerospike-proxy-configmap
+          configMap:
+            name: {{ include "aerospike-proxy.fullname" . }}-cm
+            optional: false
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

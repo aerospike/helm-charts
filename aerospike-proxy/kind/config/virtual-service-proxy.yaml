@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: proxy-vs
+  namespace: aerospike
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - proxy-gw
+  http:
+    - match:
+        - uri:
+            prefix: /
+          port: 4000
+      route:
+        - destination:
+            port:
+              number: 4000
+            host: proxy-aerospike-proxy.aerospike.svc.cluster.local

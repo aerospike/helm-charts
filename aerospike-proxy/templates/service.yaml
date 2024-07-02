@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-proxy.fullname" . }}
+  labels:
+    app:  {{ include "aerospike-proxy.fullname" . }}
+    {{- include "aerospike-proxy.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- range $k := .Values.proxyConfig.service.ports | keys }}
+    - name: {{ printf "svc-%s" $k }}
+      appProtocol: grpc
+      port: {{ $k }}
+      {{- end -}}
+    {{- range $k := .Values.proxyConfig.service.manage | keys }}
+    - name: {{ printf "manage-%s" $k }}
+      appProtocol: http
+      port: {{ $k }}
+      {{- end }}
+  selector:
+    app:  {{ include "aerospike-proxy.fullname" . }}
+    {{- include "aerospike-proxy.selectorLabels" . | nindent 4 }}
