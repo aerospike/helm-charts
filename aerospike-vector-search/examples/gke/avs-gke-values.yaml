@@ -2,7 +2,7 @@ replicaCount: 3
 aerospikeVectorSearchConfig:
   cluster:
     cluster-name: "avs-db-1"
-  feature-key-file: "/etc/aerospike-proximus/features.conf"
+  feature-key-file: "/etc/aerospike-vector-search/features.conf"
   service:
     ports:
       5000:
@@ -27,7 +27,7 @@ aerospikeVectorSearchConfig:
       - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
           port: 3000
   logging:
-    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
+    #    file: /var/log/aerospike-vector-search/aerospike-vector-search.log
     enable-console-logging: false
     format: simple
     max-history: 30

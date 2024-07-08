@@ -1,11 +1,11 @@
-# Aerospike Proximus EKS example
+# Aerospike Vector Search EKS example
 
 ## Prerequisites
 - EKS cluster
 - Helm v3
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
-- Aerospike Proximus [Helm chart](../../README.md#configuration)
+- Aerospike Vector Search [Helm chart](../../README.md#configuration)
 
 ## Adding the helm chart repository
 
@@ -15,7 +15,7 @@ Add the `aerospike` helm repository if not already done
 helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
-## Deploy Proximus Cluster.
+## Deploy Aerospike Vector Search Cluster.
 
 All subsequent commands are run from this directory.
 
@@ -43,11 +43,11 @@ kubectl create namespace aerospike
 ### EKS LoadBalancer configuration
 In this example we configure internal facing L4 LoadBalancer (NLB) for more details please refer to AWS [documentation](https://docs.aws.amazon.com/eks/latest/userguide/network-load-balancing.html).
 
-### Deploy Proximus.
-Update the [as-proximus-eks-values.yaml](as-proximus-eks-values.yaml) file to change Proximus configuration.
+### Deploy Aerospike Vector Search.
+Update the [avs-eks-values.yaml](avs-eks-values.yaml) file to change Aerospike Vector Search configuration.
 
 
-Deploy the Proximus cluster using configuration from [as-proximus-eks-values.yaml](as-proximus-eks-values.yaml)
+Deploy the Aerospike Vector Search cluster using configuration from [avs-eks-values.yaml](avs-eks-values.yaml)
 ```shell
-helm install --namespace aerospike as-proximus-eks -f as-proximus-eks-values.yaml ../../../aerospike-proximus
+helm install --namespace aerospike avs-eks -f avs-eks-values.yaml ../../../aerospike-vector-search
 ```

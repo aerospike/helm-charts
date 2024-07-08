@@ -1,11 +1,11 @@
-# Aerospike Proximus GKE example
+# Aerospike Aerospike Vector Search GKE example
 
 ## Prerequisites
 - GKE cluster
 - Helm v3
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
-- Aerospike Proximus [Helm chart](../../README.md#configuration)
+- Aerospike Vector Search [Helm chart](../../README.md#configuration)
 
 ## Adding the helm chart repository
 
@@ -15,7 +15,7 @@ Add the `aerospike` helm repository if not already done
 helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
-## Deploy Proximus Cluster.
+## Deploy Aerospike Vector Search Cluster.
 
 All subsequent commands are run from this directory.
 
@@ -43,11 +43,11 @@ kubectl create namespace aerospike
 ### GKE LoadBalancer configuration
 In this example we configure internal facing L4 LoadBalancer for more details please refer to GCP [documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/service-load-balancer).
 
-### Deploy Proximus.
-Update the [avs-gke-values.yaml](avs-gke-values.yaml) file to change Proximus configuration.
+### Deploy Aerospike Vector Search.
+Update the [avs-gke-values.yaml](avs-gke-values.yaml) file to change Aerospike Vector Search configuration.
 
 
-Deploy the Proximus cluster using configuration from [avs-gke-values.yaml](avs-gke-values.yaml)
+Deploy the Aerospike Vector Search cluster using configuration from [avs-gke-values.yaml](avs-gke-values.yaml)
 ```shell
-helm install --namespace aerospike as-proximus-gke -f avs-gke-values.yaml ../../../aerospike-proximus
+helm install --namespace aerospike avs-eks -f avs-gke-values.yaml ../../../aerospike-vector-search
 ```

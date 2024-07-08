@@ -1,6 +1,6 @@
 # Aerospike Vector Search
 
-This Helm chart allows you to configure and run our official [Aerospike Vector Search](https://hub.docker.com/repository/docker/aerospike/aerospike-proximus)
+This Helm chart allows you to configure and run our official [Aerospike Vector Search](https://hub.docker.com/repository/docker/aerospike/aerospike-vector-search)
 docker image on a Kubernetes cluster.
 
 This helm chart sets up a `StatefulSet` for each AVS instance. We use a `StatefulSet` instead of a `Deployment`, to have stable DNS names for the  
@@ -30,7 +30,7 @@ helm repo add aerospike https://aerospike.github.io/helm-charts
 | `replicaCount`                | Configures the number AVS instance pods to run.                                                                                                                                      | '1'                            |
 | `image`                       | Configures AVS image repository, tag and pull policy.                                                                                                                                | see [values.yaml](values.yaml) |
 | `imagePullSecrets`            | For Private docker registries, when authentication is needed.                                                                                                                        | see [values.yaml](values.yaml) |
-| `aerospikeVectorSearchConfig` | AVS cluster configuration deployed to `/etc/aerospike-proximus/aerospike-proximus.yml`.                                                                                              | see [values.yaml](values.yaml) |
+| `aerospikeVectorSearchConfig` | AVS cluster configuration deployed to `/etc/aerospike-vector-search/aerospike-vector-search.yml`.                                                                                              | see [values.yaml](values.yaml) |
 | `initContainers`              | List of initContainers added to each AVS pods for custom cluster behavior.                                                                                                           | `[]`                           |
 | `serviceAccount`              | Service Account details like name and annotations.                                                                                                                                   | see [values.yaml](values.yaml) |
 | `podAnnotations`              | Additional pod [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/). Should be specified as a map of annotation names to annotation values. | `{}`                           |
@@ -58,7 +58,7 @@ A sample values yaml file is shown below:
 replicaCount: 1
 
 image:
-  tag: "0.4.0"
+  tag: "0.5.0"
 
 aerospikeVectorSearchConfig:
   aerospike:

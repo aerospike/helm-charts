@@ -5,5 +5,5 @@ metadata:
   labels:
     {{- include "aerospike-vector-search.labels" . | nindent 4 }}
 data:
-  aerospike-proximus.yml: |-
+  aerospike-vector-search.yml: |-
     {{- .Values.aerospikeVectorSearchConfig | toYaml | nindent 4 }}

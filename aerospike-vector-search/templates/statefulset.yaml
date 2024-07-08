@@ -63,8 +63,8 @@ spec:
             {{- end }}
           volumeMounts:
             - name: aerospike-vector-search-configmap
-              mountPath: /etc/aerospike-proximus/aerospike-proximus.yml
-              subPath: aerospike-proximus.yml
+              mountPath: /etc/aerospike-vector-search/aerospike-vector-search.yml
+              subPath: aerospike-vector-search.yml
               readOnly: true
             - name: aerospike-secret
               mountPath: {{ index .Values.aerospikeVectorSearchConfig "feature-key-file" }}
