@@ -22,7 +22,6 @@ aerospikeVectorSearchConfig:
         addresses:
           0.0.0.0
   aerospike:
-    metadata-namespace: "avs-meta"
     seeds:
       - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
           port: 3000
