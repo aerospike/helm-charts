@@ -58,7 +58,7 @@ A sample values yaml file is shown below:
 replicaCount: 1
 
 image:
-  tag: "0.5.0"
+  tag: "0.9.0"
 
 aerospikeVectorSearchConfig:
   aerospike:
