@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aerospike-proxy
-description: A Helm chart for Kubernetes
+description: Helm chart for Aerospike Proxy
 
 # A chart can be either an 'application' or a 'library' chart.
 #
