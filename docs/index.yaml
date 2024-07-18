@@ -23,6 +23,20 @@ entries:
     version: 0.1.0
   aerospike-graph:
   - apiVersion: v2
+    appVersion: 2.2.0
+    created: "2024-07-18T00:16:51.743989698-06:00"
+    description: Aerospike Graph Service
+    digest: 80e92b7a3ebcd9b02248e67f22ce7b39f884deeed360a24c9d40b48155150996
+    keywords:
+    - graph
+    - database
+    - aerospike
+    name: aerospike-graph
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-graph-2.2.0.tgz
+    version: 2.2.0
+  - apiVersion: v2
     appVersion: 2.0.0
     created: "2024-07-08T10:25:45.245205+03:00"
     description: Aerospike Graph Service
