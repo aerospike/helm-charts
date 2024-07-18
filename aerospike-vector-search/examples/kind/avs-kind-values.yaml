@@ -1,11 +1,26 @@
 aerospikeVectorSearchConfig:
+  cluster:
+    cluster-name: "avs-db-1"
+  feature-key-file: "/etc/aerospike-vector-search/features.conf"
+  service:
+    ports:
+      5000:
+        addresses:
+          "0.0.0.0"
+  manage:
+    ports:
+      5040: { }
+  interconnect:
+    ports:
+      5001:
+        addresses:
+          "0.0.0.0"
   aerospike:
-    metadata-namespace: "avs-meta"
     seeds:
       - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
           port: 3000
   logging:
-    #    file: /var/log/aerospike-proximus/aerospike-proximus.log
+    #    file: /var/log/aerospike-vector-search/aerospike-vector-search.log
     enable-console-logging: false
     format: simple
     max-history: 30

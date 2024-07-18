@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: aerospike.jfrog.io/ecosystem-container-prod-local/aerospike-backup-service
+  repository: aerospike/aerospike-backup-service
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "1.0.0"
@@ -13,6 +13,15 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+# the helm chart will be deployed into the default namespace if namespace is not set.
+namespace: ""
+
+configmap:
+  # Specifies whether a configmap should be created with the backupServiceConfig.
+  # When false the backupServiceConfig will get created in the deployment init container.
+  # Set to false when needing to change the config at runtime.
+  create: true
 
 #args: ["-c", "/etc/aerospike-backup-service/aerospike-backup-service.yml", "-r"]
 args: []
@@ -63,7 +72,7 @@ backupServiceConfig: {}
 #        certfile: <path-to-certfile> # Optional
 #  storage:
 #    <storage-name>:
-#      type: <storage-type> # Mandatory Valid values (0 - Local, 1 - AWS S3)
+#      type: <storage-type> # Mandatory Valid values ("local" or "aws-s3")
 #      path: <root-path> # Mandatory
 #      s3-region: <s3-region> # Optional S3 region where the S3 backet resides
 #      s3-profile: <s3-profile> # Optional AWS profile name

@@ -1,23 +1,23 @@
-# Aerospike Proximus Quote Search example
+# Aerospike Vector Search Quote Search example
 
-This example deploys Aerospike Proximus cluster along with an Aerospike cluster and runs `quote-search` example app.
+This example deploys Aerospike Vector Search cluster along with an Aerospike cluster and runs `quote-search` example app.
 
 ## Prerequisites
 - Kubernetes cluster
 - Helm v3
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
-- Aerospike Proximus [Helm chart](../../README.md#configuration)
+- Aerospike Vector Search [Helm chart](../../README.md#configuration)
 
 ## Clone this repository.
 - A clone of this git repository
 
-## Deploy Proximus Cluster.
+## Deploy Aerospike Vector Search Cluster.
 
 All subsequent commands are run from this directory.
 
 ### Install and Configure Load-Balancer
-Proximus cluster can be reach outside of Kubernetes cluster using a Load-Balancer in this example we're using Metallb but it could be any L4 Load-Balancer of your choice.
+Aerospike Vector Search cluster can be reach outside of Kubernetes cluster using a Load-Balancer in this example we're using Metallb but it could be any L4 Load-Balancer of your choice.
 #### Deploy MetalLB
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.4/config/manifests/metallb-native.yaml
@@ -65,21 +65,21 @@ Create a Kubernetes namespace if not already done
 kubectl create namespace aerospike
 ```
 
-### Deploy Proximus.
-Update the [quote-search-values.yaml](quote-search-values.yaml) file to change Proximus configuration.
+### Deploy Aerospike Vector Search.
+Update the [quote-search-values.yaml](quote-search-values.yaml) file to change Aerospike Vector Search configuration.
 
-Deploy the Proximus cluster using configuration from [quote-search-values.yaml](quote-search-values.yaml)
+Deploy the Aerospike Vector Search cluster using configuration from [quote-search-values.yaml](quote-search-values.yaml)
 ```shell
-helm install --namespace aerospike as-quote-search -f quote-search-values.yaml ../../../aerospike-proximus
+helm install --namespace aerospike as-quote-search -f quote-search-values.yaml ../../../aerospike-vector-search
 ```
 
 ### Deploy `quote-search` app
 #### Build Docker Image
-Follow this [manual](https://github.com/aerospike/proximus-examples/blob/main/quote-semantic-search/README.md#1-build-the-image) to build `qoute-search` app.
+Follow this [manual](https://github.com/aerospike/aerospike-vector-search-examples/blob/main/quote-semantic-search/README.md#1-build-the-image) to build `qoute-search` app.
 #### Download sample data set
 ```shell
 mkdir -p ./data
-curl -L -o ./data/quotes.csv.tgz https://github.com/aerospike/proximus-examples/raw/main/quote-semantic-search/container-volumes/quote-search/data/quotes.csv.tgz
+curl -L -o ./data/quotes.csv.tgz https://github.com/aerospike/aerospike-vector-search-examples/raw/main/quote-semantic-search/container-volumes/quote-search/data/quotes.csv.tgz
 ```
 #### Run tha app
 ```shell
@@ -87,11 +87,11 @@ docker run -d \
 --name "quote-search" \
 -v "./data:/container-volumes/quote-search/data" \
 --network "kind" -p "8080:8080" \
--e "PROXIMUS_HOST=$(kubectl -n aerospike get svc/as-quote-search-aerospike-proximus-lb -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')" \
--e "PROXIMUS_PORT=80" \
+-e "AVS_HOST=$(kubectl -n aerospike get svc/as-quote-search-aerospike-vector-search-lb -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')" \
+-e "AVS_PORT=80" \
 -e "APP_NUM_QUOTES=5000" \
 -e "GRPC_DNS_RESOLVER=native" \
--e "PROXIMUS_IS_LOADBALANCER=True" quote-search
+-e "AVS_IS_LOADBALANCER=True" quote-search
 ```
 ## Cleanup
 ### Stop `quote-search` app
@@ -99,7 +99,7 @@ docker run -d \
 docker stop quote-search
 docker rm quote-search
 ```
-### Uninstall Proximus cluster
+### Uninstall Aerospike Vector Search cluster
 ```shell
 helm delete as-quote-search --namespace aerospike
 ```
