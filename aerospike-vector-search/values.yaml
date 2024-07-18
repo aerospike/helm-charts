@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: "aerospike/aerospike-proximus"
+  repository: "aerospike/aerospike-vector-search"
   pullPolicy: "IfNotPresent"
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.4.0"
+  tag: "0.9.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -56,7 +56,7 @@ aerospikeVectorSearchConfig: {}
 #    default:
 #      - address: 10.0.0.1
 #        port: 5000
-#  metadata-namespace: <metadata-namespace> # Optional default: proximus-meta
+#  metadata-namespace: <metadata-namespace> # Optional default: avs-meta
 #  graceful-shutdown-timeout: <graceful-shutdown-timeout> # Optional default: 20,000 milliseconds
 #
 #manage: # Optional
@@ -121,7 +121,7 @@ aerospikeVectorSearchConfig: {}
 #  ticker-interval-seconds: <ticker-interval-seconds> # Optional
 #  timezone-name: <timezoneName> # Optional
 #
-#feature-key-file: "/etc/aerospike-proximus/features.conf" # Required
+#feature-key-file: "/etc/aerospike-vector-search/features.conf" # Required
 #
 #indexing: # Optional
 #  cache: # Optional
