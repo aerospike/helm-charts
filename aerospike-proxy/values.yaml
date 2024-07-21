@@ -97,13 +97,6 @@ volumes: []
 #     optional: false
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-
-# Additional volumeMounts on the output Deployment definition.
 extraVolumeMounts: []
 # - name: foo
 #   mountPath: "/etc/foo"
