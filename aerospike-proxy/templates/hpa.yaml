@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "aerospike-proxy.fullname" . }}
+  namespace: {{ include "aerospike-proxy.namespace" . }}
   labels:
     {{- include "aerospike-proxy.labels" . | nindent 4 }}
 spec:

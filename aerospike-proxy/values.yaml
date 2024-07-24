@@ -14,7 +14,16 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-proxyConfig: {}
+# namespaceOverride overrides the namespace, defaults to .Release.Namespace
+namespaceOverride: ""
+
+proxyConfig:
+  service:
+    ports:
+      4000:
+    manage:
+      4000:
+        addresses: "0.0.0.0"
 
 serviceAccount:
   # Specifies whether a service account should be created
