@@ -6,7 +6,7 @@ proxyConfig:
       4040: { }
   aerospike:
     seeds:
-      - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
+      - aerocluster-0-0.aerospike.svc.cluster.local:
           port: 3000
 imagePullSecrets:
   - name: regcred
