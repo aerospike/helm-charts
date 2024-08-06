@@ -1,7 +1,7 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT="aerospike-dev"
-ZONE="me-west1-a"
+PROJECT=""
+ZONE=""
 
 #rm -rf "$PWD/aerospike-vector-search-examples"
 #helm uninstall quote-search --namespace aerospike
