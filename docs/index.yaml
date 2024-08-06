@@ -131,6 +131,16 @@ entries:
     version: 1.0.0
   aerospike-proxy:
   - apiVersion: v2
+    appVersion: 1.1.2
+    created: "2024-08-06T16:51:42.507399+03:00"
+    description: Helm chart for Aerospike Proxy
+    digest: 73814826795a6e18830ec09d57ca444e1552516f28bff33b6012e03009865268
+    name: aerospike-proxy
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-proxy-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
     appVersion: 1.1.1
     created: "2024-07-24T13:51:55.223200589-07:00"
     description: Helm chart for Aerospike Proxy
