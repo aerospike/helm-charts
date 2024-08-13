@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "graphservice.fullname" . }}
+  namespace: {{ include "aerospike-graph.namespace" . }}
   labels:
     {{- include "graphservice.labels" . | nindent 4 }}
 spec:
