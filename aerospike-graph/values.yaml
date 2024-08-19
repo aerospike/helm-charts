@@ -43,9 +43,13 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+container:
+  port: 8182
+
 service:
   type: LoadBalancer
   port: 8182
+  # livenessProbePort: 9090
 ingress:
   enabled: false
   className: ""
@@ -61,6 +65,9 @@ ingress:
     #     - path: /gremlin
     #       pathType: ImplementationSpecific
   tls: []
+
+livenessProbe:
+  port: 9090
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
