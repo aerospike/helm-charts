@@ -38,14 +38,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.container.port }}
               protocol: TCP
           livenessProbe:
             initialDelaySeconds: 10
             periodSeconds: 5
             httpGet:
               path: /healthcheck
-              port: 9090
+              port: {{ .Values.livenessProbe.port }}
           readinessProbe:
             exec:
               command:

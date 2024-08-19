@@ -8,9 +8,13 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
-      name: http
+    - name: service
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.container.port }}
+      appProtocol: http
+    - name: healthcheck
+      port: {{ .Values.service.livenessProbePort }}
+      targetPort: {{ .Values.livenessProbe.port }}
+      appProtocol: http
   selector:
     {{- include "graphservice.selectorLabels" . | nindent 4 }}
