@@ -49,7 +49,7 @@ container:
 service:
   type: LoadBalancer
   port: 8182
-  # livenessProbePort: 9090
+  livenessProbePort: 9090
 ingress:
   enabled: false
   className: ""

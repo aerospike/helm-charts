@@ -12,11 +12,9 @@ spec:
       port: {{ .Values.service.port }}
       targetPort: {{ .Values.container.port }}
       appProtocol: http
-    {{- if eq "ClusterIP" .Values.service.type -}}
     - name: healthcheck
-      port: {{ .Values.service.livenessProbePort | default .Values.livenessProbe.port }}
-      targetPort: {{ default .Values.livenessProbe.port }}
+      port: {{ .Values.service.livenessProbePort }}
+      targetPort: {{ .Values.livenessProbe.port }}
       appProtocol: http
-    {{- end }}
   selector:
     {{- include "graphservice.selectorLabels" . | nindent 4 }}
