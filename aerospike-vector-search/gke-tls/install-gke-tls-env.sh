@@ -19,7 +19,7 @@ if [ ! -f "$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/features.
 fi
 
 
-mkdir -p "$WORKSPACE"/aerospike-vector-search/examples/gke-tls/{input,output,secrets}
+mkdir -p "$WORKSPACE"/aerospike-vector-search/examples/gke-tls/{input,output,secrets,certs}
 
 echo "Generate Root"
 openssl genrsa \
@@ -29,6 +29,8 @@ openssl req \
 -x509 \
 -new \
 -nodes \
+-config "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl_ca.conf" \
+-extensions v3_ca \
 -key "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.key" \
 -sha256 \
 -days 3650 \
@@ -36,7 +38,7 @@ openssl req \
 -subj "/C=UK/ST=London/L=London/O=abs/OU=Support/CN=ca.aerospike.com"
 
 echo "Generate Requests & Private Key"
-SAN="asd.aerospike.com" openssl req \
+SVC_NAME="aerospike-cluster.aerospike.svc.cluster.local" COMMON_NAME="asd.aerospike.com" openssl req \
 -new \
 -nodes \
 -config "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl.conf" \
@@ -45,17 +47,28 @@ SAN="asd.aerospike.com" openssl req \
 -keyout "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/asd.aerospike.com.key" \
 -subj "/C=UK/ST=London/L=London/O=abs/OU=Server/CN=asd.aerospike.com"
 
-SAN="avs.aerospike.com" openssl req \
+echo "1"
+SVC_NAME="avs-gke-aerospike-vector-search.aerospike.svc.cluster.local" COMMON_NAME="avs.aerospike.com" openssl req \
 -new \
 -nodes \
 -config "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl.conf" \
 -extensions v3_req \
 -out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/input/avs.aerospike.com.req" \
 -keyout "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/avs.aerospike.com.key" \
--subj "/C=UK/ST=London/L=London/O=abs/OU=Client/CN=avs.aerospike.com"
+-subj "/C=UK/ST=London/L=London/O=abs/OU=Client/CN=avs.aerospike.com" \
+
+echo "2"
+SVC_NAME="avs-gke-aerospike-vector-search.aerospike.svc.cluster.local" COMMON_NAME="svc.aerospike.com" openssl req \
+-new \
+-nodes \
+-config "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl_svc.conf" \
+-extensions v3_req \
+-out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/input/svc.aerospike.com.req" \
+-keyout "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.key" \
+-subj "/C=UK/ST=London/L=London/O=abs/OU=Client/CN=svc.aerospike.com" \
 
 echo "Generate Certificates"
-SAN="asd.aerospike.com" openssl x509 \
+SVC_NAME="aerospike-cluster.aerospike.svc.cluster.local" COMMON_NAME="asd.aerospike.com" openssl x509 \
 -req \
 -extfile "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl.conf" \
 -in "$WORKSPACE/aerospike-vector-search/examples/gke-tls/input/asd.aerospike.com.req" \
@@ -65,9 +78,9 @@ SAN="asd.aerospike.com" openssl x509 \
 -days 3649 \
 -outform PEM \
 -out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/asd.aerospike.com.pem" \
--set_serial 110
+-set_serial 110 \
 
-SAN="avs.aerospike.com" openssl x509 \
+SVC_NAME="avs-gke-aerospike-vector-search.aerospike.svc.cluster.local" COMMON_NAME="avs.aerospike.com" openssl x509 \
 -req \
 -extfile "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl.conf" \
 -in "$WORKSPACE/aerospike-vector-search/examples/gke-tls/input/avs.aerospike.com.req" \
@@ -77,7 +90,19 @@ SAN="avs.aerospike.com" openssl x509 \
 -days 3649 \
 -outform PEM \
 -out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/avs.aerospike.com.pem" \
--set_serial 210
+-set_serial 210 \
+
+SVC_NAME="avs-gke-aerospike-vector-search.aerospike.svc.cluster.local" COMMON_NAME="svc.aerospike.com" openssl x509 \
+-req \
+-extfile "$WORKSPACE/aerospike-vector-search/examples/gke-tls/openssl_svc.conf" \
+-in "$WORKSPACE/aerospike-vector-search/examples/gke-tls/input/svc.aerospike.com.req" \
+-CA "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.pem" \
+-CAkey "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.key" \
+-extensions v3_req \
+-days 3649 \
+-outform PEM \
+-out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.pem" \
+-set_serial 310 \
 
 echo "Verify Certificate signed by root"
 openssl verify \
@@ -90,9 +115,15 @@ openssl verify \
  -CAfile "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.pem" \
  "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/asd.aerospike.com.pem"
 
+ openssl verify \
+ -verbose\
+  -CAfile "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.pem" \
+  "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.pem"
+
 PASSWORD="citrusstore"
-echo -n "$PASSWORD" | tee "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass" > \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/keypass"
+echo -n "$PASSWORD" | tee "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass" \
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/keypass" > \
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/client-password.txt"
 
 ADMIN_PASSWORD="admin123"
 echo -n "$ADMIN_PASSWORD" > "$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/aerospike-password.txt"
@@ -121,29 +152,64 @@ keytool \
 -deststorepass "$(cat $WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass)" \
 -noprompt
 
+openssl pkcs12 \
+-export \
+-out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.p12" \
+-in "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.pem" \
+-inkey "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.key" \
+-password file:"$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass"
+
+keytool \
+-importkeystore \
+-srckeystore "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.p12" \
+-destkeystore "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.keystore.jks" \
+-srcstoretype pkcs12 \
+-srcstorepass "$(cat $WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass)" \
+-deststorepass "$(cat $WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass)" \
+-noprompt
+
+mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.keystore.jks" \
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/svc.aerospike.com.keystore.jks"
+
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/avs.aerospike.com.keystore.jks" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/avs.aerospike.com.keystore.jks"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/avs.aerospike.com.keystore.jks"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.truststore.jks" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/ca.aerospike.com.truststore.jks"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/ca.aerospike.com.truststore.jks"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/asd.aerospike.com.pem" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/asd.aerospike.com.pem"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/asd.aerospike.com.pem"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/avs.aerospike.com.pem" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/avs.aerospike.com.pem"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/avs.aerospike.com.pem"
+
+mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/svc.aerospike.com.pem" \
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/svc.aerospike.com.pem"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/asd.aerospike.com.key" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/asd.aerospike.com.key"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/asd.aerospike.com.key"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/ca.aerospike.com.pem" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/ca.aerospike.com.pem"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/ca.aerospike.com.pem"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/keypass" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/keypass"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/keypass"
 
 mv "$WORKSPACE/aerospike-vector-search/examples/gke-tls/output/storepass" \
-"$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/storepass"
+"$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs/storepass"
+
+echo "Generate Auth Keys"
+openssl genpkey \
+-algorithm RSA \
+-out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/private_key.pem" \
+-pkeyopt rsa_keygen_bits:2048 \
+-pass "pass:$PASSWORD"
+
+openssl rsa \
+-pubout \
+-in "$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/private_key.pem" \
+-out "$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets/public_key.pem" \
+-passin "pass:$PASSWORD"
 
 echo "Install GKE"
 gcloud config set project "$PROJECT"
@@ -151,7 +217,7 @@ gcloud container clusters create avs-gke-cluster \
 --zone "$ZONE" \
 --project "$PROJECT" \
 --num-nodes 3 \
---machine-type e2-standard-4
+--machine-type e2-highmem-4
 gcloud container clusters get-credentials avs-gke-cluster --zone="$ZONE"
 
 sleep 60
@@ -178,7 +244,7 @@ echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike create secret generic aerospike-secret \
 --from-file="$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets"
 kubectl --namespace aerospike create secret generic aerospike-tls \
---from-file="$WORKSPACE/aerospike-vector-search/examples/gke-tls/secrets"
+--from-file="$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs"
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
 
 echo "Add Storage Class"
@@ -218,7 +284,15 @@ helm install avs-gke "$WORKSPACE/aerospike-vector-search" \
 --values "$WORKSPACE/aerospike-vector-search/examples/gke-tls/avs-gke-values.yaml" --namespace aerospike --wait
 
 #echo "Deploying Quote-Search"
-#
+#docker run --name="quote-search" \
+#--rm \
+#--env AVS_HOST="$(kubectl get svc/istio-ingress --namespace istio-ingress -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')" \
+#--env AVS_PORT="5433" \
+#--env AVS_TLS_CA_FILE="/etc/quote-search/certs/ca.aerospike.com.pem" \
+#--env AVS_IS_LOADBALANCER="True" \
+#--volume "$WORKSPACE/aerospike-vector-search/examples/gke-tls/certs":"/etc/quote-search/certs" \
+#davi17g/quote-search:1.0.0
+
 #git clone \
 #--depth 1 \
 #--branch main \

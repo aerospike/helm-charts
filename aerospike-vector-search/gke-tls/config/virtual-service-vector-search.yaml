@@ -8,22 +8,13 @@ spec:
     - "*"
   gateways:
     - avs-gw
-  http:
+  tls:
     - match:
-        - uri:
-            prefix: /
-          port: 80
+        - port: 5433
+          sniHosts:
+            - "*"
       route:
         - destination:
-            port:
-              number: 8080
-            host: quote-search-quote-semantic-search.aerospike.svc.cluster.local
-    - match:
-        - uri:
-            prefix: /
-          port: 5443
-      route:
-        - destination:
-            port:
-              number: 5443
             host: avs-gke-aerospike-vector-search.aerospike.svc.cluster.local
+            port:
+              number: 5433

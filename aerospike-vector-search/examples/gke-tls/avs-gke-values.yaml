@@ -1,8 +1,8 @@
-replicaCount: 1
+replicaCount: 3
 aerospikeVectorSearchConfig:
   cluster:
     cluster-name: "avs-db-1"
-  feature-key-file: "/etc/aerospike-vector-search/features.conf"
+  feature-key-file: "/etc/aerospike-vector-search/secrets/features.conf"
   service:
     metadata-namespace: "avs-meta"
     ports:
@@ -17,6 +17,7 @@ aerospikeVectorSearchConfig:
   heartbeat:
     seeds:
       - address: avs-gke-aerospike-vector-search-0.avs-gke-aerospike-vector-search.aerospike.svc.cluster.local
+#        port: 5001
         port: 5444
   interconnect:
     client-tls-id: interconnect-tls
@@ -25,33 +26,45 @@ aerospikeVectorSearchConfig:
         addresses:
           "0.0.0.0"
         tls-id: interconnect-tls
+#    ports:
+#      5001:
+#        addresses:
+#          "0.0.0.0"
   storage:
     client-policy:
-      cluster-name: aerocluster
-      #      max-conns-per-node: 1000
+#      cluster-name: aerocluster
+#      max-conns-per-node: 1000
       tls-id: aerospike-tls
       credentials:
-        username: admin
-        password-file: "/etc/ssl/certs/aerospike-password.txt"
+        username: tester
+        password-file: "/etc/aerospike-vector-search/secrets/aerospike-password.txt"
     seeds:
-      - aerospike-cluster-0-0.aerospike-cluster.aerospike.svc.cluster.local:
+      - aerospike-cluster.aerospike.svc.cluster.local:
+#          port: 3000
           port: 4333
           tls-name: "asd.aerospike.com"
-
+  security:
+    auth-token:
+      private-key: "/etc/aerospike-vector-search/secrets/private_key.pem"
+      private-key-password: "/etc/aerospike-vector-search/secrets/client-password.txt"
+      public-key: "/etc/aerospike-vector-search/secrets/public_key.pem"
   tls:
     service-tls:
       trust-store:
         store-file: /etc/ssl/certs/ca.aerospike.com.truststore.jks
         store-password-file: /etc/ssl/certs/storepass
+        key-password-file: "/etc/ssl/certs/keypass"
       key-store:
-        store-file: /etc/ssl/certs/avs.aerospike.com.keystore.jks
+        store-file: /etc/ssl/certs/svc.aerospike.com.keystore.jks
         store-password-file: /etc/ssl/certs/storepass
         key-password-file: /etc/ssl/certs/keypass
+#      override-tls-hostname: avs-gke-aerospike-vector-search-0.avs-gke-aerospike-vector-search.aerospike.svc.cluster.local
 
     interconnect-tls:
       trust-store:
         store-file: /etc/ssl/certs/ca.aerospike.com.truststore.jks
         store-password-file: /etc/ssl/certs/storepass
+        key-password-file: "/etc/ssl/certs/keypass"
       key-store:
         store-file: /etc/ssl/certs/avs.aerospike.com.keystore.jks
         store-password-file: /etc/ssl/certs/storepass
@@ -62,18 +75,19 @@ aerospikeVectorSearchConfig:
       trust-store:
         store-file: "/etc/ssl/certs/ca.aerospike.com.truststore.jks"
         store-password-file: "/etc/ssl/certs/storepass"
+        key-password-file: "/etc/ssl/certs/keypass"
       key-store:
         store-file: "/etc/ssl/certs/avs.aerospike.com.keystore.jks"
         store-password-file: "/etc/ssl/certs/storepass"
         key-password-file: "/etc/ssl/certs/keypass"
-      override-tls-hostname: "avs.aerospike.com"
+#      override-tls-hostname: "asd.aerospike.com"
   logging:
     #    file: /var/log/aerospike-vector-search/aerospike-vector-search.log
     enable-console-logging: false
     format: simple
     max-history: 30
     levels:
-      metrics-ticker: info
+      metrics-ticker: debug
       root: info
     ticker-interval: 10
 

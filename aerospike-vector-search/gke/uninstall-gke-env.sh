@@ -3,8 +3,6 @@ WORKSPACE="$(git rev-parse --show-toplevel)"
 PROJECT=""
 ZONE=""
 
-rm -rf "$PWD/aerospike-vector-search-examples"
-helm uninstall quote-search --namespace aerospike
 helm uninstall avs-gke --namespace aerospike
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/gke/config/gateway.yaml"
 kubectl delete -f "$WORKSPACE/aerospike-vector-search/gke/config/virtual-service-vector-search.yaml"
