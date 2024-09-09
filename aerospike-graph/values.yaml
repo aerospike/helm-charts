@@ -81,6 +81,18 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+initContainers: []
+
+volumes: []
+# - name: example_volume
+#   secret:
+#     secretName: example_secret
+
+volumeMounts: []
+# - name: example_volume_mount
+#   mountPath: "/path/to/example"
+#   readOnly: true
+
 autoscaling:
   enabled: false
   minReplicas: 2
