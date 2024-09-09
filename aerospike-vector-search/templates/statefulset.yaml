@@ -67,8 +67,7 @@ spec:
               subPath: aerospike-vector-search.yml
               readOnly: true
             - name: aerospike-secret
-              mountPath: {{ index .Values.aerospikeVectorSearchConfig "feature-key-file" }}
-              subPath: {{ index .Values.aerospikeVectorSearchConfig "feature-key-file" | base }}
+              mountPath: /etc/aerospike-vector-search/secrets
               readOnly: true
             {{- if .Values.extraVolumeMounts }}
             {{- range .Values.extraVolumeMounts }}
