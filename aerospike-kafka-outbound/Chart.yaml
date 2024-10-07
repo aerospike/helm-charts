@@ -16,4 +16,4 @@ maintainers:
 version: 1.0.1
 
 # The default version of Aerospike Kafka Outbound Connector
-appVersion: "5.1.2"
+appVersion: "5.3.3"
