@@ -11,7 +11,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version:  0.5.0
+version:  0.6.0
 
-# The default version of Aerospike Kafka Outbound Connector
-appVersion: "0.10.0"
+# The default version of Aerospike Vector Search
+appVersion: "0.11.1"

@@ -8,137 +8,175 @@ image:
   repository: "aerospike/aerospike-vector-search"
   pullPolicy: "IfNotPresent"
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.0"
+  tag: "0.11.1"
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 aerospikeVectorSearchConfig: {}
-#service: # Required
-#  io-threads: <io-threads> # Optional default: retrieved from the system
-#  worker-threads: <worker-threads> # Optional default: retrieved from the system
-#  max-inbound-message-size: <max-inbound-message-size> # Optional default: 8388608 (8MiB)
-#  max-concurrent-requests: <max-concurrent-requests> # Optional default: 32768
-#  http2-max-concurrent-streams: <http2-max-concurrent-streams> # Optional default: 128
-#  flow-control: # Optional
-#    memory-high-water-mark-percentage: <memory-high-water-mark-percentage> # Optional default: 80
-#    memory-low-water-mark-percentage: <memory-low-water-mark-percentage> # Optional default: 60
-#    period: <period> # Optional default: 10
-#    stream-ready-timeout: <stream-ready-timeout> # Optional default: 10,000 milliseconds
-#    minimum-enable-time: <minimum-enable-time> # Optional default: 10,000 milliseconds
-#  ports: # Required
+#cluster:
+#  # Unique identifier for this cluster.
+#  cluster-name: aerospike-vector-search
+#
+#  # Custom node-id as 8 byte long in Hexadecimal format.
+#  #  It will be auto-generated if not specified.
+#  node-id: a1
+#
+## If TLS is desired, TLS configuration ids used
+## and associated TLS configurations.
+#tls:
+#  service-tls:
+#    trust-store:
+#      store-file: tls/ca.aerospike.com.truststore.jks
+#      store-password-file: tls/storepass
+#    key-store:
+#      store-file: tls/avs.aerospike.com.keystore.jks
+#      store-password-file: tls/storepass
+#      key-password-file: tls/keypass
+#
+#  interconnect-tls:
+#    trust-store:
+#      store-file: tls/ca.aerospike.com.truststore.jks
+#      store-password-file: tls/storepass
+#    key-store:
+#      store-file: tls/avs.aerospike.com.keystore.jks
+#      store-password-file: tls/storepass
+#      key-password-file: tls/keypass
+#    override-tls-hostname: avs.aerospike.com
+#
+#  aerospike-tls:
+#    trust-store:
+#      store-file: tls/ca.aerospike.com.truststore.jks
+#      store-password-file: tls/storepass
+#    key-store:
+#      store-file: tls/avs.aerospike.com.keystore.jks
+#      store-password-file: tls/storepass
+#      key-password-file: tls/keypass
+#    override-tls-hostname: asd.aerospike.com
+#
+## The AVS service listening ports, TLS and network interface.
+#service:
+#  ports:
+#    # Clear text service port.
 #    5000:
+#      # Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
 #      addresses:
-#        "0.0.0.0"
-#    tls-id: # Optional
-#      allowed-peer-names: <allowed-peer-names> # Optional
-#      mutual-auth: <mutual-auth> # Optional default: false
-#      key-store: # Required
-#        cert-chain-files: <certChainFiles>
-#        key-password-file: <keyPasswordFile>
-#        store-file: <storeFile>
-#        store-files: <storeFiles>
-#        store-password-file: <storePasswordFile>
-#        store-type: <storeType>
-#      trust-store: # Optional
-#        cert-chain-files: <certChainFiles>
-#        key-password-file: <keyPasswordFile>
-#        store-file: <storeFile>
-#        store-files: <storeFiles>
-#        store-password-file: <storePasswordFile>
-#        store-type: <storeType>
-#      protocols: <protocols> # Optional default: TLSv1.2"
-#      ciphers: <ciphers>
-#      cert-refresh-interval-ms: <cert-refresh-interval-ms>
-#      advertised-listeners: <advertised-listeners>
-#  advertised-listeners: # Optional
-#    default:
-#      - address: 10.0.0.1
-#        port: 5000
-#  metadata-namespace: <metadata-namespace> # Optional default: avs-meta
-#  graceful-shutdown-timeout: <graceful-shutdown-timeout> # Optional default: 20,000 milliseconds
+#        localhost
+#      # Required when running behind NAT
+#      advertised-listeners:
+#        default:
+#          # List of externally accessible addresses and
+#          # ports for this AVS instance.
+#          - address: 10.0.0.1
+#            port: 5000
 #
-#manage: # Optional
-#  ports:
-#    5040: { }
+#    # TLS service port.
+#    5443:
+#      # Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
+#      addresses:
+#        localhost
+#      tls-id: service-tls
+#      # Required when running behind NAT
+#      advertised-listeners:
+#        default:
+#          # List of externally accessible addresses and
+#          # ports for this AVS instance.
+#          # Use the hostname/domain name/IP here to match the TLS certificate.
+#          - address: 10.0.0.1
+#            port: 5443
 #
-#interconnect: # Required
+## Management API listening ports, TLS and network interface.
+#manage:
 #  ports:
+#    # Clear text port
+#    5040:
+#      # Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
+#      addresses:
+#        localhost
+#    # Manage TLS port
+#    5483:
+#      # Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
+#      addresses:
+#        localhost
+#      tls-id: service-tls
+#
+## Intra cluster interconnect listening ports, TLS and network interface.
+#interconnect:
+#  # Interconnect client side TLS configuration
+#  # when TLS is enabled for interconnect
+#  client-tls-id: interconnect-tls
+#  ports:
+#    # Clear text port
 #    5001:
+#      # Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
 #      addresses:
-#        "0.0.0.0"
-#  client-tls-id: <client-tls-id> # Optional
-#  max-connections: <max-connections>  # Optional
-#  max-total-connections: <max-total-connections> # Optional default: 32767
-#  connect-timeout: <connect-timeout> # Optional default: 10000
-#  io-threads: <io-threads> # Optional default: retrieved from the system
-#  worker-threads: <worker-threads> # Optional default: retrieved from the system
-#  max-inbound-message-size: <max-inbound-message-size> # Optional default: 8388608 (8MiB)
-#  max-concurrent-requests: <max-concurrent-requests> # Optional default: 32768
-#  http2-max-concurrent-streams": <http2-max-concurrent-streams> # Optional default: 128
-#  flow-control: # Optional
-#    memory-high-water-mark-percentage: <memory-high-water-mark-percentage> # Optional default: 80
-#    memory-low-water-mark-percentage: <memory-low-water-mark-percentage> # Optional default: 60
-#    period: <period> # Optional default: 10
-#    stream-ready-timeout: <stream-ready-timeout> # Optional default: 10,000 milliseconds
-#    minimum-enable-time: <minimum-enable-time> # Optional default: 10,000 milliseconds
-#  rtt-max: <rtt-max> # Optional default: 5
+#        localhost
+#    # TLS interconnect port
+#    5444:
+#      #Hostname/IP/network interface name to bind to.
+#      # If not specified binds to all interfaces.
+#      addresses:
+#        localhost
+#      tls-id: interconnect-tls
 #
-#heartbeat: # Optional
-#  interval: <interval> # Optional default: 500 milliseconds
-#  timeout: <timeout> # Optional default: 5000 milliseconds
-#  seeds: # Optional
-#    - address: "10.0.0.1"
-#      port: "5001"
+#heartbeat:
+#  # Seed nodes to discover and form a cluster.
+#  seeds:
+#    # Clear text seed
+#    - address: 192.168.1.5
+#      port: 5001
+#    # TLS seed node
+#    - address: 192.168.1.5
+#      port: 5001
 #
-#cluster: # Required
-#  node-id: <id> # Optional
-#  cluster-name: <cluster-name> # Required
-#  min-cluster-size: <int> # Optional minimum allowed cluster size
-#
-#aerospike: # Required
-#  seeds:  # Required
-#    - "10.0.0.1"
-#        port: 3000
-#  client-policy: <client-policy>
-#
+## To enable client authentication
 #security:
-#  auth-token: <auth-token> # Required
-#  timeout: <timeout> # Optional default 2000 milliseconds
-#  cache-expiry: <expiry>  # Optional default 10,000 milliseconds
+#  auth-token:
+#    private-key: samples/auth/private_key.pem
+#    public-key: samples/auth/public_key.pem
+#    token-expiry: 300_000
 #
-#logging: # Optional
-#  enable-console-logging: <enable-console-logging> # Optional default: false
-#  levels: # Optional
-#    metrics-ticker: <metrics-ticker> # Optional
-#    root: <root> # Optional
-#    ticker-interval: <ticker-interval> # Optional
-#  log-file-path: <log-file-path> # Optional
-#  log-format: <log-format> # Optional
-#  max-history: <max-history> # Optional
-#  rolling-fileName-pattern: <rolling-fileName-pattern> # Optional
-#  ticker-interval-seconds: <ticker-interval-seconds> # Optional
-#  timezone-name: <timezoneName> # Optional
+## Aerospike DB storage configuration
+#storage:
+#  seeds:
+#    - localhost:
+#        port: 3000
+#        # Aerospike TLS port
+#        port: 3010
 #
-#feature-key-file: "/etc/aerospike-vector-search/features.conf" # Required
+#  client-policy:
+#    max-conns-per-node: 1000
+#    # If TLS is required to connect to Aerospike
+#    tls-id: aerospike-tls
+#    #
+#    # Aerospike credentials if required.
+#    credentials:
+#      username: admin
+#      password-file: aerospike-password.txt
 #
-#indexing: # Optional
-#  cache: # Optional
-#    max-entries: <max-entries> # Optional default: 2,000,000
-#    expiry-millis: <expiry-millis> # Optional default: 2^63-1
-#  cleanup: # Optional
-#    dropped-index-cleanup-scheduler-delay: <dropped-index-cleanup-scheduler-delay> # Optional default: 30 minutes
-#    dropped-index-cleanup-scheduler-initial-delay: <dropped-index-cleanup-scheduler-initial-delay> # Optional default: 30 minutes
-#    mark-dropped-index-clean-after: <mark-dropped-index-clean-after> # Optional default: 1 Hour
-#    deleted-index-retention-time: <deleted-index-retention-time> # Optional default: 5 Days
-#  batch-merge: # Optional
-#    parallelism: <parallelism> # Optional default: retrieved from the system
-#    executor-delay: <executor-delay> # Optional default: 1 Second
-#    executor-initial-delay: <executor-initial-delay:> # Optional default: 0
-#  enable-proxy-load-balancing: <enable-proxy-load-balancing> # Optional default: true
+## HNSW index configuration defaults
+#hnsw:
+#  healer:
+#    # Schedule healer runs using Quartz cron expressions.
+#    # See https://www.freeformatter.com/cron-expression-generator-quartz.html
+#    # and https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
+#    # Expression below runs the healer once every 5 hours.
+#    schedule: "0 0 0/5 ? * * *"
+#  # Disable vector integrity check.
+#  enable-vector-integrity-check: false
 #
-#tls: ""
+## The logging properties.
+#logging:
+#  file: /var/log/aerospike-vector-search/aerospike-vector-search.log
+#  enable-console-logging: true
+#  levels:
+#    root: debug
 
 
 initContainers: []
