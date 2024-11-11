@@ -60,7 +60,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "5.3.4"
+  tag: "5.3.5"
 
 connectorConfig:
   service:
