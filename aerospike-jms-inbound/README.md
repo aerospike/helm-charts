@@ -56,7 +56,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "3.0.6"
+  tag: "3.0.7"
 
 connectorConfig:
   # Optional HTTP Server configuration to expose Manage API and Prometheus metrics

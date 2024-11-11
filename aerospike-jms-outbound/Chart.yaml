@@ -16,4 +16,4 @@ maintainers:
 version: 1.0.0
 
 # The default version of Aerospike JMS Outbound Connector
-appVersion: "4.2.4"
+appVersion: "4.2.5"
