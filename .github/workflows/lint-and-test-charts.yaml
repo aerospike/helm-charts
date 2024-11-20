@@ -171,5 +171,6 @@ jobs:
 
       - name: Run chart-testing (install)
         run: |
-          ct install --chart-dirs "./aerospike-vector-search" \
+          cd aerospike-vector-search
+          ct install --namespace aerospike  --chart-dirs . --charts . \
             --target-branch ${{ github.event.repository.default_branch }}
