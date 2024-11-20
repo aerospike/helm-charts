@@ -63,7 +63,114 @@ jobs:
           
           echo "Set Secrets for Aerospike Cluster"
           kubectl --namespace aerospike create secret generic aerospike-secret \
-          --from-literal=features.conf="$(echo "${{ secrets.FEATURES_CONF }}")" 
+          --from-literal=features.conf="$(echo "${{ secrets.FEATURES_CONF }}")"
+          
+          kubectl apply -f - <<-EOF
+            apiVersion: asdb.aerospike.com/v1
+            kind: AerospikeCluster
+            metadata:
+              name: aerospike-cluster
+              namespace: aerospike
+            spec:
+              size: 1
+              image: aerospike/aerospike-server-enterprise:7.0.0.5
+              podSpec:
+                multiPodPerHost: true
+              storage:
+                filesystemVolumePolicy:
+                  cascadeDelete: true
+                  initMethod: deleteFiles
+                volumes:
+                  - name: workdir
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 3Gi
+                    aerospike:
+                      path: /opt/aerospike
+                  - name: nsvol1
+                    aerospike:
+                      path: /mnt/disks/test
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol2
+                    aerospike:
+                      path: /mnt/disks/avs-index
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol3
+                    aerospike:
+                      path: /mnt/disks/avs-data
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol4
+                    aerospike:
+                      path: /mnt/disks/avs-meta
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: aerospike-config-secret
+                    source:
+                      secret:
+                        secretName: aerospike-secret
+                    aerospike:
+                      path: /etc/aerospike/secret
+              aerospikeConfig:
+                service:
+                  feature-key-file: /etc/aerospike/secret/features.conf
+                #    security: {}
+                network:
+                  service:
+                    port: 3000
+                  fabric:
+                    port: 3001
+                  heartbeat:
+                    port: 3002
+                namespaces:
+                  - name: test
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/test/test.dat
+                  - name: avs-index
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-index/avs-index.dat
+                  - name: avs-data
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-data/avs-data.dat
+                  - name: avs-meta
+                    nsup-period: 600
+                    nsup-threads: 2
+                    evict-tenths-pct: 5
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-meta/avs-meta.dat
+          EOF
 
 #
 #      - name: Run chart-testing (install)
