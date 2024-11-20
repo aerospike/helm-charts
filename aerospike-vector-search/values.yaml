@@ -74,7 +74,7 @@ aerospikeVectorSearchConfig:
 #            - address: 10.0.0.1
 #              port: 5000
 #       TLS service port.
-        5443:
+#      5443:
 #        Hostname/IP/network interface name to bind to.
 #        If not specified binds to all interfaces.
 #          addresses:
