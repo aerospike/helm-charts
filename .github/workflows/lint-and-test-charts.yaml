@@ -25,17 +25,16 @@ jobs:
           check-latest: true
 
       - name: Set up chart-testing
+        if: startsWith(github.head_ref, 'VEC-')
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Output default branch
+      - name: Run chart-testing (lint)
+        if: startsWith(github.head_ref, 'VEC-')
         run: |
-          echo "Branch: ${{ github.event.repository.default_branch }}"
+          ct lint --chart-dirs "./aerospike-vector-search" --target-branch ${{ github.event.repository.default_branch }}
 
-#      - name: Run chart-testing (lint)
-#        if: steps.list-changed.outputs.changed == 'true'
-#        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
-#
       - name: Create kind cluster
+        if: startsWith(github.head_ref, 'VEC-')
         uses: helm/kind-action@v1.10.0
 
       - name: Setup Prerequisites
@@ -172,7 +171,8 @@ jobs:
                         - /mnt/disks/avs-meta/avs-meta.dat
           EOF
 
-#
-#      - name: Run chart-testing (install)
-#        if: steps.list-changed.outputs.changed == 'true'
-#        run: ct install --target-branch ${{ github.event.repository.default_branch }}
+      - name: Run chart-testing (install)
+        if: startsWith(github.head_ref, 'VEC-')
+        run: |
+          ct install --chart-dirs "./aerospike-vector-search" \
+            --target-branch ${{ github.event.repository.default_branch }}
