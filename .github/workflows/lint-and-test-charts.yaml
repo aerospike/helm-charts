@@ -35,9 +35,36 @@ jobs:
 #        if: steps.list-changed.outputs.changed == 'true'
 #        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
 #
-#      - name: Create kind cluster
-#        if: steps.list-changed.outputs.changed == 'true'
-#        uses: helm/kind-action@v1.10.0
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.10.0
+
+      - name: Setup Prerequisites
+        run: |
+          
+          echo "Deploying AKO"
+          curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.30.0/install.sh \
+          | bash -s v0.30.0
+          
+          kubectl create -f https://operatorhub.io/install/aerospike-kubernetes-operator.yaml
+          echo "Waiting for AKO"
+          while true; do
+            if kubectl --namespace operators get deployment/aerospike-operator-controller-manager &> /dev/null; then
+              kubectl --namespace operators wait \
+                --for=condition=available --timeout=180s deployment/aerospike-operator-controller-manager
+              break
+            fi
+          done
+          
+          echo "Grant permissions to the target namespace"
+          kubectl create namespace aerospike
+          kubectl --namespace aerospike create serviceaccount aerospike-operator-controller-manager
+          kubectl create clusterrolebinding aerospike-cluster \
+            --clusterrole=aerospike-cluster --serviceaccount=aerospike:aerospike-operator-controller-manager
+          
+          echo "Set Secrets for Aerospike Cluster"
+          kubectl --namespace aerospike create secret generic aerospike-secret \
+          --from-literal=features.conf="$(echo "${{ secrets.FEATURES_CONF }}")" 
+
 #
 #      - name: Run chart-testing (install)
 #        if: steps.list-changed.outputs.changed == 'true'
