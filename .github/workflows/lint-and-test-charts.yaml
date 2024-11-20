@@ -27,15 +27,33 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
 
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed="$(ct list-changed --chart-dirs . --target-branch ${{ github.event.repository.default_branch }})" \
+            | grep "aerospike-vector-search"
+          if [[ -n "$changed" ]]; then
+            echo "here"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint version bump)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          ct lint --chart-dirs . --target-branch ${{ github.event.repository.default_branch }}
+
       - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
         run: |
           cd aerospike-vector-search
           ct lint --chart-dirs . --charts . --target-branch ${{ github.event.repository.default_branch }}
 
       - name: Create kind cluster
+        if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@v1.10.0
 
       - name: Setup Prerequisites
+        if: steps.list-changed.outputs.changed == 'true'
         run: |
           
           echo "Deploying AKO"
@@ -170,6 +188,7 @@ jobs:
           EOF
 
       - name: Run chart-testing (install)
+        if: steps.list-changed.outputs.changed == 'true'
         run: |
           cd aerospike-vector-search
           ct install --namespace aerospike  --chart-dirs . \
