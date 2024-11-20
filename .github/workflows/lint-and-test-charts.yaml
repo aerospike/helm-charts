@@ -31,7 +31,7 @@ jobs:
         id: list-changed
         run: |
           changed="$(ct list-changed --chart-dirs . --target-branch ${{ github.event.repository.default_branch }} \
-          | grep "aerospike-vector-search")" \
+          | grep "aerospike-vector-search")"
           if [[ -n "$changed" ]]; then
             echo "here"
             echo "changed=true" >> "$GITHUB_OUTPUT"
