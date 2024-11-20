@@ -1,10 +1,7 @@
 name: Lint and Test Charts
 
-#on: pull_request
-on:
-  push:
-    branches:
-      - "VEC-430-configure-test-and-linting-for-all-helm-charts"
+on: pull_request
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest
