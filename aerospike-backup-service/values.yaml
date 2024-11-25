@@ -225,6 +225,10 @@ extraSecretVolumeMounts: []
 #   mountPath: "/etc/foo"
 #   readOnly: true
 
+envFrom: []
+#- configMapRef:
+#    name: foo
+
 nodeSelector: {}
 
 tolerations: []
