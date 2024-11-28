@@ -3,7 +3,7 @@ configmap:
 namespace: "aerospike"
 image:
   repository: aerospike.jfrog.io/ecosystem-container-dev-local/aerospike-backup-service
-  tag: azureCreds
+  tag: tests
 imagePullSecrets:
   - name: regcred
 backupServiceConfig:
