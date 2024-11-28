@@ -1,6 +1,11 @@
 configmap:
   create: true
 namespace: "aerospike"
+image:
+  repository: aerospike.jfrog.io/ecosystem-container-dev-local/aerospike-backup-service
+  tag: azureCreds
+imagePullSecrets:
+  - name: regcred
 backupServiceConfig:
   aerospike-clusters:
     absCluster1:
@@ -12,13 +17,13 @@ backupServiceConfig:
         password: psw
   storage:
     minioStorage:
-      # Use 1 for S3 or compatible and 0 for local storage.
-      type: "aws-s3"
-      # as-backup-bucket is expected to exist in MinIO.
-      path: s3://as-backup-bucket/minioStorage
-      s3-region: eu-central-1
-      s3-profile: minio
-      s3-endpoint-override: http://minio:9000
+      s3-storage:
+        path: minioStorage
+        # as-backup-bucket is expected to exist in MinIO.
+        bucket: as-backup-bucket
+        s3-region: eu-central-1
+        s3-profile: minio
+        s3-endpoint-override: http://minio:9000
   backup-policies:
     keepFilesPolicy:
       # Run backup operations in a single thread.
