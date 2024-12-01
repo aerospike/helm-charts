@@ -25,6 +25,11 @@ kubectl create secret generic psw-cm \
 --namespace aerospike \
 --from-file="$WORKSPACE/aerospike-backup-service/examples/kind/config/psw.txt"
 
+kubectl create secret generic regcred \
+--namespace aerospike \
+--type=kubernetes.io/dockerconfigjson \
+--from-file=.dockerconfigjson="$WORKSPACE/aerospike-backup-service/examples/kind/config/docker-conf.json"
+
 helm install abs "$WORKSPACE/aerospike-backup-service/" \
 --namespace aerospike \
 --values "$WORKSPACE/aerospike-backup-service/examples/values/minio-values.yaml" \
