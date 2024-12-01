@@ -58,3 +58,4 @@ extraSecretVolumeMounts:
     mountPath: /root/.aws/credentials
     subPath: credentials
     readOnly: true
+    
