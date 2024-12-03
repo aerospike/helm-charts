@@ -15,10 +15,12 @@ deployed AVS pods.
 
 ## Adding the helm chart repository
 
-Add the `aerospike` helm repository if not already done
+Add the `aerospike-io` helm repository if not already done. (Note: The repository has moved to artifact.aerospike.io. If you are still pointing to aerospike.github.io, please update the repository URL)
+
 
 ```shell
-helm repo add aerospike https://aerospike.github.io/helm-charts
+helm repo add aerospike-io https://artifact.aerospike.io/artifactory/api/helm/aerospike-helm
+
 ```
 
 ## Supported configuration
@@ -58,7 +60,7 @@ A sample values yaml file is shown below:
 replicaCount: 1
 
 image:
-  tag: "0.9.0"
+  tag: "0.11.1"
 
 aerospikeVectorSearchConfig:
   aerospike:
@@ -94,7 +96,7 @@ kubectl --namespace aerospike create secret generic aerospike-secret --from-file
 
 ```shell
 # helm install --namespace <target namespace> <helm release name/cluster name> -f <path to custom values yaml> aerospike/aerospike-vector-search
-helm install --namespace aerospike avs -f avs-values.yaml aerospike/aerospike-vector-search
+helm install --namespace aerospike avs -f avs-values.yaml aerospike/aerospike-vector-search --version 0.6.0 
 ```
 
 Here `avs` is the release name for the AVS cluster and also its cluster name.
@@ -175,3 +177,5 @@ Verify that the AVS cluster have been scaled.
 - [List the pods](#list-pods-for-the-avs-cluster) and verify the count of AVS instances is as desired
 
 **_NOTE:_** The changes might take some time to apply. If you do not see the desired count try again after some time.
+
+
