@@ -1,4 +1,4 @@
-name: Sign,  Build, and Bundle
+name: Build and Bundle Jfrog Helm chart
 
 on:
   workflow_dispatch:
@@ -15,17 +15,62 @@ on:
         description: 'Name of the jfrog repo to deploy the chart to'
         required: true
         default: 'ecosystem-helm-dev-local'
-      build_name:
-        description: 'Name of the build to create'
-        required: true
-        default: 'aerospike-vector-search-helm'
-      build_number: 
+      chart_version: 
         description: 'Build number to use for the build metadata'
         required: true
         default: '0.7.0'
+env:
+    JF_PROJECT: ${{ github.event.inputs.jfrog_project }}
+    JF_REPO: ${{ github.event.inputs.repo_name }}
+    CHART_VERSION: ${{ github.event.inputs.chart_version }}
+    CHART_NAME: ${{ github.event.inputs.chart_name }}
+
 jobs:
   build-chart:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+
+    # You can sign helm charts but not doing this for now
+    #   - name: setup GPG
+    #     uses: aerospike/shared-workflows/devops/setup-gpg@main
+    #     with:
+    #       gpg-private-key: ${{ secrets.GPG_SECRET_KEY }}
+    #       gpg-public-key: ${{ secrets.GPG_PUBLIC_KEY }}
+    #       gpg-key-pass: ${{ secrets.GPG_PASS }}
+    #       gpg-key-name: "aerospike-inc"
+          
+      - name: setup jfrog
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://aerospike.jfrog.io
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ECO_CONTRIB_TOKEN }}
+          JF_PROJECT: ${{ github.event.inputs.jfrog_project }}
+
+        
+      - name: "Deploy helm to JFrog"
+        run: |
+            helm package $CHART_NAME
+            jf rt u "${{env.CHART_NAME}}-${{env.CHART_VERSION}}.tgz" "${{env.JF_REPO}}/${{env.CHART_NAME}}/${{env.CHART_VERSION}}/" \
+            --build-name="${{env.CHART_NAME}}-helm" --build-number="${{env.CHART_VERSION}}" --project="${{env.JF_PROJECT}}"
+            jf rt build-collect-env "${{env.CHART_NAME}}-helm" "${{env.CHART_VERSION}}"
+            jf rt build-add-git "${{env.CHART_NAME}}-helm" "${{env.CHART_VERSION}}"
+            jf rt build-publish "${{env.CHART_NAME}}-helm" "${{env.CHART_VERSION}}" --project="${{env.JF_PROJECT}}"                  
+      - name: Create release bundle
+
+        run: |
+            echo '{
+              
+              "name": "${{ env.CHART_NAME }}-helm",
+              "version": "${{ env.CHART_VERSION }}",
+              "files": [
+                {
+                  "project": "${{ env.JF_PROJECT }}",
+                  "build": "${{ env.CHART_NAME }}-helm/${{ env.CHART_VERSION }}"
+                }
+              ]
+            }' > release-bundle-spec.json
+            cat release-bundle-spec.json
+            jf release-bundle-create "${{ env.CHART_NAME }}-release-bundle" "${{ env.CHART_VERSION }}" \
+              --spec release-bundle-spec.json --project="${{ env.JF_PROJECT }}" --signing-key="aerospike"
