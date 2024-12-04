@@ -1,0 +1,191 @@
+name: Lint and Test Charts
+
+on: pull_request
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          check-latest: true
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed="$(ct list-changed --chart-dirs . --target-branch ${{ github.event.repository.default_branch }} \
+          | grep "aerospike-vector-search")"
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint version bump)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          ct lint --chart-dirs . --target-branch ${{ github.event.repository.default_branch }}
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          cd aerospike-vector-search
+          ct lint --chart-dirs . --charts . --target-branch ${{ github.event.repository.default_branch }}
+
+      - name: Create kind cluster
+        if: steps.list-changed.outputs.changed == 'true'
+        uses: helm/kind-action@v1.10.0
+
+      - name: Setup Prerequisites
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          
+          echo "Deploying AKO"
+          curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.30.0/install.sh \
+          | bash -s v0.30.0
+          
+          kubectl create -f https://operatorhub.io/install/aerospike-kubernetes-operator.yaml
+          echo "Waiting for AKO"
+          while true; do
+            if kubectl --namespace operators get deployment/aerospike-operator-controller-manager &> /dev/null; then
+              kubectl --namespace operators wait \
+                --for=condition=available --timeout=180s deployment/aerospike-operator-controller-manager
+              break
+            fi
+          done
+          
+          echo "Grant permissions to the target namespace"
+          kubectl create namespace aerospike
+          kubectl --namespace aerospike create serviceaccount aerospike-operator-controller-manager
+          kubectl create clusterrolebinding aerospike-cluster \
+            --clusterrole=aerospike-cluster --serviceaccount=aerospike:aerospike-operator-controller-manager
+          
+          echo "Set Secrets for Aerospike Cluster"
+          kubectl --namespace aerospike create secret generic aerospike-secret \
+          --from-literal=features.conf="$(echo "${{ secrets.FEATURES_CONF }}")"
+          
+          kubectl apply -f - <<-EOF
+            apiVersion: asdb.aerospike.com/v1
+            kind: AerospikeCluster
+            metadata:
+              name: aerospike-cluster
+              namespace: aerospike
+            spec:
+              size: 1
+              image: aerospike/aerospike-server-enterprise:7.0.0.5
+              podSpec:
+                multiPodPerHost: true
+              storage:
+                filesystemVolumePolicy:
+                  cascadeDelete: true
+                  initMethod: deleteFiles
+                volumes:
+                  - name: workdir
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 3Gi
+                    aerospike:
+                      path: /opt/aerospike
+                  - name: nsvol1
+                    aerospike:
+                      path: /mnt/disks/test
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol2
+                    aerospike:
+                      path: /mnt/disks/avs-index
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol3
+                    aerospike:
+                      path: /mnt/disks/avs-data
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: nsvol4
+                    aerospike:
+                      path: /mnt/disks/avs-meta
+                    source:
+                      persistentVolume:
+                        storageClass: standard
+                        volumeMode: Filesystem
+                        size: 16G
+                  - name: aerospike-config-secret
+                    source:
+                      secret:
+                        secretName: aerospike-secret
+                    aerospike:
+                      path: /etc/aerospike/secret
+              aerospikeConfig:
+                service:
+                  feature-key-file: /etc/aerospike/secret/features.conf
+                #    security: {}
+                network:
+                  service:
+                    port: 3000
+                  fabric:
+                    port: 3001
+                  heartbeat:
+                    port: 3002
+                namespaces:
+                  - name: test
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/test/test.dat
+                  - name: avs-index
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-index/avs-index.dat
+                  - name: avs-data
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-data/avs-data.dat
+                  - name: avs-meta
+                    nsup-period: 600
+                    nsup-threads: 2
+                    evict-tenths-pct: 5
+                    replication-factor: 2
+                    storage-engine:
+                      type: device
+                      filesize: 17179869184
+                      files:
+                        - /mnt/disks/avs-meta/avs-meta.dat
+          EOF
+
+      - name: Run chart-testing (install)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          cd aerospike-vector-search
+          ct install --namespace aerospike  --chart-dirs . \
+            --target-branch ${{ github.event.repository.default_branch }}
