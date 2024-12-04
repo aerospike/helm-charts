@@ -1,0 +1,31 @@
+name: Sign,  Build, and Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      jfrog_project:
+        description: 'Name of the jfrog project to deploy the chart to'
+        required: true
+        default: 'ecosystem'
+      chart_name:
+        description: 'Name of the chart to build'
+        required: true
+        default: 'aerospike-vector-search'
+      repo_name: 
+        description: 'Name of the jfrog repo to deploy the chart to'
+        required: true
+        default: 'ecosystem-helm-dev-local'
+      build_name:
+        description: 'Name of the build to create'
+        required: true
+        default: 'aerospike-vector-search-helm'
+      build_number: 
+        description: 'Build number to use for the build metadata'
+        required: true
+        default: '0.7.0'
+jobs:
+  build-chart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
