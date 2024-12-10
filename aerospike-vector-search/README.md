@@ -19,7 +19,7 @@ Add the `aerospike-io` helm repository if not already done. (Note: The repositor
 
 
 ```shell
-helm repo add aerospike-io https://artifact.aerospike.io/artifactory/api/helm/aerospike-helm
+helm repo add aerospike-helm https://artifact.aerospike.io/artifactory/api/helm/aerospike-helm
 
 ```
 
@@ -58,10 +58,6 @@ A sample values yaml file is shown below:
 
 ```yaml
 replicaCount: 1
-
-image:
-  tag: "0.11.1"
-
 aerospikeVectorSearchConfig:
   aerospike:
     metadata-namespace: "avs-meta"
