@@ -15,8 +15,7 @@ deployed AVS pods.
 
 ## Adding the helm chart repository
 
-Add the `aerospike-io` helm repository if not already done. (Note: The repository has moved to artifact.aerospike.io. If you are still pointing to aerospike.github.io, please update the repository URL)
-
+Add the `aerospike-helm` helm repository if not already done. (Note: The repository has moved to artifact.aerospike.io. If you are still pointing to aerospike.github.io, please update the repository URL)
 
 ```shell
 helm repo add aerospike-helm https://artifact.aerospike.io/artifactory/api/helm/aerospike-helm
