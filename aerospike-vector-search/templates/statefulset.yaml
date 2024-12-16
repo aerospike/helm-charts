@@ -37,13 +37,23 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: config-injector
-          image: busybox
+          image: davi17g/avs-init-container:1.0.0
           command:
             - /bin/sh
             - -c
             - |
               echo -e {{ .Values.aerospikeVectorSearchConfig | toYaml | quote }} > /etc/aerospike-vector-search/aerospike-vector-search.yml
               AEROSPIKE_VECTOR_SEARCH_NODE_ROLES="$(echo -e {{ .Values.aerospikeVectorSearchNodeRoles | toJson | quote }})"
+              IS_EMPTY="$(echo "$AEROSPIKE_VECTOR_SEARCH_NODE_ROLES" | jq -e 'if . == {} then true else false end')"
+              if [ "$IS_EMPTY" == "false" ]; then
+                KEY="node-$(echo "$POD_NAME" | awk -F'-' '{print $NF}')"
+                ROLE="$(echo "$AEROSPIKE_VECTOR_SEARCH_NODE_ROLES" | jq -r --arg k "$KEY" 'if has($k) then .[$k] else "KEY_NOT_FOUND" end')"
+                if [[ "$ROLE" != "KEY_NOT_FOUND" ]]; then
+                  echo "here"
+                  node_roles=$(echo $ROLE | jq -r '.' | yq eval -)
+                  yq eval '.cluster["node-roles"] = '"$node_roles"'' -i /etc/aerospike-vector-search/aerospike-vector-search.yml
+                fi
+              fi
 
           volumeMounts:
             - name: aerospike-vector-search
@@ -92,8 +102,8 @@ spec:
               protocol: TCP
             {{- end }}
           volumeMounts:
-            - name: aerospike-vector-search-config
-              mountPath: /etc/aerospike-vector-search/aerospike-vector-search.yml
+            - name: aerospike-vector-search
+              mountPath: /etc/aerospike-vector-search
             - name: aerospike-secret
               mountPath: /etc/aerospike-vector-search/secrets
               readOnly: true
@@ -126,7 +136,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: aerospike-vector-search-config
+        - name: aerospike-vector-search
           emptyDir: {}
         - name: aerospike-secret
           secret:
