@@ -12,7 +12,7 @@ with [Kubernetes](https://kubernetes.io/) and [Helm](https://helm.sh/).
 Add the `aerospike` helm repository if not already done
 
 ```shell
-helm repo add aerospike https://aerospike.github.io/helm-charts
+helm repo add aerospike https://artifact.aerospike.io/helm
 ```
 
 ## Usage
