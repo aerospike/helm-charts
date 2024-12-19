@@ -55,6 +55,16 @@ spec:
                 fi
               fi
 
+              list=""
+              for i in $(seq 0 $(($REPLICAS - 1))); do
+                list="$list $POD_NAME.$SERVICE_NAME.$POD_NAMESPACE.svc.cluster.local"
+              done
+              SEEDS="$(printf '%s\n' "${list[@]}" | yq -P -o yaml '. as $item ireduce ([]; . + [{"address": $item, "port": env(PORT)}]) | {seeds: .}')"
+              echo $SEEDS
+
+
+
+
           volumeMounts:
             - name: aerospike-vector-search
               mountPath: /etc/aerospike-vector-search
@@ -67,6 +77,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: SERVICE_NAME
+              value: {{ include "aerospike-vector-search.fullname" . }}
+            - name: REPLICAS
+              value: {{ .Values.replicaCount | quote }}
+
       {{ if .Values.initContainers }}
       initContainers:
       {{- toYaml .Values.initContainers | nindent 8 }}
