@@ -72,5 +72,5 @@ jobs:
               ]
             }' > release-bundle-spec.json
             cat release-bundle-spec.json
-            jf release-bundle-create "${{ env.CHART_NAME }}-release-bundle" "${{ env.CHART_VERSION }}" \
+            jf release-bundle-create "${{ env.CHART_NAME }}-helm" "${{ env.CHART_VERSION }}" \
               --spec release-bundle-spec.json --project="${{ env.JF_PROJECT }}" --signing-key="aerospike"
