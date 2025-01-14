@@ -66,6 +66,7 @@ backupServiceConfig: {}
 #        maxage: <max-days-retain-logs> # Optional default: 0
 #        maxbackups: <backup-logfiles> # Optional default: 0
 #        compress: <true/false> # Optional default: false
+#
 #  aerospike-clusters:
 #    <cluster-name>: # At least one service is required
 #      label: <cluster-label> # Optional
@@ -98,10 +99,10 @@ backupServiceConfig: {}
 #        keyfile: <path-to-key-file> # Optional
 #        keyfile-password: <keyfile-password> # Optional
 #        certfile: <path-to-certfile> # Optional
+#
 # storage:
 #   local-storage:
 #     path: <root-path> # Mandatory. The root path for the backup repository.
-#
 #   s3-storage:
 #     path: <root-path> # Mandatory. The root path for the backup repository within the bucket.
 #     bucket: <bucket> # Mandatory. The S3 bucket name.
@@ -121,7 +122,6 @@ backupServiceConfig: {}
 #       timeout: <timeout> # Optional timeout in miliseconds default: 0
 #       tls-ca-file: <path-to-ca-file> # Optional default: ""
 #       is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-#
 #   gcp-storage:
 #     key-file-path: <key-file-path> # Optional. Path to the file containing the service account key in JSON format.
 #     key: <key> # Optional. Service account key in JSON format. Can be sensitive information.
@@ -136,7 +136,6 @@ backupServiceConfig: {}
 #       timeout: <timeout> # Optional timeout in miliseconds default: 0
 #       tls-ca-file: <path-to-ca-file> # Optional default: ""
 #       is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-#
 #   azure-storage:
 #     endpoint: <endpoint> # Mandatory. Azure Blob service endpoint URL.
 #     container-name: <container-name> # Mandatory. Name of the Azure Blob container.
@@ -155,6 +154,7 @@ backupServiceConfig: {}
 #       tls-ca-file: <path-to-ca-file> # Optional default: ""
 #       is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
 #
+#  backup-policies:
 #    <policy-name>:
 #      parallel: <parallel> # Optional Max number of parallel scan calls default: 1
 #      socket-timeout: <socket-timeout> # Optional default: 0 (Timeout is in milliseconds)
@@ -182,6 +182,7 @@ backupServiceConfig: {}
 #        mode: <mode> # Optional compression mode to be used Valid values: (NONE,ZSTD) default NONE
 #        level: <level> # Optional compression level default: 0
 #      sealed: <true/false> # Optional determines whether backup should include keys updated during the backup process default: false
+#
 #  backup-routines:
 #    <routine-name>:
 #      backup-policy: <policy-name> # Mandatory name of the corresponding backup policy
@@ -196,6 +197,7 @@ backupServiceConfig: {}
 #      prefer-racks: [ <rack-ids> ] # Optional list of rack IDs to prefer when reading records for a backup
 #      partition-list: <partition-list> # Optional list of partition filters default: empty string
 #      disabled: <true/false> #Optional. Disabled routines are not executed.
+#
 #  secret-agents:
 #    <agent-name>:
 #      connection-type: <tcp/udp> # required
