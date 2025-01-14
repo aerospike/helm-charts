@@ -88,7 +88,7 @@ backupServiceConfig: {}
 #          timeout: <timeout> # Optional timeout in miliseconds default: 0
 #          tls-ca-file: <path-to-ca-file> # Optional default: ""
 #          is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-
+#
 #      tls:
 #        cafile: <path-to-ca-file> # Mandatory if TLS enabled and capath is empty
 #        capath: <path-to-ca-dorectory> # Mandatory if TLS enabled and cafile if empty
@@ -121,7 +121,7 @@ backupServiceConfig: {}
 #       timeout: <timeout> # Optional timeout in miliseconds default: 0
 #       tls-ca-file: <path-to-ca-file> # Optional default: ""
 #       is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-
+#
 #   gcp-storage:
 #     key-file-path: <key-file-path> # Optional. Path to the file containing the service account key in JSON format.
 #     key: <key> # Optional. Service account key in JSON format. Can be sensitive information.
@@ -154,7 +154,7 @@ backupServiceConfig: {}
 #       timeout: <timeout> # Optional timeout in miliseconds default: 0
 #       tls-ca-file: <path-to-ca-file> # Optional default: ""
 #       is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-
+#
 #    <policy-name>:
 #      parallel: <parallel> # Optional Max number of parallel scan calls default: 1
 #      socket-timeout: <socket-timeout> # Optional default: 0 (Timeout is in milliseconds)
