@@ -99,7 +99,7 @@ backupServiceConfig: { }
 #       keyfile-password: <keyfile-password> # Optional
 #       certfile: <path-to-certfile> # Optional
 #
-#  storage:
+# storage:
 #   local-storage:
 #     path: <root-path> # Mandatory. The root path for the backup repository.
 #   s3-storage:
