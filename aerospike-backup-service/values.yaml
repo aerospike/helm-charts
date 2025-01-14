@@ -89,7 +89,6 @@ backupServiceConfig: {}
 #          timeout: <timeout> # Optional timeout in miliseconds default: 0
 #          tls-ca-file: <path-to-ca-file> # Optional default: ""
 #          is-base64: <true/false> # Flag that shows if secret agent responses are encrypted with base64.
-#
 #      tls:
 #        cafile: <path-to-ca-file> # Mandatory if TLS enabled and capath is empty
 #        capath: <path-to-ca-dorectory> # Mandatory if TLS enabled and cafile if empty
