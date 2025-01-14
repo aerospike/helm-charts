@@ -222,40 +222,6 @@ entries:
     version: 1.0.0
   aerospike-vector-search:
   - apiVersion: v2
-    appVersion: 0.11.1
-    created: "2025-01-14T18:14:43.637489+02:00"
-    description: A Helm chart for Aerospike Vector Search
-    digest: 24985f55149997319278a3ef6870bc319a57452e2b321be8c7d558d404320626
-    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
-    keywords:
-    - Aerospike
-    - Vector
-    maintainers:
-    - email: developers@aerospike.com
-      name: Aerospike
-    name: aerospike-vector-search
-    type: application
-    urls:
-    - https://aerospike.github.io/helm-charts/aerospike-vector-search-0.6.0.tgz
-    version: 0.6.0
-  - apiVersion: v2
-    appVersion: 0.10.0
-    created: "2025-01-14T18:14:43.635814+02:00"
-    description: A Helm chart for Aerospike Vector Search
-    digest: b4529302f4f4d4ea92e0d0aa9dcaeea618c79a1260af661894bdbfa465b7d8bc
-    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
-    keywords:
-    - Aerospike
-    - Vector
-    maintainers:
-    - email: developers@aerospike.com
-      name: Aerospike
-    name: aerospike-vector-search
-    type: application
-    urls:
-    - https://aerospike.github.io/helm-charts/aerospike-vector-search-0.5.0.tgz
-    version: 0.5.0
-  - apiVersion: v2
     appVersion: 0.9.0
     created: "2025-01-14T18:14:43.633749+02:00"
     description: A Helm chart for Aerospike Vector Search
