@@ -34,7 +34,7 @@ jobs:
 
     # You can sign helm charts but not doing this for now
     #   - name: setup GPG
-    #     uses: aerospike/shared-workflows/devops/setup-gpg@main
+    #     uses: aerospike/shared-workflows/devops/setup-gpg@ed780e9928d56ef074532dbc6877166d5460587a # v0.1.0
     #     with:
     #       gpg-private-key: ${{ secrets.GPG_SECRET_KEY }}
     #       gpg-public-key: ${{ secrets.GPG_PUBLIC_KEY }}
@@ -72,5 +72,5 @@ jobs:
               ]
             }' > release-bundle-spec.json
             cat release-bundle-spec.json
-            jf release-bundle-create "${{ env.CHART_NAME }}-release-bundle" "${{ env.CHART_VERSION }}" \
+            jf release-bundle-create "${{ env.CHART_NAME }}-helm" "${{ env.CHART_VERSION }}" \
               --spec release-bundle-spec.json --project="${{ env.JF_PROJECT }}" --signing-key="aerospike"
