@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   aerospike-backup-service:
     - apiVersion: v2
+      appVersion: 3.0.1
+      created: "2025-04-07T16:46:52.003749+03:00"
+      description: A Helm chart for Kubernetes
+      digest: 0627b94bcc6e74cea0ba4b14a95fa0fb7ce44b40e7cb2405d26d2ca2d236ca21
+      name: aerospike-backup-service
+      type: application
+      urls:
+        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.4.tgz
+      version: 2.0.4
+    - apiVersion: v2
       appVersion: 3.0.0
       created: "2025-01-14T18:14:43.615951+02:00"
       description: A Helm chart for Kubernetes
