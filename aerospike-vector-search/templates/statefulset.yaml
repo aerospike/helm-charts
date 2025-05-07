@@ -35,6 +35,53 @@ spec:
       serviceAccountName: {{ include "aerospike-vector-search.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: config-injector
+          image: davi17g/avs-init-container:1.0.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo -e {{ .Values.aerospikeVectorSearchConfig | toYaml | quote }} > /etc/aerospike-vector-search/aerospike-vector-search.yml
+              AEROSPIKE_VECTOR_SEARCH_NODE_ROLES="$(echo -e {{ .Values.aerospikeVectorSearchNodeRoles | toJson | quote }})"
+              IS_EMPTY="$(echo "$AEROSPIKE_VECTOR_SEARCH_NODE_ROLES" | jq -e 'if . == {} then true else false end')"
+              if [ "$IS_EMPTY" == "false" ]; then
+                KEY="node-$(echo "$POD_NAME" | awk -F'-' '{print $NF}')"
+                ROLE="$(echo "$AEROSPIKE_VECTOR_SEARCH_NODE_ROLES" | jq -r --arg k "$KEY" 'if has($k) then .[$k] else "KEY_NOT_FOUND" end')"
+                if [[ "$ROLE" != "KEY_NOT_FOUND" ]]; then
+                  echo "here"
+                  node_roles=$(echo $ROLE | jq -r '.' | yq eval -)
+                  yq eval '.cluster["node-roles"] = '"$node_roles"'' -i /etc/aerospike-vector-search/aerospike-vector-search.yml
+                fi
+              fi
+
+              list=""
+              for i in $(seq 0 $(($REPLICAS - 1))); do
+                list="$list $POD_NAME.$SERVICE_NAME.$POD_NAMESPACE.svc.cluster.local"
+              done
+              SEEDS="$(printf '%s\n' "${list[@]}" | yq -P -o yaml '. as $item ireduce ([]; . + [{"address": $item, "port": env(PORT)}]) | {seeds: .}')"
+              echo $SEEDS
+
+
+
+
+          volumeMounts:
+            - name: aerospike-vector-search
+              mountPath: /etc/aerospike-vector-search
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SERVICE_NAME
+              value: {{ include "aerospike-vector-search.fullname" . }}
+            - name: REPLICAS
+              value: {{ .Values.replicaCount | quote }}
+
       {{ if .Values.initContainers }}
       initContainers:
       {{- toYaml .Values.initContainers | nindent 8 }}
@@ -45,6 +92,14 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{ with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
           {{- range $k := .Values.aerospikeVectorSearchConfig.service.ports | keys }}
             - name: {{ printf "svc-%s" $k }}
@@ -62,10 +117,8 @@ spec:
               protocol: TCP
             {{- end }}
           volumeMounts:
-            - name: aerospike-vector-search-configmap
-              mountPath: /etc/aerospike-vector-search/aerospike-vector-search.yml
-              subPath: aerospike-vector-search.yml
-              readOnly: true
+            - name: aerospike-vector-search
+              mountPath: /etc/aerospike-vector-search
             - name: aerospike-secret
               mountPath: /etc/aerospike-vector-search/secrets
               readOnly: true
@@ -98,10 +151,8 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: aerospike-vector-search-configmap
-          configMap:
-            name: {{ include "aerospike-vector-search.fullname" . }}
-            optional: false
+        - name: aerospike-vector-search
+          emptyDir: {}
         - name: aerospike-secret
           secret:
             secretName: aerospike-secret

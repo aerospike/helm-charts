@@ -14,6 +14,28 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+envFrom: []
+# - configMapRef:
+#     name: config-map-name
+# - secretRef:
+#     name: secret-name
+
+env: []
+# - name: SOME_ENV_VAR
+#   value: some-env-var-value
+# - name: SOME_ENV_VAR_FROM_CONFIG_MAP
+#   valueFrom:
+#     configMapRef:
+#       name: configmap-name
+#       key: config-key
+# - name: SOME_ENV_SECRET
+#   valueFrom:
+#     secretKeyRef:
+#       name: secret-name
+#       key: secret-key
+
+aerospikeVectorSearchNodeRoles: {}
+
 aerospikeVectorSearchConfig: {}
 #cluster:
 #  # Unique identifier for this cluster.
