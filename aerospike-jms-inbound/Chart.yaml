@@ -16,4 +16,4 @@ maintainers:
 version: 1.0.0
 
 # The default version of Aerospike JMS Inbound Connector
-appVersion: "3.0.11"
+appVersion: "3.0.12"
