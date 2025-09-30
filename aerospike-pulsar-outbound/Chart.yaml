@@ -16,4 +16,4 @@ maintainers:
 version: 1.0.0
 
 # The default version of Aerospike Pulsar Outbound Connector
-appVersion: "3.3.12"
+appVersion: "3.3.13"
