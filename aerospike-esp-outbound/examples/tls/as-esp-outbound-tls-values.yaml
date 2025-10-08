@@ -1,0 +1,51 @@
+replicaCount: 3
+
+image:
+  tag: "2.4.12"
+
+connectorConfig:
+  service:
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  routing:
+    mode: static-multi-destination
+    destinations:
+      - dc1
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  destinations:
+    dc1:
+      urls:
+        - https://connector.aerospike.com:8443
+      tls:
+        trust-store:
+          store-file: ca.aerospike.com.truststore.jks
+          store-password-file: storepass
+        key-store:
+          store-file: connector.aerospike.com.keystore.jks
+          store-password-file: storepass
+      health-check:
+        call-timeout: 5100
+      connect-timeout: 5000
+      connection-ttl: 300000
+      max-connections-per-endpoint: 20
+      call-timeout: 5100
+      protocol: HTTP_2
+      http2-max-concurrent-streams: 100
+
+  logging:
+    enable-console-logging: true
+
+# List of secrets containing TLS certificates
+connectorSecrets:
+  - esp-tls-secret 
