@@ -29,8 +29,8 @@ connectorConfig:
         - https://connector.aerospike.com:8443
       tls:
         trust-store:
-          store-file: ca.aerospike.com.truststore.jks
-          store-password-file: storepass
+          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
+          store-password-file: secrets/tls-certs/storepass
       health-check:
         call-timeout: 5100
       connect-timeout: 5000
@@ -41,4 +41,8 @@ connectorConfig:
       http2-max-concurrent-streams: 100
 
   logging:
-    enable-console-logging: true 
+    enable-console-logging: true
+
+# List of secrets containing TLS certificates (required for HTTPS connections)
+connectorSecrets:
+  - tls-certs 
