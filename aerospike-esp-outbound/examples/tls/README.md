@@ -12,14 +12,12 @@ This example demonstrates how to deploy the Aerospike ESP Outbound Connector wit
 
 ## Create TLS Secret
 
-Before deploying, create a secret containing your TLS certificates:
+Before deploying, create a secret containing your TLS certificates. 
+There are sample TLS certificates, keys and keystores in the [tls-certs](tls-certs) folder that the following command uses.
+Use a folder with your TLS files.
 
 ```shell
-kubectl create secret generic esp-tls-secret \
-  --from-file=ca.aerospike.com.truststore.jks \
-  --from-file=connector.aerospike.com.keystore.jks \
-  --from-file=storepass \
-  --namespace aerospike
+kubectl -n aerospike create secret generic tls-certs --from-file=tls-certs
 ```
 
 ## Deploy the connector
@@ -50,7 +48,7 @@ The example configuration includes:
 - Trust store and key store configuration
 - Health checks and connection pooling
 - Console logging enabled
-- TLS secrets mounted to `/etc/aerospike-esp-outbound/secrets/esp-tls-secret`
+- TLS secrets mounted to `/etc/aerospike-esp-outbound/secrets/tls-certs`
 
 ## Update ESP endpoint
 
@@ -68,5 +66,5 @@ destinations:
 To remove the deployment:
 ```shell
 helm uninstall --namespace aerospike as-esp-outbound
-kubectl delete secret esp-tls-secret --namespace aerospike
+kubectl delete secret tls-certs --namespace aerospike
 ``` 

@@ -1,7 +1,7 @@
 replicaCount: 3
 
 image:
-  tag: "2.4.12"
+  tag: "2.4.13"
 
 connectorConfig:
   service:
@@ -29,11 +29,11 @@ connectorConfig:
         - https://connector.aerospike.com:8443
       tls:
         trust-store:
-          store-file: ca.aerospike.com.truststore.jks
-          store-password-file: storepass
+          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
+          store-password-file: secrets/tls-certs/storepass
         key-store:
-          store-file: connector.aerospike.com.keystore.jks
-          store-password-file: storepass
+          store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+          store-password-file: secrets/tls-certs/storepass
       health-check:
         call-timeout: 5100
       connect-timeout: 5000
@@ -48,4 +48,4 @@ connectorConfig:
 
 # List of secrets containing TLS certificates
 connectorSecrets:
-  - esp-tls-secret 
+  - tls-certs 
