@@ -1,0 +1,68 @@
+replicaCount: 3
+
+image:
+  tag: "2.4.13"
+
+connectorConfig:
+  service:
+    # TLS setup for secure communication between Aerospike server (XDR) and the connector.
+    # For service configuration details, see: https://aerospike.com/docs/connectors/streaming/esp/configure/service/#configuring-tls
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  # See: https://aerospike.com/docs/connectors/streaming/esp/configure/routing
+  routing:
+    mode: static-multi-destination
+    destinations:
+      - dc1
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  # See: https://aerospike.com/docs/connectors/streaming/esp/configure/destinations
+  destinations:
+    dc1:
+      urls:
+        # Example HTTPS endpoint with TLS (change to your actual ESP endpoint)
+        - https://connector.aerospike.com:8443
+      # TLS configuration for mutual TLS authentication
+      # For TLS configuration details, see: https://aerospike.com/docs/connectors/streaming/esp/configure/service/#configuring-tls
+      tls:
+        trust-store:
+          # Path to trust store file (mounted from Kubernetes secret)
+          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
+          # Path to trust store password file (mounted from Kubernetes secret)
+          store-password-file: secrets/tls-certs/storepass
+        key-store:
+          # Path to key store file (mounted from Kubernetes secret)
+          store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+          # Path to key store password file (mounted from Kubernetes secret)
+          store-password-file: secrets/tls-certs/storepass
+      health-check:
+        call-timeout: 5100
+      connect-timeout: 5000
+      connection-ttl: 300000
+      max-connections-per-endpoint: 20
+      call-timeout: 5100
+      protocol: HTTP_2
+      http2-max-concurrent-streams: 100
+
+  logging:
+    enable-console-logging: true
+
+# List of secrets containing TLS certificates
+# The secret 'tls-certs' will be mounted to /etc/aerospike-esp-outbound/secrets/tls-certs
+# Ensure the secret contains:
+#   - svc.cluster.local.truststore.jks (trust store)
+#   - svc.cluster.local.keystore.jks (key store)
+#   - storepass (password file)
+# See the README.md for instructions on creating the TLS secret
+connectorSecrets:
+  - tls-certs 

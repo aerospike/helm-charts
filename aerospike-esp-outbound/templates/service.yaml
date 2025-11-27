@@ -1,0 +1,17 @@
+# Headless service for stable DNS entries for the pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-esp-outbound.fullname" . }}
+  labels:
+    app: {{ include "aerospike-esp-outbound.fullname" . }}
+    {{- include "aerospike-esp-outbound.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: service
+    port: {{ include "aerospike-esp-outbound.servicePort" . }}
+  - name: manage
+    port: {{ (((.Values.connectorConfig).service).manage).port | default 8902 }}
+  clusterIP: None
+  selector:
+    app: {{ include "aerospike-esp-outbound.fullname" . }}

@@ -1,0 +1,10 @@
+# Configuration for the connector.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-esp-outbound.fullname" . }}
+  labels:
+    {{- include "aerospike-esp-outbound.labels" . | nindent 4 }}
+data:
+  aerospike-esp-outbound.yml: |-
+    {{- include "aerospike-esp-outbound.connectorConfig" . | nindent 4 }}

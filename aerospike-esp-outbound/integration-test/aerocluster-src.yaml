@@ -1,0 +1,48 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster-src
+  namespace: aerospike-test
+spec:
+  size: 1
+  image: aerospike/aerospike-server-enterprise:8.0.0.8
+  podSpec:
+    multiPodPerHost: true
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        port: 3000
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+    namespaces:
+      - name: test
+        replication-factor: 1
+        storage-engine:
+          type: memory
+          data-size: 3000000000
+    xdr:
+      dcs:
+        - name: esp
+          connector: true
+          namespaces:
+            - name: test
+          node-address-ports:
+            # ESP Outbound connector pod DNS names
+            - test-esp-outbound-aerospike-esp-outbound-0.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901
+            - test-esp-outbound-aerospike-esp-outbound-1.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901
+            - test-esp-outbound-aerospike-esp-outbound-2.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901
