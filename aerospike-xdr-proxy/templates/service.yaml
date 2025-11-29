@@ -1,0 +1,17 @@
+# Headless service for stable DNS entries for the pods.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aerospike-xdr-proxy.fullname" . }}
+  labels:
+    app: {{ include "aerospike-xdr-proxy.fullname" . }}
+    {{- include "aerospike-xdr-proxy.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: service
+    port: {{ include "aerospike-xdr-proxy.servicePort" . }}
+  - name: manage
+    port: {{ include "aerospike-xdr-proxy.managePort" . }}
+  clusterIP: None
+  selector:
+    app: {{ include "aerospike-xdr-proxy.fullname" . }}

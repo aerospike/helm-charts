@@ -1,0 +1,53 @@
+replicaCount: 1
+
+proxyConfig:
+  service:
+    # Clear-text (non-TLS) setup for communication between Aerospike server (XDR) and the proxy.
+    # For TLS configuration, see: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html
+    # Note: When receiving XDR protocol directly from Aerospike servers, protocol should be null
+    # Use protocol: HTTP_2 only when receiving HTTP/2 from connectors (e.g., ESP Outbound)
+    port: 8901
+    socket-receive-buffer-bytes: 131072
+    protocol: null  # Accepts XDR protocol from Aerospike servers
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  # See: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html#aerospike-configuration
+  aerospike:
+    seeds:
+      # Example destination Aerospike cluster endpoint (change to your actual cluster)
+      - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
+          port: 3000
+    performance:
+      max-connections-per-node: 100
+      event-loop-size: 15
+
+  logging:
+    enable-console-logging: true
+    file: /var/log/aerospike-xdr-proxy/aerospike-xdr-proxy.log
+    ticker-interval: 1
+
+# List of initContainers to be added for each proxy pod.
+# Can be used to copy custom code plugins jars to /opt/aerospike-xdr-proxy-init
+# For custom code plugin development, see: https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin
+initContainers:
+  - name: aerospike-xdr-proxy-init
+    # Image containing custom code plugins jars
+    # Update this to your custom transformer image
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0"
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "-c"]
+    # Update args to copy all the jars from init container to emptyDir volume path
+    # The jar will be mounted at /opt/aerospike-xdr-proxy/usr-lib/aerospike-xdr-proxy-custom-transformers.jar
+    args:
+      - |
+        set -e
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-xdr-proxy-custom-transformers.jar /opt/aerospike-xdr-proxy-init
+    volumeMounts:
+      - name: aerospike-xdr-proxy-init
+        mountPath: /opt/aerospike-xdr-proxy-init
+
+# No TLS secrets needed for clear-text (HTTP) connections
+# proxySecrets: []
+

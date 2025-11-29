@@ -1,0 +1,46 @@
+replicaCount: 1
+
+proxyConfig:
+  service:
+    # TLS setup for secure communication between Aerospike server (XDR) and the proxy.
+    # For service configuration details, see: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html
+    # Note: When receiving XDR protocol directly from Aerospike servers, protocol should be null
+    # Use protocol: HTTP_2 only when receiving HTTP/2 from connectors (e.g., ESP Outbound)
+    port: 8901
+    socket-receive-buffer-bytes: 131072
+    protocol: null  # Accepts XDR protocol from Aerospike servers
+    # TLS configuration for secure communication
+    # For TLS configuration details, see: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html#tls-configuration
+    tls:
+      port: 8943
+      key-store:
+        # Path to key store file (mounted from Kubernetes secret)
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        # Path to key store password file (mounted from Kubernetes secret)
+        store-password-file: secrets/tls-certs/storepass
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  # See: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html#aerospike-configuration
+  aerospike:
+    seeds:
+      # Example destination Aerospike cluster endpoint (change to your actual cluster)
+      - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
+          port: 3000
+    performance:
+      max-connections-per-node: 100
+      event-loop-size: 15
+
+  logging:
+    enable-console-logging: true
+
+# List of secrets containing TLS certificates
+# The secret 'tls-certs' will be mounted to /etc/aerospike-xdr-proxy/secrets/tls-certs
+# Ensure the secret contains:
+#   - svc.cluster.local.keystore.jks (key store)
+#   - storepass (password file)
+# See the README.md for instructions on creating the TLS secret
+proxySecrets:
+  - tls-certs
+
