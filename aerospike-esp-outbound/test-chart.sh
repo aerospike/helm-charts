@@ -3,7 +3,7 @@
 # Test script for aerospike-esp-outbound Helm chart
 set -e
 
-CHART_NAME="aerospike-esp-outbound"
+CHART_NAME="."
 RELEASE_NAME="test-esp-outbound"
 NAMESPACE="aerospike-test"
 CLEAR_TEXT_VALUES="examples/clear-text/as-esp-outbound-values.yaml"
