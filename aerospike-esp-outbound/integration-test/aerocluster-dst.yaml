@@ -34,5 +34,5 @@ spec:
         replication-factor: 1
         storage-engine:
           type: memory
-          data-size: 3000000000
+          data-size: 300000000  # 300MB - minimum required for Aerospike 8.0.0.8
 

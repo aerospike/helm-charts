@@ -272,7 +272,8 @@ echo ""
 # Detect architecture
 ARCH=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
-    TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_amd64.tgz"
+    # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
+    TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
     DEB_PKG="aerospike-tools_11.2.2-ubuntu20.04_amd64.deb"
 else
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64.tgz"
@@ -283,31 +284,66 @@ print_info "Detected architecture: $ARCH"
 print_info "Using tools package: $TOOLS_PKG"
 echo ""
 
+# Check for local tools file on Jenkins box
+LOCAL_TOOLS_PATH="/var/lib/jenkins/aerospike-connect-resources/tests2/aerospike"
+LOCAL_TOOLS_FILE=""
+if [ -f "${LOCAL_TOOLS_PATH}/${TOOLS_PKG}" ]; then
+    LOCAL_TOOLS_FILE="${LOCAL_TOOLS_PATH}/${TOOLS_PKG}"
+fi
+
+# Helper function to install tools in a pod
+install_tools_in_pod() {
+    local POD_NAME=$1
+    local POD_TYPE=$2
+    local USE_LOCAL_FILE=false
+    
+    if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
+        print_info "Copying tools file into ${POD_TYPE} pod..."
+        if kubectl cp "${LOCAL_TOOLS_FILE}" ${NAMESPACE}/${POD_NAME}:/tmp/tools.tgz 2>/dev/null; then
+            USE_LOCAL_FILE=true
+        else
+            print_warning "Failed to copy local tools file to ${POD_TYPE} pod, falling back to download"
+        fi
+    fi
+    
+    if [ "$USE_LOCAL_FILE" = true ]; then
+        # Install from copied local file
+        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        set -e
+        cd /tmp && \
+        apt-get update -qq && \
+        (apt-get install -y -qq libreadline8 > /dev/null 2>&1 || apt-get install -y -qq libreadline9 > /dev/null 2>&1 || true) && \
+        tar -xzf tools.tgz > /dev/null 2>&1 && \
+        dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG} > /dev/null 2>&1 && \
+        echo '✅ Tools installed successfully from local file'
+        " || print_warning "Tools installation from local file in ${POD_TYPE} pod may have failed (check manually)"
+    else
+        # Fall back to download method
+        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        set -e
+        cd /tmp && \
+        apt-get update -qq && \
+        apt-get install -y -qq wget curl > /dev/null 2>&1 && \
+        wget --no-check-certificate --content-disposition -q 'https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/${TOOLS_PKG}' -O tools.tgz || \
+        curl -L -o tools.tgz 'https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/${TOOLS_PKG}' && \
+        tar -xzf tools.tgz > /dev/null 2>&1 && \
+        (apt-get install -y -qq libreadline8 > /dev/null 2>&1 || apt-get install -y -qq libreadline9 > /dev/null 2>&1 || true) && \
+        dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG} > /dev/null 2>&1 && \
+        echo '✅ Tools installed successfully from download'
+        " || print_warning "Tools installation from download in ${POD_TYPE} pod may have failed (check manually)"
+    fi
+}
+
 # Install tools in destination DB pod
 print_info "Installing tools in destination DB pod..."
-kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- bash -c "
-cd /tmp && \
-apt-get update -qq && \
-apt-get install -y -qq wget curl > /dev/null 2>&1 && \
-wget -q https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/${TOOLS_PKG} -O tools.tgz && \
-tar -xzf tools.tgz > /dev/null 2>&1 && \
-apt-get install -y -qq libreadline8 > /dev/null 2>&1 && \
-dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG} > /dev/null 2>&1 && \
-echo '✅ Tools installed successfully'
-" || print_warning "Tools installation in destination pod may have failed (check manually)"
+if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
+    print_info "Found local tools file: $LOCAL_TOOLS_FILE"
+fi
+install_tools_in_pod "${DST_CLUSTER}-0-0" "destination"
 
 # Install tools in source DB pod
 print_info "Installing tools in source DB pod..."
-kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- bash -c "
-cd /tmp && \
-apt-get update -qq && \
-apt-get install -y -qq wget curl > /dev/null 2>&1 && \
-wget -q https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/${TOOLS_PKG} -O tools.tgz && \
-tar -xzf tools.tgz > /dev/null 2>&1 && \
-apt-get install -y -qq libreadline8 > /dev/null 2>&1 && \
-dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG} > /dev/null 2>&1 && \
-echo '✅ Tools installed successfully'
-" || print_warning "Tools installation in source pod may have failed (check manually)"
+install_tools_in_pod "${SRC_CLUSTER}-0-0" "source"
 
 print_info "✅ Tools installation complete"
 echo ""
