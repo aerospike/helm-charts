@@ -10,10 +10,23 @@ for item in "${REQUISITES[@]}"; do
   fi
 done
 
-if [ ! -f "$WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf" ]; then
+# Check for local features.conf file on Jenkins box first
+LOCAL_FEATURES_CONF="/var/lib/jenkins/aerospike-connect-resources/tests2/aerospike/features.conf"
+FEATURES_CONF=""
+
+if [ -f "$LOCAL_FEATURES_CONF" ]; then
+  echo "Found local features.conf at: $LOCAL_FEATURES_CONF"
+  FEATURES_CONF="$LOCAL_FEATURES_CONF"
+elif [ -f "$WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf" ]; then
+  echo "Using features.conf from workspace: $WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf"
+  FEATURES_CONF="$WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf"
+else
   echo "features.conf Not found"
   echo "Please create features.conf file with your Aerospike license"
   echo "You can copy it from another chart or create it manually"
+  echo "Expected locations:"
+  echo "  - $LOCAL_FEATURES_CONF (Jenkins local)"
+  echo "  - $WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf (workspace)"
   exit 1
 fi
 
@@ -45,16 +58,15 @@ kubectl create clusterrolebinding aerospike-cluster-xdr-proxy-test \
 
 echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike-test create secret generic aerospike-secret \
---from-file=features.conf="$WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf" || \
+--from-file=features.conf="$FEATURES_CONF" || \
 kubectl --namespace aerospike-test create secret generic aerospike-secret \
---from-file=features.conf="$WORKSPACE/aerospike-xdr-proxy/kind/config/features.conf" --dry-run=client -o yaml | kubectl apply -f -
+--from-file=features.conf="$FEATURES_CONF" --dry-run=client -o yaml | kubectl apply -f -
 
 echo ""
 echo "✅ Kind cluster setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Run integration test: cd integration-test && ./run-integration-test.sh"
+echo "1. Run integration test: cd tests/integration-test && ./run-integration-test.sh"
 echo "2. Or deploy XDR Proxy manually: helm install test-xdr-proxy . --namespace aerospike-test"
 echo ""
 echo "To clean up: ./uninstall-kind.sh"
-

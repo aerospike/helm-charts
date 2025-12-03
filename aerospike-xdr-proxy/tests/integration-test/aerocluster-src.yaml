@@ -1,7 +1,7 @@
 apiVersion: asdb.aerospike.com/v1
 kind: AerospikeCluster
 metadata:
-  name: aerocluster-dst
+  name: aerocluster-src
   namespace: aerospike-test
 spec:
   size: 1
@@ -34,5 +34,16 @@ spec:
         replication-factor: 1
         storage-engine:
           type: memory
-          data-size: 3000000000
+          data-size: 300000000  # 300MB - minimum required for Aerospike 8.0.0.8
+    xdr:
+      dcs:
+        - name: xdr-proxy
+          connector: true
+          namespaces:
+            - name: test
+          node-address-ports:
+            # XDR Proxy pod DNS names
+            # Note: For dynamic generation with actual pod names, use run-integration-test.sh
+            # This is a template - update with actual XDR Proxy pod DNS names after deployment
+            - test-xdr-proxy-aerospike-xdr-proxy-0.test-xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local:8901
 
