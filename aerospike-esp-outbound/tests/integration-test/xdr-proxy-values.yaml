@@ -23,5 +23,3 @@ proxyConfig:
 
 # Note: The aerospike-xdr-proxy chart has built-in probes for manage port
 # No need to override - probes are configured in the StatefulSet template
-
-

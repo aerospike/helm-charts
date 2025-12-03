@@ -8,7 +8,7 @@ This guide walks you through setting up a complete integration test to verify th
 **Automated Test (Recommended):**
 ```bash
 # Run the complete integration test script (sets up environment, runs tests, and displays metrics)
-cd integration-test
+cd tests/integration-test
 ./run-integration-test.sh
 ```
 
@@ -78,7 +78,7 @@ kubectl get namespace aerospike-test > /dev/null 2>&1 || kubectl create namespac
 
 ```bash
 # Deploy destination cluster
-kubectl apply -f integration-test/aerocluster-dst.yaml
+kubectl apply -f tests/integration-test/aerocluster-dst.yaml
 
 # Wait for cluster to be ready
 kubectl wait --for=condition=ready pod -l app=aerospike-cluster,statefulset.kubernetes.io/pod-name=aerocluster-dst-0-0 \
@@ -94,7 +94,7 @@ kubectl get pods -n aerospike-test -l app=aerospike-cluster
 # Deploy XDR Proxy using the aerospike-xdr-proxy chart
 helm install xdr-proxy ../aerospike-xdr-proxy \
   --namespace aerospike-test \
-  --values integration-test/xdr-proxy-values.yaml \
+  --values tests/integration-test/xdr-proxy-values.yaml \
   --wait --timeout 2m
 
 # Verify proxy is running
@@ -112,7 +112,7 @@ Deploy ESP Outbound pointing to XDR Proxy:
 # Deploy ESP Outbound with configuration pointing to XDR Proxy
 helm install test-esp-outbound . \
   --namespace aerospike-test \
-  --values integration-test/esp-outbound-integration-values.yaml \
+  --values tests/integration-test/esp-outbound-integration-values.yaml \
   --wait --timeout 2m
 
 # Verify ESP pods are running
@@ -128,7 +128,7 @@ The source cluster YAML already includes ESP pod DNS names. Deploy it:
 
 ```bash
 # Deploy source cluster (XDR configured to point to ESP Outbound pods)
-kubectl apply -f integration-test/aerocluster-src.yaml
+kubectl apply -f tests/integration-test/aerocluster-src.yaml
 
 # Wait for cluster to be ready
 kubectl wait --for=condition=ready pod -l app=aerospike-cluster,statefulset.kubernetes.io/pod-name=aerocluster-src-0-0 \
@@ -237,10 +237,10 @@ kubectl get pods -n aerospike-test -o wide
 
 ```bash
 # Delete source cluster
-kubectl delete -f integration-test/aerocluster-src.yaml
+kubectl delete -f tests/integration-test/aerocluster-src.yaml
 
 # Delete destination cluster
-kubectl delete -f integration-test/aerocluster-dst.yaml
+kubectl delete -f tests/integration-test/aerocluster-dst.yaml
 
 # Uninstall XDR Proxy
 helm uninstall xdr-proxy --namespace aerospike-test
@@ -248,4 +248,3 @@ helm uninstall xdr-proxy --namespace aerospike-test
 # ESP Outbound can remain or be uninstalled
 # helm uninstall test-esp-outbound --namespace aerospike-test
 ```
-

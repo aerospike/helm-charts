@@ -407,7 +407,7 @@ For production deployment:
 - [Aerospike ESP Connector Documentation](https://docs.aerospike.com/connect/esp/from-asdb/configuring)
 - [Helm Documentation](https://helm.sh/docs/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [Integration Test Guide](integration-test/INTEGRATION-TEST.md) - For end-to-end testing with Aerospike clusters
+- [Integration Test Guide](tests/integration-test/INTEGRATION-TEST.md) - For end-to-end testing with Aerospike clusters
 
 ## Troubleshooting
 
