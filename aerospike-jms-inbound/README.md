@@ -46,6 +46,47 @@ helm repo add aerospike https://aerospike.github.io/helm-charts
 
 ## Deploy the connectors
 
+### Quick Deploy (Test Environment)
+
+For quick testing, use the `deploy-test.sh` script:
+
+**Clear-Text Deployment:**
+```bash
+# Deploy with clear-text configuration (no TLS)
+./deploy-test.sh --values examples/clear-text/as-jms-inbound-values.yaml
+
+# Or with custom release name
+./deploy-test.sh --release-name test-jms-inbound-cleartext --values examples/clear-text/as-jms-inbound-values.yaml
+```
+
+**TLS Deployment:**
+```bash
+# Deploy with TLS configuration
+./deploy-test.sh --values examples/tls/as-jms-inbound-tls-values.yaml
+
+# Or with custom release name
+./deploy-test.sh --release-name test-jms-inbound-tls --values examples/tls/as-jms-inbound-tls-values.yaml
+```
+
+**Other Options:**
+```bash
+# Deploy with default settings (uses chart defaults)
+./deploy-test.sh
+
+# Deploy with custom namespace and release name
+./deploy-test.sh --namespace my-namespace --release-name my-release --values my-values.yaml
+
+# Uninstall a specific release
+./deploy-test.sh --uninstall --namespace aerospike-test --release-name test-jms-inbound-cleartext
+
+# Show help
+./deploy-test.sh --help
+```
+
+**Note:** The `deploy-test.sh` script automatically creates TLS secrets from `examples/tls/tls-certs/` if your values file references `connectorSecrets: [tls-certs]`.
+
+### Manual Deployment
+
 We recommend creating a new `.yaml` for providing configuration values to the helm chart for deployment.
 See the [examples](examples) folder for examples.
 
@@ -296,3 +337,42 @@ The most likely reason is secret listed in `connectorSecrets` has not been creat
 The most likely reason is connector configuration provided in `connectorConfig` is invalid. 
 Verify this by [viewing the connector logs](#get-logs-for-all-connector-instances), fix and [update](#updating-connector-configuration)
 the connector configuration.
+
+## Integration Testing
+
+This chart includes a comprehensive integration test setup that verifies end-to-end data flow:
+**RabbitMQ Broker → JMS Inbound Connector → Aerospike DB**
+
+### Quick Start
+
+Run the automated integration test:
+
+```bash
+cd tests/integration-test
+./run-integration-test.sh
+```
+
+The test script will:
+1. Deploy RabbitMQ broker (RabbitMQ 3.8.7)
+2. Deploy Aerospike destination cluster
+3. Deploy JMS Inbound connector
+4. Install Aerospike tools
+5. Send test message to RabbitMQ queue
+6. Verify message was written to Aerospike DB using AQL
+7. Display connector metrics and final status
+
+### What the Test Verifies
+
+- ✅ Message publishing to RabbitMQ queue
+- ✅ Message consumption by JMS Inbound connector
+- ✅ Record writing to Aerospike DB (verified with AQL SELECT)
+- ✅ Test key verification in Aerospike record
+- ✅ Connector metrics (messages-consumed, records-written, requests-total)
+
+### Prerequisites for Integration Testing
+
+1. **Kind cluster** - See `kind/README.md` for setup instructions
+2. **Aerospike Kubernetes Operator** - Installed via the Kind setup script
+3. **Aerospike features.conf** - License file placed in `kind/config/features.conf`
+
+For detailed integration testing documentation, see [tests/integration-test/INTEGRATION-TEST.md](tests/integration-test/INTEGRATION-TEST.md).

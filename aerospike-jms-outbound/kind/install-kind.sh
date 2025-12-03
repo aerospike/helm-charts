@@ -17,26 +17,39 @@ FEATURES_CONF=""
 if [ -f "$LOCAL_FEATURES_CONF" ]; then
   echo "Found local features.conf at: $LOCAL_FEATURES_CONF"
   FEATURES_CONF="$LOCAL_FEATURES_CONF"
-elif [ -f "$WORKSPACE/aerospike-kafka-outbound/kind/config/features.conf" ]; then
-  echo "Using features.conf from workspace: $WORKSPACE/aerospike-kafka-outbound/kind/config/features.conf"
-  FEATURES_CONF="$WORKSPACE/aerospike-kafka-outbound/kind/config/features.conf"
+elif [ -f "$WORKSPACE/aerospike-jms-outbound/kind/config/features.conf" ]; then
+  echo "Using features.conf from workspace: $WORKSPACE/aerospike-jms-outbound/kind/config/features.conf"
+  FEATURES_CONF="$WORKSPACE/aerospike-jms-outbound/kind/config/features.conf"
 else
   echo "features.conf Not found"
   echo "Please create features.conf file with your Aerospike license"
   echo "You can copy it from another chart or create it manually"
   echo "Expected locations:"
   echo "  - $LOCAL_FEATURES_CONF (Jenkins local)"
-  echo "  - $WORKSPACE/aerospike-kafka-outbound/kind/config/features.conf (workspace)"
+  echo "  - $WORKSPACE/aerospike-jms-outbound/kind/config/features.conf (workspace)"
   exit 1
 fi
 
 echo "Installing Kind"
-kind create cluster --config "$WORKSPACE/aerospike-kafka-outbound/kind/config/kind-cluster.yaml"
-kubectl cluster-info --context kind-kafka-test-cluster
+kind create cluster --config "$WORKSPACE/aerospike-jms-outbound/kind/config/kind-cluster.yaml"
+kubectl cluster-info --context kind-jms-test-cluster
 
 echo "Deploying OLM"
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.32.0/install.sh \
 | bash -s v0.32.0
+
+# Wait for OLM to be ready
+echo "Waiting for OLM to initialize..."
+sleep 30
+
+# Wait for OLM CRDs to be available
+echo "Waiting for OLM CRDs..."
+kubectl wait --for=condition=Established --timeout=120s crd/clusterserviceversions.operators.coreos.com 2>/dev/null || true
+kubectl wait --for=condition=Established --timeout=120s crd/subscriptions.operators.coreos.com 2>/dev/null || true
+
+# Wait for OLM deployments
+kubectl wait --for=condition=available --timeout=120s deployment/olm-operator -n olm 2>/dev/null || true
+kubectl wait --for=condition=available --timeout=120s deployment/catalog-operator -n olm 2>/dev/null || true
 
 echo "Deploying AKO"
 kubectl create -f https://operatorhub.io/install/aerospike-kubernetes-operator.yaml
@@ -53,7 +66,7 @@ done
 echo "Grant permissions to the target namespace"
 kubectl create namespace aerospike-test || true
 kubectl --namespace aerospike-test create serviceaccount aerospike-operator-controller-manager || true
-kubectl create clusterrolebinding aerospike-cluster-kafka-test \
+kubectl create clusterrolebinding aerospike-cluster-jms-test \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike-test:aerospike-operator-controller-manager || true
 
 echo "Set Secrets for Aerospike Cluster"
@@ -66,7 +79,7 @@ echo ""
 echo "✅ Kind cluster setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Run integration test: cd integration-test && ./run-integration-test.sh"
-echo "2. Or deploy Kafka Outbound manually: helm install test-kafka-outbound ../aerospike-kafka-outbound --namespace aerospike-test"
+echo "1. Run integration test: cd tests/integration-test && ./run-integration-test.sh"
+echo "2. Or deploy JMS Outbound manually: helm install test-jms-outbound ../aerospike-jms-outbound --namespace aerospike-test"
 echo ""
 echo "To clean up: ./uninstall-kind.sh"

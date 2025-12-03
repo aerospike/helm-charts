@@ -1,6 +1,6 @@
-# Local Kind Installation for Kafka Outbound Integration Test
+# Local Kind Installation for JMS Outbound Integration Test
 
-This directory contains scripts to set up a complete local Kind cluster environment for testing the Aerospike Kafka Outbound connector integration test.
+This directory contains scripts to set up a complete local Kind cluster environment for testing the Aerospike JMS Outbound connector integration test.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ cp /path/to/your/features.conf kind/config/features.conf
 ### 2. Install Complete Environment
 
 The `install-kind.sh` script sets up:
-- Kind cluster (`kafka-test-cluster`)
+- Kind cluster (`jms-test-cluster`)
 - Operator Lifecycle Manager (OLM)
 - Aerospike Kubernetes Operator (AKO)
 - Namespace (`aerospike-test`) with proper permissions
@@ -45,22 +45,16 @@ cd ../tests/integration-test
 Or deploy components manually:
 
 ```bash
-# Add Bitnami Helm repository
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
+# Deploy RabbitMQ broker
+kubectl apply -f tests/integration-test/rabbitmq-deployment.yaml
 
-# Deploy Kafka broker
-helm install kafka bitnami/kafka \
+# Deploy JMS Outbound connector
+helm install test-jms-outbound ../aerospike-jms-outbound \
   --namespace aerospike-test \
-  --values integration-test/kafka-values.yaml
-
-# Deploy Kafka Outbound connector
-helm install test-kafka-outbound ../aerospike-kafka-outbound \
-  --namespace aerospike-test \
-  --values integration-test/kafka-outbound-integration-values.yaml
+  --values tests/integration-test/jms-outbound-integration-values.yaml
 
 # Deploy Aerospike cluster (after connector pods are ready)
-kubectl apply -f integration-test/aerocluster-src-generated.yaml
+kubectl apply -f tests/integration-test/aerocluster-src-generated.yaml
 ```
 
 ## Cleanup
@@ -73,7 +67,7 @@ cd kind
 ```
 
 This will:
-- Uninstall all Helm releases (Kafka Outbound connector and Kafka broker)
+- Uninstall all Helm releases (JMS Outbound connector and RabbitMQ broker)
 - Delete Aerospike clusters
 - Remove secrets and RBAC resources
 - Uninstall AKO and OLM

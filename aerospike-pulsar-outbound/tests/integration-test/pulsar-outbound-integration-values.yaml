@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  tag: "3.3.14"
+
+connectorConfig:
+  service:
+    port: 8080
+    manage:
+      port: 8081
+
+  # Pulsar connector client configuration.
+  client-configuration:
+    # Pulsar broker service (will be set dynamically by script)
+    serviceUrl: pulsar://pulsar.aerospike-test.svc.cluster.local:6650
+
+  # Format of the Pulsar destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Pulsar destination.
+  routing:
+    mode: static
+    # Topic name (will be set dynamically by script)
+    destination: persistent://public/default/aerospike
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# Only include TLS secrets if using TLS
+# connectorSecrets:
+#   - tls-certs
+

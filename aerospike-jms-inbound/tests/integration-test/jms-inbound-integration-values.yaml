@@ -1,0 +1,49 @@
+replicaCount: 1
+
+connectorConfig:
+  # Optional HTTP Server configuration to expose Manage API and Prometheus metrics
+  service:
+    manage:
+      port: 8081
+
+  # JMS sources to consume messages from.
+  queues:
+    aerospike:
+      aerospike-operation:
+        type: write
+      parsing:
+        format: json
+      mapping:
+        bins:
+          type: multi-bins
+          all-value-fields: true
+        key-field:
+          source: value-field
+          field-name: key
+        namespace:
+          mode: static
+          value: test
+
+  # The connection properties to the JMS message broker (RabbitMQ).
+  jms:
+    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+    config:
+      host: rabbitmq.aerospike-test.svc.cluster.local
+      port: 5672
+      username: guest
+      password: guest
+
+  # The Aerospike cluster connection properties.
+  aerospike:
+    seeds:
+      - aerocluster-dst.aerospike-test.svc.cluster.local:
+          port: 3000
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# Only include TLS secrets if using TLS
+# connectorSecrets:
+#   - tls-certs
+

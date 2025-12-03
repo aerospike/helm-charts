@@ -1,0 +1,71 @@
+# Apache Pulsar standalone deployment for integration testing
+# Using official Apache Pulsar image (version 4.0.7)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pulsar
+  namespace: aerospike-test
+spec:
+  serviceName: pulsar-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pulsar
+  template:
+    metadata:
+      labels:
+        app: pulsar
+    spec:
+      containers:
+      - name: pulsar
+        image: apachepulsar/pulsar:4.0.7
+        command: ["bin/pulsar", "standalone"]
+        ports:
+        - containerPort: 6650
+          name: pulsar
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PULSAR_MEM
+          value: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m"
+        volumeMounts:
+        - name: data
+          mountPath: /pulsar/data
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulsar
+  namespace: aerospike-test
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6650
+    targetPort: 6650
+    name: pulsar
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: pulsar
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulsar-headless
+  namespace: aerospike-test
+spec:
+  clusterIP: None
+  ports:
+  - port: 6650
+    targetPort: 6650
+    name: pulsar
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: pulsar
+
