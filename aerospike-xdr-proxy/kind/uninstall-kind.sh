@@ -8,7 +8,7 @@ echo "Cleaning up XDR Proxy integration test environment..."
 helm uninstall test-xdr-proxy --namespace aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
-kubectl delete aerospikecluster aerocluster-src aerocluster-dst -n aerospike-test 2>/dev/null || true
+kubectl delete aerospikecluster aerocluster-xdr-src aerocluster-xdr-dst -n aerospike-test 2>/dev/null || true
 
 # Wait for clusters to be deleted
 sleep 5
@@ -38,4 +38,3 @@ docker network rm kind 2>/dev/null || true
 
 echo ""
 echo "✅ Cleanup complete!"
-

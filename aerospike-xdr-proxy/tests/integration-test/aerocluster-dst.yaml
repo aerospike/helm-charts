@@ -1,7 +1,7 @@
 apiVersion: asdb.aerospike.com/v1
 kind: AerospikeCluster
 metadata:
-  name: aerocluster-dst
+  name: aerocluster-xdr-dst
   namespace: aerospike-test
 spec:
   size: 1
@@ -24,15 +24,14 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3043
       fabric:
-        port: 3001
+        port: 3044
       heartbeat:
-        port: 3002
+        port: 3045
     namespaces:
       - name: test
         replication-factor: 1
         storage-engine:
           type: memory
           data-size: 300000000  # 300MB - minimum required for Aerospike 8.0.0.8
-

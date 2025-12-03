@@ -18,7 +18,7 @@ proxyConfig:
     # Destination Aerospike cluster endpoint
     seeds:
       - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
-          port: 3000
+          port: 3043
     performance:
       max-connections-per-node: 100
       event-loop-size: 15
@@ -26,5 +26,6 @@ proxyConfig:
     enable-console-logging: true
 
 # No TLS secrets needed for clear-text (HTTP) connections
-# proxySecrets: []
-
+# To enable TLS, uncomment and configure:
+# proxySecrets:
+#   - tls-certs-xdr-proxy

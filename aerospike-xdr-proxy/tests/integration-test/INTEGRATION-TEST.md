@@ -20,9 +20,9 @@ cd tests/integration-test
 **Manual Quick Test:**
 ```bash
 # After all components are deployed and tools installed:
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3040 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
 sleep 15
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3043 -c "SELECT * FROM test.demo WHERE PK='test-key'"
 ```
 
 ## Architecture
@@ -178,10 +178,10 @@ kubectl exec -n aerospike-test aerocluster-dst-0-0 -- bash -c "
 
 ```bash
 # Insert test record directly in source DB pod
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key-1', 'Test Record', 100)"
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3040 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key-1', 'Test Record', 100)"
 
 # Verify record in source
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3040 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
 ```
 
 ### Step 2: Verify Data in Destination Cluster
@@ -191,7 +191,7 @@ kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -
 sleep 15
 
 # Check if record replicated to destination
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3043 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
 ```
 
 **Expected Result:** The record should appear in the destination cluster, confirming that XDR Proxy successfully forwarded the data.
@@ -287,4 +287,3 @@ cd ../kind
 1. Data inserted in source DB does not appear in destination DB after reasonable wait time
 2. XDR Proxy logs show connection errors
 3. Any component pods are not running or ready
-

@@ -50,11 +50,11 @@ Or deploy components manually:
 # Deploy XDR Proxy
 helm install test-xdr-proxy .. \
   --namespace aerospike-test \
-  --values tests/integration-test/xdr-proxy-values.yaml
+  --values ../tests/integration-test/xdr-proxy-values.yaml
 
 # Deploy Aerospike clusters
-kubectl apply -f tests/integration-test/aerocluster-dst.yaml
-kubectl apply -f tests/integration-test/aerocluster-src.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-dst.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-src.yaml
 ```
 
 ## Cleanup

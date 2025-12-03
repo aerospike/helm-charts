@@ -43,7 +43,7 @@ helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-values.yaml ..
 Or use the deploy script from the chart root:
 ```shell
 cd ../../aerospike-xdr-proxy
-./deploy-test.sh --values examples/custom-code-plugin/as-xdr-proxy-values.yaml
+./tests/deploy-test.sh --values examples/custom-code-plugin/as-xdr-proxy-values.yaml
 ```
 
 4. Verify the deployment:
@@ -99,4 +99,3 @@ To remove the deployment:
 ```shell
 helm uninstall --namespace aerospike-test xdr-proxy
 ```
-

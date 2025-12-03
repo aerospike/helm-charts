@@ -1,7 +1,7 @@
 apiVersion: asdb.aerospike.com/v1
 kind: AerospikeCluster
 metadata:
-  name: aerocluster-src
+  name: aerocluster-xdr-src
   namespace: aerospike-test
 spec:
   size: 1
@@ -24,11 +24,11 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3040
       fabric:
-        port: 3001
+        port: 3041
       heartbeat:
-        port: 3002
+        port: 3042
     namespaces:
       - name: test
         replication-factor: 1
@@ -46,4 +46,3 @@ spec:
             # Note: For dynamic generation with actual pod names, use run-integration-test.sh
             # This is a template - update with actual XDR Proxy pod DNS names after deployment
             - test-xdr-proxy-aerospike-xdr-proxy-0.test-xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local:8901
-

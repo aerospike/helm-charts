@@ -26,19 +26,19 @@ deployed proxy pods.
 
 ```bash
 # Deploy with default values
-./deploy-test.sh
+./tests/deploy-test.sh
 
 # Deploy with custom values file
-./deploy-test.sh --values examples/clear-text/as-xdr-proxy-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-xdr-proxy-values.yaml
 
 # Deploy with TLS configuration
-./deploy-test.sh --values examples/tls/as-xdr-proxy-tls-values.yaml
+./tests/deploy-test.sh --values examples/tls/as-xdr-proxy-tls-values.yaml
 
 # Deploy to custom namespace
-./deploy-test.sh --namespace my-namespace --release-name my-release
+./tests/deploy-test.sh --namespace my-namespace --release-name my-release
 
 # Uninstall
-./deploy-test.sh --uninstall
+./tests/deploy-test.sh --uninstall
 ```
 
 ### Option 2: Using Helm Directly
@@ -110,4 +110,3 @@ See the [examples](examples) directory for example configurations:
 
 For detailed XDR Proxy configuration options, visit:
 https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html
-
