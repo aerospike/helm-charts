@@ -14,7 +14,7 @@ proxyConfig:
   aerospike:
     seeds:
       - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
-          port: 3000
+          port: 3003
     performance:
       max-connections-per-node: 100
       event-loop-size: 15

@@ -26,19 +26,19 @@ deployed connector pods.
 
 ```bash
 # Deploy with default values
-./deploy-test.sh
+./tests/deploy-test.sh
 
 # Deploy with custom values file
-./deploy-test.sh --values examples/clear-text/as-esp-outbound-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-esp-outbound-values.yaml
 
 # Deploy with TLS configuration
-./deploy-test.sh --values examples/tls/as-esp-outbound-tls-values.yaml
+./tests/deploy-test.sh --values examples/tls/as-esp-outbound-tls-values.yaml
 
 # Deploy to custom namespace
-./deploy-test.sh --namespace my-namespace --release-name my-release
+./tests/deploy-test.sh --namespace my-namespace --release-name my-release
 
 # Uninstall
-./deploy-test.sh --uninstall
+./tests/deploy-test.sh --uninstall
 ```
 
 ### Option 2: Setting Up a Local Test Cluster
@@ -54,7 +54,7 @@ cd kind
 cd ..
 
 # Deploy the chart
-./deploy-test.sh --values examples/clear-text/as-esp-outbound-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-esp-outbound-values.yaml
 ```
 
 For more details on kind setup, see [kind/README.md](kind/README.md).
@@ -378,7 +378,7 @@ If you have scaled up add the new PODs to the XDR DC section else on scale down 
 
 ```bash
 # Using the deployment script
-./deploy-test.sh --uninstall
+./tests/deploy-test.sh --uninstall
 
 # Or using Helm directly
 helm uninstall test-esp-outbound --namespace aerospike-test

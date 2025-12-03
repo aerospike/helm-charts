@@ -1,7 +1,7 @@
 apiVersion: asdb.aerospike.com/v1
 kind: AerospikeCluster
 metadata:
-  name: aerocluster-src
+  name: aerocluster-esp-src
   namespace: aerospike-test
 spec:
   size: 1
@@ -44,5 +44,3 @@ spec:
           node-address-ports:
             # ESP Outbound connector pod DNS names
             - test-esp-outbound-aerospike-esp-outbound-0.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901
-            - test-esp-outbound-aerospike-esp-outbound-1.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901
-            - test-esp-outbound-aerospike-esp-outbound-2.test-esp-outbound-aerospike-esp-outbound.aerospike-test.svc.cluster.local:8901

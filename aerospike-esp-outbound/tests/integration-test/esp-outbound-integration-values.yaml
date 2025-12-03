@@ -44,5 +44,4 @@ connectorConfig:
 
 # Only include TLS secrets if using HTTPS
 # connectorSecrets:
-#   - tls-certs
-
+#   - tls-certs-esp

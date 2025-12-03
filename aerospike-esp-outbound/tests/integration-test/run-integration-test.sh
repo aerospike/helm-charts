@@ -13,8 +13,8 @@ set -e
 NAMESPACE="aerospike-test"
 ESP_RELEASE="test-esp-outbound"
 PROXY_RELEASE="xdr-proxy"
-SRC_CLUSTER="aerocluster-src"
-DST_CLUSTER="aerocluster-dst"
+SRC_CLUSTER="aerocluster-esp-src"
+DST_CLUSTER="aerocluster-esp-dst"
 
 # Colors
 GREEN='\033[0;32m'
@@ -62,30 +62,30 @@ echo ""
 # Check if TLS secrets are needed for ESP Outbound
 ESP_VALUES_FILE="$SCRIPT_DIR/esp-outbound-integration-values.yaml"
 if [ -f "$ESP_VALUES_FILE" ]; then
-    # Check if values file references tls-certs secret (not commented out)
+    # Check if values file references tls-certs-esp secret (not commented out)
     if grep -q "connectorSecrets:" "$ESP_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$ESP_VALUES_FILE"; then
-        if grep -q "tls-certs" "$ESP_VALUES_FILE"; then
-            print_info "Checking for TLS secret 'tls-certs'..."
-            if ! kubectl get secret tls-certs -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs' not found in namespace $NAMESPACE"
+        if grep -q "tls-certs-esp" "$ESP_VALUES_FILE"; then
+            print_info "Checking for TLS secret 'tls-certs-esp'..."
+            if ! kubectl get secret tls-certs-esp -n $NAMESPACE &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-esp' not found in namespace $NAMESPACE"
                 
                 # Try to create from examples/tls/tls-certs directory (relative to chart root)
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
                 TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
                 if [ -d "$TLS_CERTS_DIR" ]; then
                     print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                    if kubectl create secret generic tls-certs-esp --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway (may fail if TLS is required)..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs' is required but $TLS_CERTS_DIR not found."
+                    print_warning "TLS secret 'tls-certs-esp' is required but $TLS_CERTS_DIR not found."
                     print_warning "Please create it manually if TLS is configured:"
-                    print_info "  kubectl create secret generic tls-certs --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_info "  kubectl create secret generic tls-certs-esp --from-file=<path-to-tls-certs> -n $NAMESPACE"
                 fi
             else
-                print_info "✅ TLS secret 'tls-certs' already exists"
+                print_info "✅ TLS secret 'tls-certs-esp' already exists"
             fi
             echo ""
         fi
@@ -154,7 +154,7 @@ echo ""
 
 # Step 2: Deploy XDR Proxy
 print_info "Step 2: Deploying XDR Proxy..."
-WORKSPACE="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 helm install ${PROXY_RELEASE} "$WORKSPACE/aerospike-xdr-proxy" \
   -n ${NAMESPACE} -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
 print_info "✅ XDR Proxy deployed"
@@ -162,7 +162,7 @@ echo ""
 
 # Step 3: Deploy ESP Outbound
 print_info "Step 3: Deploying ESP Outbound connector..."
-helm install ${ESP_RELEASE} "$SCRIPT_DIR/.." \
+helm install ${ESP_RELEASE} "$SCRIPT_DIR/../.." \
   -n ${NAMESPACE} -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" --wait --timeout=2m
 print_info "✅ ESP Outbound deployed"
 echo ""
@@ -374,7 +374,7 @@ sleep 10
 
 # Verify data in destination DB
 print_info "Verifying data in destination DB..."
-RESULT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+RESULT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3003 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 | grep -v "^OK" || true)
 
 if echo "$RESULT" | grep -q "${TEST_KEY}"; then
@@ -446,4 +446,3 @@ print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
 print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SCRIPT_DIR/esp-outbound-integration-values.yaml (ESP config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ESP pod DNS)"
-

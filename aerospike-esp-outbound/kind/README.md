@@ -38,7 +38,7 @@ cd kind
 After installation, you can run the integration test:
 
 ```bash
-cd ../integration-test
+cd ../tests/integration-test
 ./run-integration-test.sh
 ```
 
@@ -48,16 +48,16 @@ Or deploy components manually:
 # Deploy ESP Outbound
 helm install test-esp-outbound ../aerospike-esp-outbound \
   --namespace aerospike-test \
-  --values integration-test/esp-outbound-integration-values.yaml
+  --values ../tests/integration-test/esp-outbound-integration-values.yaml
 
 # Deploy XDR Proxy
 helm install xdr-proxy ../../aerospike-xdr-proxy \
   --namespace aerospike-test \
-  --values integration-test/xdr-proxy-values.yaml
+  --values ../tests/integration-test/xdr-proxy-values.yaml
 
 # Deploy Aerospike clusters
-kubectl apply -f integration-test/aerocluster-dst.yaml
-kubectl apply -f integration-test/aerocluster-src.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-dst.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-src.yaml
 ```
 
 ## Cleanup
@@ -78,5 +78,4 @@ This will:
 
 ## Manual Steps
 
-If you prefer to set up manually, see [INTEGRATION-TEST.md](../integration-test/INTEGRATION-TEST.md) for step-by-step instructions.
-
+If you prefer to set up manually, see [INTEGRATION-TEST.md](../tests/integration-test/INTEGRATION-TEST.md) for step-by-step instructions.

@@ -23,7 +23,7 @@ cd tests/integration-test
 # After all components are deployed and tools installed:
 kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
 sleep 10
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3003 -c "SELECT * FROM test.demo WHERE PK='test-key'"
 ```
 
 ## Architecture
@@ -187,7 +187,7 @@ kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -
 sleep 10
 
 # Check if record replicated to destination
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3003 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
 ```
 
 ### Step 3: Check Component Metrics
