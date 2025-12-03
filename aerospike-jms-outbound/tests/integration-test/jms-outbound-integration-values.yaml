@@ -14,7 +14,7 @@ connectorConfig:
   jms:
     factory: com.rabbitmq.jms.admin.RMQConnectionFactory
     config:
-      host: rabbitmq.aerospike-test.svc.cluster.local
+      host: rabbitmq-jms-outbound.aerospike-test.svc.cluster.local
       port: 5672
       username: guest
       password: guest
@@ -36,4 +36,4 @@ connectorConfig:
 
 # Only include TLS secrets if using TLS
 # connectorSecrets:
-#   - tls-certs
+#   - tls-certs-jms-outbound

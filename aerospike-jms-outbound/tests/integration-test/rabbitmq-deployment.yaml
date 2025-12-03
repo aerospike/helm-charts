@@ -1,19 +1,19 @@
-# RabbitMQ deployment for JMS integration testing
+# RabbitMQ deployment for JMS Outbound integration testing
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rabbitmq
+  name: rabbitmq-jms-outbound
   namespace: aerospike-test
 spec:
-  serviceName: rabbitmq-headless
+  serviceName: rabbitmq-jms-outbound-headless
   replicas: 1
   selector:
     matchLabels:
-      app: rabbitmq
+      app: rabbitmq-jms-outbound
   template:
     metadata:
       labels:
-        app: rabbitmq
+        app: rabbitmq-jms-outbound
     spec:
       containers:
       - name: rabbitmq
@@ -38,7 +38,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq
+  name: rabbitmq-jms-outbound
   namespace: aerospike-test
 spec:
   type: ClusterIP
@@ -50,12 +50,12 @@ spec:
     targetPort: 15672
     name: http
   selector:
-    app: rabbitmq
+    app: rabbitmq-jms-outbound
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq-headless
+  name: rabbitmq-jms-outbound-headless
   namespace: aerospike-test
 spec:
   clusterIP: None
@@ -67,5 +67,5 @@ spec:
     targetPort: 15672
     name: http
   selector:
-    app: rabbitmq
+    app: rabbitmq-jms-outbound
 

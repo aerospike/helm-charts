@@ -21,7 +21,7 @@ cd integration-test
 ```bash
 # After all components are deployed and tools installed:
 # Insert test data
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3020 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
 
 # Wait for replication
 sleep 10
@@ -156,7 +156,7 @@ kubectl exec -n aerospike-test kafka-0 -- kafka-topics.sh \
 ```bash
 # Insert test data
 TEST_KEY="test-key-$(date +%s)"
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3020 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)"
 
 # Wait for replication

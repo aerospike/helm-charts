@@ -48,7 +48,7 @@ print(json.loads(response.read().decode('utf-8')))
 sleep 10
 
 # Verify data in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\"
 ```
 
 ## Architecture
@@ -163,7 +163,7 @@ kubectl get pods -n aerospike-test -l app.kubernetes.io/name=aerospike-jms-inbou
 - **RabbitMQ Host**: `rabbitmq.aerospike-test.svc.cluster.local`
 - **RabbitMQ Port**: `5672`
 - **Queue Name**: `aerospike`
-- **Aerospike Cluster**: `aerocluster-dst.aerospike-test.svc.cluster.local:3000`
+- **Aerospike Cluster**: `aerocluster-dst.aerospike-test.svc.cluster.local:3050`
 - **Namespace**: `test`
 - **Format**: `json`
 
@@ -219,7 +219,7 @@ print(json.loads(response.read().decode('utf-8')))
 sleep 10
 
 # Verify data in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
 ```
 
 ## Verification
@@ -246,10 +246,10 @@ kubectl exec -n aerospike-test rabbitmq-0 -- rabbitmqctl list_queues name messag
 
 ```bash
 # Query all records in test.demo
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo"
 
 # Query specific record
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key-1234567890'"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo WHERE PK='test-key-1234567890'"
 ```
 
 ### Send More Test Messages
@@ -275,7 +275,7 @@ done
 sleep 15
 
 # Verify all records
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo"
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo"
 ```
 
 ## Troubleshooting

@@ -24,11 +24,11 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3010
       fabric:
-        port: 3001
+        port: 3011
       heartbeat:
-        port: 3002
+        port: 3012
     namespaces:
       - name: test
         replication-factor: 1

@@ -7,7 +7,7 @@ helm uninstall test-pulsar-outbound --namespace aerospike-test 2>/dev/null || tr
 helm uninstall pulsar --namespace aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
-kubectl delete aerospikecluster aerocluster-src -n aerospike-test 2>/dev/null || true
+kubectl delete aerospikecluster aerocluster-pulsar-src -n aerospike-test 2>/dev/null || true
 
 # Wait for clusters to be deleted
 sleep 5

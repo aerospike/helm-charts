@@ -70,8 +70,7 @@ kubectl create clusterrolebinding aerospike-cluster-jms-test \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike-test:aerospike-operator-controller-manager || true
 
 echo "Set Secrets for Aerospike Cluster"
-kubectl --namespace aerospike-test create secret generic aerospike-secret \
---from-file=features.conf="$FEATURES_CONF" || \
+# Use idempotent apply to avoid race conditions when multiple install-kind.sh scripts run in parallel
 kubectl --namespace aerospike-test create secret generic aerospike-secret \
 --from-file=features.conf="$FEATURES_CONF" --dry-run=client -o yaml | kubectl apply -f -
 
@@ -79,7 +78,7 @@ echo ""
 echo "✅ Kind cluster setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Run integration test: cd tests/integration-test && ./run-integration-test.sh"
+echo "1. Run integration test: cd ../tests/integration-test && ./run-integration-test.sh"
 echo "2. Or deploy JMS Outbound manually: helm install test-jms-outbound ../aerospike-jms-outbound --namespace aerospike-test"
 echo ""
 echo "To clean up: ./uninstall-kind.sh"

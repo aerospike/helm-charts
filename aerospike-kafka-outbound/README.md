@@ -9,14 +9,53 @@ deployed connector pods.
 **_NOTE:_** The helm chart appends `-aerospike-kafka-outbound` suffix to all created Kubernetes resources to prevent name clashes with other applications.
 
 ## Prerequisites
-- Kubernetes cluster
-- Helm v3
-- A Kafka cluster with brokers reachable from the pods in the Kubernetes cluster
-- An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
+
+- **Kubernetes Cluster**: A running Kubernetes cluster (v1.19+)
+  - Local options: [kind](https://kind.sigs.k8s.io/), [minikube](https://minikube.sigs.k8s.io/), [Docker Desktop](https://www.docker.com/products/docker-desktop)
+  - Cloud options: GKE, EKS, AKS, or any Kubernetes cluster
+- **Helm**: v3.x installed ([Install Helm](https://helm.sh/docs/intro/install/))
+- **kubectl**: Configured to connect to your cluster
+- **Kafka Cluster**: A Kafka cluster with brokers reachable from the pods in the Kubernetes cluster
+- **Aerospike Cluster**: An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
   Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
 
-## Install the helm chart
+## Quick Start
+
+### Option 1: Setting Up a Local Test Cluster
+
+If you don't have a Kubernetes cluster, you can set up a local kind cluster:
+
+```bash
+# Set up complete kind cluster with OLM and operator
+cd kind
+./install-kind.sh
+
+# Navigate back to chart directory
+cd ..
+```
+
+For more details on kind setup, see [kind/README.md](kind/README.md).
+
+### Option 2: Using Helm Directly
+
+```bash
+# Create namespace
+kubectl create namespace aerospike-test
+
+# Deploy with default values
+helm install test-kafka-outbound . \
+  --namespace aerospike-test \
+  --wait --timeout 5m
+
+# Deploy with custom values
+helm install test-kafka-outbound . \
+  --namespace aerospike-test \
+  --values examples/clear-text/as-kafka-outbound-values.yaml \
+  --wait --timeout 5m
+```
+
+## Adding the helm chart repository
 
 Add the `aerospike` helm repository if not already done
 
@@ -32,22 +71,23 @@ helm install aerospike-kafka-outbound aerospike/aerospike-kafka-outbound
 
 ## Supported configuration
 
-## Configuration
+### Configuration
 
-| Parameter          | Description                                                                                                                                                                          | Default                        |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
-| `replicaCount`     | Configures the number Aerospike Kafka connector pods to run.                                                                                                                         | '1'                            |
-| `image`            | Configures Aerospike Kafka connector image repository, tag and pull policy.                                                                                                          | see [values.yaml](values.yaml) |
-| `connectorConfig`  | Connector configuration deployed to `/etc/aerospike-kafka-outbound/aerospike-kafka-outbound.yml`.                                                                                    | see [values.yaml](values.yaml) |
-| `connectorSecrets` | List of secrets mounted to `/etc/aerospike-kafka-outbound/secrets` for each connector pod.                                                                                           | `[]`                           |
-| `autoscaling`      | Enable the horizontal pod auto-scaler.                                                                                                                                               | see [values.yaml](values.yaml) |
-| `serviceAccount`   | Service Account details like name and annotations.                                                                                                                                   | see [values.yaml](values.yaml) |
-| `podAnnotations`   | Additional pod [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/). Should be specified as a map of annotation names to annotation values. | `{}`                           |
-| `securityContext`  | Pod [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)                                                                                   | `{}`                           |
-| `resources`        | Resource [requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the connector pods.                                               | `{}`                           |
-| `affinity`         | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)  rules if any for the pods.                                          | `{}`                           |
-| `nodeSelector`     | [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector)  for the pods.                                                                | `{}`                           |
-| `tolerations`      | [Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)  for the pods.                                                                          | `{}`                           |
+| Parameter            | Description                                                                                                                                                                          | Default                        |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
+| `replicaCount`       | Configures the number Aerospike Kafka connector pods to run.                                                                                                                         | '1'                            |
+| `image`              | Configures Aerospike Kafka connector image repository, tag and pull policy.                                                                                                          | see [values.yaml](values.yaml) |
+| `connectorConfig`    | Connector configuration deployed to `/etc/aerospike-kafka-outbound/aerospike-kafka-outbound.yml`.                                                                                    | see [values.yaml](values.yaml) |
+| `connectorSecrets`   | List of secrets mounted to `/etc/aerospike-kafka-outbound/secrets` for each connector pod.                                                                                           | `[]`                           |
+| `serviceAccount`     | Service Account details like name and annotations.                                                                                                                                   | see [values.yaml](values.yaml) |
+| `podAnnotations`     | Additional pod [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/). Should be specified as a map of annotation names to annotation values. | `{}`                           |
+| `podSecurityContext` | Pod [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)                                                                                   | `{}`                           |
+| `securityContext`    | Container [security context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container)                                    | `{}`                           |
+| `resources`          | Resource [requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) for the connector pods.                                               | `{}`                           |
+| `autoscaling`        | Enable the horizontal pod auto-scaler.                                                                                                                                               | see [values.yaml](values.yaml) |
+| `affinity`           | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)  rules if any for the pods.                                          | `{}`                           |
+| `nodeSelector`       | [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector)  for the pods.                                                                | `{}`                           |
+| `tolerations`        | [Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)  for the pods.                                                                          | `{}`                           |
 
 ## Deploy the connectors
 
@@ -262,3 +302,49 @@ The most likely reason is secret listed in `connectorSecrets` has not been creat
 The most likely reason is connector configuration provided in `connectorConfig` is invalid. 
 Verify this by [viewing the connector logs](#get-logs-for-all-connector-instances), fix and [update](#updating-connector-configuration)
 the connector configuration.
+
+## Integration Testing
+
+This chart includes a comprehensive integration test setup that verifies end-to-end data flow:
+**Aerospike DB → Kafka Outbound Connector → Kafka Broker**
+
+### Quick Start
+
+Run the automated integration test:
+
+```bash
+cd tests/integration-test
+./run-integration-test.sh
+```
+
+The test script will:
+1. Deploy Kafka broker (Bitnami Kafka)
+2. Deploy Kafka Outbound connector
+3. Deploy Aerospike source cluster with XDR pointing to connector
+4. Install Aerospike tools
+5. Insert test data and verify it in Aerospike DB using AQL
+6. Verify data replication to Kafka topic
+7. Display connector metrics and final status
+
+### What the Test Verifies
+
+- ✅ Record insertion in Aerospike DB (verified with AQL SELECT)
+- ✅ Data replication to Kafka topic
+- ✅ Message content verification
+- ✅ Test key verification in message payload
+- ✅ Connector metrics (requests-total, requests-success)
+
+### Prerequisites for Integration Testing
+
+1. **Kind cluster** - See `kind/README.md` for setup instructions
+2. **Aerospike Kubernetes Operator** - Installed via the Kind setup script
+3. **Aerospike features.conf** - License file placed in `kind/config/features.conf`
+
+For detailed integration testing documentation, see [tests/integration-test/INTEGRATION-TEST.md](tests/integration-test/INTEGRATION-TEST.md).
+
+## Additional Resources
+
+- [Aerospike Kafka Connector Documentation](https://docs.aerospike.com/connect/kafka/from-asdb/configuring)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [Integration Test Guide](tests/integration-test/INTEGRATION-TEST.md) - For end-to-end testing with Aerospike clusters

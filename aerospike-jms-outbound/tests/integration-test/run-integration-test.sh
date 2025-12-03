@@ -13,9 +13,9 @@
 set -e
 
 NAMESPACE="aerospike-test"
-RABBITMQ_RELEASE="rabbitmq"
+RABBITMQ_RELEASE="rabbitmq-jms-outbound"
 CONNECTOR_RELEASE="test-jms-outbound"
-SRC_CLUSTER="aerocluster-src"
+SRC_CLUSTER="aerocluster-jms-outbound-src"
 JMS_QUEUE="aerospike"
 
 # Colors
@@ -58,23 +58,25 @@ fi
 CONNECTOR_VALUES_FILE="$SCRIPT_DIR/jms-outbound-integration-values.yaml"
 if [ -f "$CONNECTOR_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$CONNECTOR_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$CONNECTOR_VALUES_FILE"; then
-        if grep -q "tls-certs" "$CONNECTOR_VALUES_FILE"; then
-            print_info "Checking for TLS secret 'tls-certs'..."
-            if ! kubectl get secret tls-certs -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs' not found in namespace $NAMESPACE"
+        if grep -q "tls-certs-jms-outbound" "$CONNECTOR_VALUES_FILE"; then
+            print_info "Checking for TLS secret 'tls-certs-jms-outbound'..."
+            if ! kubectl get secret tls-certs-jms-outbound -n $NAMESPACE &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-jms-outbound' not found in namespace $NAMESPACE"
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
                 TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
                 if [ -d "$TLS_CERTS_DIR" ]; then
                     print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                    if kubectl create secret generic tls-certs-jms-outbound --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs' is required but $TLS_CERTS_DIR not found."
-                    print_info "  kubectl create secret generic tls-certs --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_warning "TLS secret 'tls-certs-jms-outbound' is required but $TLS_CERTS_DIR not found."
+                    print_info "  kubectl create secret generic tls-certs-jms-outbound --from-file=<path-to-tls-certs> -n $NAMESPACE"
                 fi
+            else
+                print_info "✅ TLS secret 'tls-certs-jms-outbound' already exists"
             fi
             echo ""
         fi
@@ -101,8 +103,8 @@ if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     fi
     
     # Also clean up direct Kubernetes resources
-    kubectl delete statefulset rabbitmq -n ${NAMESPACE} 2>/dev/null || true
-    kubectl delete service rabbitmq rabbitmq-headless -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete statefulset rabbitmq-jms-outbound -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete service rabbitmq-jms-outbound rabbitmq-jms-outbound-headless -n ${NAMESPACE} 2>/dev/null || true
     
     if kubectl get aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
         print_info "Deleting existing ${SRC_CLUSTER}..."
@@ -117,21 +119,21 @@ fi
 # Step 1: Deploy RabbitMQ broker
 print_info "Step 1: Deploying RabbitMQ broker..."
 kubectl apply -f "$SCRIPT_DIR/rabbitmq-deployment.yaml" > /dev/null 2>&1
-kubectl wait --for=condition=ready pod -l app=rabbitmq -n ${NAMESPACE} --timeout=10m > /dev/null 2>&1 || print_warning "RabbitMQ pods may still be starting"
+kubectl wait --for=condition=ready pod -l app=rabbitmq-jms-outbound -n ${NAMESPACE} --timeout=10m > /dev/null 2>&1 || print_warning "RabbitMQ pods may still be starting"
 sleep 10
 print_info "✅ RabbitMQ broker deployed"
 echo ""
 
 # Get RabbitMQ broker service name
-RABBITMQ_SERVICE="rabbitmq"
+RABBITMQ_SERVICE="rabbitmq-jms-outbound"
 RABBITMQ_HOST="${RABBITMQ_SERVICE}.${NAMESPACE}.svc.cluster.local"
 
 # Step 2: Deploy JMS Outbound connector
 print_info "Step 2: Deploying JMS Outbound connector..."
 TEMP_VALUES=$(mktemp)
-sed "s|rabbitmq.aerospike-test.svc.cluster.local|${RABBITMQ_HOST}|g" \
+sed "s|rabbitmq-jms-outbound.aerospike-test.svc.cluster.local|${RABBITMQ_HOST}|g" \
   "$SCRIPT_DIR/jms-outbound-integration-values.yaml" > "$TEMP_VALUES"
-helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/.." -n ${NAMESPACE} -f "$TEMP_VALUES" --wait --timeout=2m > /dev/null 2>&1
+helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/../.." -n ${NAMESPACE} -f "$TEMP_VALUES" --wait --timeout=2m > /dev/null 2>&1
 rm -f "$TEMP_VALUES"
 print_info "✅ JMS Outbound connector deployed"
 echo ""
@@ -179,11 +181,11 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3010
       fabric:
-        port: 3001
+        port: 3011
       heartbeat:
-        port: 3002
+        port: 3012
     namespaces:
       - name: test
         replication-factor: 1
@@ -280,7 +282,7 @@ print_info "Step 6: Testing data flow..."
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3010 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if ! echo "$INSERT_OUTPUT" | grep -q "OK"; then
@@ -290,7 +292,7 @@ fi
 
 # Verify record was inserted using AQL SELECT
 print_info "Verifying record in Aerospike DB..."
-AQL_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+AQL_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3010 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1)
 
 if echo "$AQL_OUTPUT" | grep -q "${TEST_KEY}"; then
@@ -304,7 +306,7 @@ echo ""
 
 sleep 10
 print_info "Verifying data in RabbitMQ queue..."
-RABBITMQ_POD=$(kubectl get pods -n ${NAMESPACE} -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+RABBITMQ_POD=$(kubectl get pods -n ${NAMESPACE} -l app=rabbitmq-jms-outbound -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 FOUND_MESSAGE=false
 if [ -n "$RABBITMQ_POD" ]; then
     QUEUE_STATS=$(kubectl exec -n ${NAMESPACE} ${RABBITMQ_POD} -- rabbitmqctl list_queues name messages messages_ready messages_unacknowledged 2>&1 | grep -E "^${JMS_QUEUE}|^name" || echo "")

@@ -52,15 +52,15 @@ helm repo update
 # Deploy Kafka broker
 helm install kafka bitnami/kafka \
   --namespace aerospike-test \
-  --values integration-test/kafka-values.yaml
+  --values ../tests/integration-test/kafka-values.yaml
 
 # Deploy Kafka Outbound connector
 helm install test-kafka-outbound ../aerospike-kafka-outbound \
   --namespace aerospike-test \
-  --values integration-test/kafka-outbound-integration-values.yaml
+  --values ../tests/integration-test/kafka-outbound-integration-values.yaml
 
 # Deploy Aerospike cluster (after connector pods are ready)
-kubectl apply -f integration-test/aerocluster-src-generated.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-src-generated.yaml
 ```
 
 ## Cleanup

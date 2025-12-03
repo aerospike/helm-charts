@@ -48,42 +48,42 @@ helm repo add aerospike https://aerospike.github.io/helm-charts
 
 ### Quick Deploy (Test Environment)
 
-For quick testing, use the `deploy-test.sh` script:
+For quick testing, use the `tests/deploy-test.sh` script:
 
 **Clear-Text Deployment:**
 ```bash
 # Deploy with clear-text configuration (no TLS)
-./deploy-test.sh --values examples/clear-text/as-jms-inbound-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-jms-inbound-values.yaml
 
 # Or with custom release name
-./deploy-test.sh --release-name test-jms-inbound-cleartext --values examples/clear-text/as-jms-inbound-values.yaml
+./tests/deploy-test.sh --release-name test-jms-inbound-cleartext --values examples/clear-text/as-jms-inbound-values.yaml
 ```
 
 **TLS Deployment:**
 ```bash
 # Deploy with TLS configuration
-./deploy-test.sh --values examples/tls/as-jms-inbound-tls-values.yaml
+./tests/deploy-test.sh --values examples/tls/as-jms-inbound-tls-values.yaml
 
 # Or with custom release name
-./deploy-test.sh --release-name test-jms-inbound-tls --values examples/tls/as-jms-inbound-tls-values.yaml
+./tests/deploy-test.sh --release-name test-jms-inbound-tls --values examples/tls/as-jms-inbound-tls-values.yaml
 ```
 
 **Other Options:**
 ```bash
 # Deploy with default settings (uses chart defaults)
-./deploy-test.sh
+./tests/deploy-test.sh
 
 # Deploy with custom namespace and release name
-./deploy-test.sh --namespace my-namespace --release-name my-release --values my-values.yaml
+./tests/deploy-test.sh --namespace my-namespace --release-name my-release --values my-values.yaml
 
 # Uninstall a specific release
-./deploy-test.sh --uninstall --namespace aerospike-test --release-name test-jms-inbound-cleartext
+./tests/deploy-test.sh --uninstall --namespace aerospike-test --release-name test-jms-inbound-cleartext
 
 # Show help
-./deploy-test.sh --help
+./tests/deploy-test.sh --help
 ```
 
-**Note:** The `deploy-test.sh` script automatically creates TLS secrets from `examples/tls/tls-certs/` if your values file references `connectorSecrets: [tls-certs]`.
+**Note:** The `tests/deploy-test.sh` script automatically creates TLS secrets from `examples/tls/tls-certs/` if your values file references `connectorSecrets: [tls-certs]`.
 
 ### Manual Deployment
 

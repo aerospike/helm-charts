@@ -14,9 +14,9 @@
 set -e
 
 NAMESPACE="aerospike-test"
-RABBITMQ_RELEASE="rabbitmq"
+RABBITMQ_RELEASE="rabbitmq-jms-inbound"
 CONNECTOR_RELEASE="test-jms-inbound"
-DST_CLUSTER="aerocluster-dst"
+DST_CLUSTER="aerocluster-jms-inbound-dst"
 JMS_QUEUE="aerospike"
 
 # Colors
@@ -58,23 +58,25 @@ fi
 CONNECTOR_VALUES_FILE="$SCRIPT_DIR/jms-inbound-integration-values.yaml"
 if [ -f "$CONNECTOR_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$CONNECTOR_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$CONNECTOR_VALUES_FILE"; then
-        if grep -q "tls-certs" "$CONNECTOR_VALUES_FILE"; then
-            print_info "Checking for TLS secret 'tls-certs'..."
-            if ! kubectl get secret tls-certs -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs' not found in namespace $NAMESPACE"
+        if grep -q "tls-certs-jms-inbound" "$CONNECTOR_VALUES_FILE"; then
+            print_info "Checking for TLS secret 'tls-certs-jms-inbound'..."
+            if ! kubectl get secret tls-certs-jms-inbound -n $NAMESPACE &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-jms-inbound' not found in namespace $NAMESPACE"
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
                 TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
                 if [ -d "$TLS_CERTS_DIR" ]; then
                     print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                    if kubectl create secret generic tls-certs-jms-inbound --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs' is required but $TLS_CERTS_DIR not found."
-                    print_info "  kubectl create secret generic tls-certs --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_warning "TLS secret 'tls-certs-jms-inbound' is required but $TLS_CERTS_DIR not found."
+                    print_info "  kubectl create secret generic tls-certs-jms-inbound --from-file=<path-to-tls-certs> -n $NAMESPACE"
                 fi
+            else
+                print_info "✅ TLS secret 'tls-certs-jms-inbound' already exists"
             fi
             echo ""
         fi
@@ -101,8 +103,8 @@ if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     fi
     
     # Also clean up direct Kubernetes resources
-    kubectl delete statefulset rabbitmq -n ${NAMESPACE} 2>/dev/null || true
-    kubectl delete service rabbitmq rabbitmq-headless -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete statefulset rabbitmq-jms-inbound -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete service rabbitmq-jms-inbound rabbitmq-jms-inbound-headless -n ${NAMESPACE} 2>/dev/null || true
     
     if kubectl get aerospikecluster ${DST_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
         print_info "Deleting existing ${DST_CLUSTER}..."
@@ -117,7 +119,7 @@ fi
 # Step 1: Deploy RabbitMQ broker
 print_info "Step 1: Deploying RabbitMQ broker..."
 kubectl apply -f "$SCRIPT_DIR/rabbitmq-deployment.yaml" > /dev/null 2>&1
-kubectl wait --for=condition=ready pod -l app=rabbitmq -n ${NAMESPACE} --timeout=10m > /dev/null 2>&1 || print_warning "RabbitMQ pods may still be starting"
+kubectl wait --for=condition=ready pod -l app=rabbitmq-jms-inbound -n ${NAMESPACE} --timeout=10m > /dev/null 2>&1 || print_warning "RabbitMQ pods may still be starting"
 sleep 10
 print_info "✅ RabbitMQ broker deployed"
 echo ""
@@ -140,7 +142,7 @@ echo ""
 
 # Step 3: Deploy JMS Inbound connector
 print_info "Step 3: Deploying JMS Inbound connector..."
-helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/.." -n ${NAMESPACE} -f "$SCRIPT_DIR/jms-inbound-integration-values.yaml" --wait --timeout=2m > /dev/null 2>&1
+helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/../.." -n ${NAMESPACE} -f "$SCRIPT_DIR/jms-inbound-integration-values.yaml" --wait --timeout=2m > /dev/null 2>&1
 print_info "✅ JMS Inbound connector deployed"
 echo ""
 
@@ -209,7 +211,7 @@ echo ""
 
 # Step 6: Send test messages to RabbitMQ queue
 print_info "Step 6: Testing data flow..."
-RABBITMQ_POD=$(kubectl get pods -n ${NAMESPACE} -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+RABBITMQ_POD=$(kubectl get pods -n ${NAMESPACE} -l app=rabbitmq-jms-inbound -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
 if [ -z "$RABBITMQ_POD" ]; then
     print_error "RabbitMQ pod not found!"
@@ -264,7 +266,7 @@ FOUND_RECORD=false
 # Query Aerospike for the test record (try multiple times)
 print_info "Running AQL query: SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
 for i in 1 2 3; do
-    QUERY_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+    QUERY_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3050 -c \
       "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || echo "")
     
     # Always print the AQL query output
@@ -286,7 +288,7 @@ done
 if [ "$FOUND_RECORD" = false ]; then
     print_warning "⚠️  Test record '${TEST_KEY}' not found in Aerospike DB after multiple attempts"
     print_info "Checking all records in test.demo namespace..."
-    ALL_RECORDS=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+    ALL_RECORDS=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3050 -c \
       "SELECT * FROM test.demo" 2>&1 || echo "")
     echo "----------------------------------------"
     echo "$ALL_RECORDS"
@@ -335,9 +337,9 @@ echo ""
 
 print_info "✅ Integration test complete!"
 if [ "$FOUND_RECORD" = true ]; then
-    print_info "   Test key: ${TEST_KEY} | Queue: ${JMS_QUEUE} | Broker: rabbitmq.aerospike-test.svc.cluster.local:5672"
+    print_info "   Test key: ${TEST_KEY} | Queue: ${JMS_QUEUE} | Broker: rabbitmq-jms-inbound.aerospike-test.svc.cluster.local:5672"
     print_info "   ✅ Data successfully written to Aerospike DB"
 else
-    print_info "   Test key: ${TEST_KEY} | Queue: ${JMS_QUEUE} | Broker: rabbitmq.aerospike-test.svc.cluster.local:5672"
+    print_info "   Test key: ${TEST_KEY} | Queue: ${JMS_QUEUE} | Broker: rabbitmq-jms-inbound.aerospike-test.svc.cluster.local:5672"
     print_warning "   ⚠️  Data verification failed - check connector logs"
 fi

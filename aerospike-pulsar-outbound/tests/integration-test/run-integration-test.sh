@@ -15,7 +15,7 @@ set -e
 NAMESPACE="aerospike-test"
 PULSAR_RELEASE="pulsar"
 CONNECTOR_RELEASE="test-pulsar-outbound"
-SRC_CLUSTER="aerocluster-src"
+SRC_CLUSTER="aerocluster-pulsar-src"
 PULSAR_TOPIC="persistent://public/default/aerospike"
 PULSAR_TOPIC_NAME="aerospike"
 
@@ -61,25 +61,25 @@ echo ""
 CONNECTOR_VALUES_FILE="$SCRIPT_DIR/pulsar-outbound-integration-values.yaml"
 if [ -f "$CONNECTOR_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$CONNECTOR_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$CONNECTOR_VALUES_FILE"; then
-        if grep -q "tls-certs" "$CONNECTOR_VALUES_FILE"; then
-            print_info "Checking for TLS secret 'tls-certs'..."
-            if ! kubectl get secret tls-certs -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs' not found in namespace $NAMESPACE"
+        if grep -q "tls-certs-pulsar" "$CONNECTOR_VALUES_FILE"; then
+            print_info "Checking for TLS secret 'tls-certs-pulsar'..."
+            if ! kubectl get secret tls-certs-pulsar -n $NAMESPACE &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-pulsar' not found in namespace $NAMESPACE"
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
                 TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
                 if [ -d "$TLS_CERTS_DIR" ]; then
                     print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                    if kubectl create secret generic tls-certs-pulsar --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs' is required but $TLS_CERTS_DIR not found."
-                    print_info "  kubectl create secret generic tls-certs --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_warning "TLS secret 'tls-certs-pulsar' is required but $TLS_CERTS_DIR not found."
+                    print_info "  kubectl create secret generic tls-certs-pulsar --from-file=<path-to-tls-certs> -n $NAMESPACE"
                 fi
             else
-                print_info "✅ TLS secret 'tls-certs' already exists"
+                print_info "✅ TLS secret 'tls-certs-pulsar' already exists"
             fi
             echo ""
         fi
@@ -147,7 +147,7 @@ sed "s|serviceUrl: pulsar://pulsar.aerospike-test.svc.cluster.local:6650|service
 # Step 3: Deploy Pulsar Outbound connector
 print_info "Step 3: Deploying Pulsar Outbound connector..."
 WORKSPACE="$(cd "$SCRIPT_DIR/../.." && pwd)"
-helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/.." \
+helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/../.." \
   -n ${NAMESPACE} \
   -f "$TEMP_VALUES" \
   --wait --timeout=2m
@@ -206,11 +206,11 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3030
       fabric:
-        port: 3001
+        port: 3031
       heartbeat:
-        port: 3002
+        port: 3032
     namespaces:
       - name: test
         replication-factor: 1
@@ -362,7 +362,7 @@ echo ""
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3030 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if echo "$INSERT_OUTPUT" | grep -q "OK"; then

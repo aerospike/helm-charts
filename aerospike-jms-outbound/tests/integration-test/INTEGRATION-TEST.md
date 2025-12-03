@@ -32,11 +32,11 @@ The automated test script performs the following:
 # After all components are deployed and tools installed:
 # Insert test data
 TEST_KEY="test-key-$(date +%s)"
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3010 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)"
 
 # Verify record in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3010 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
 
 # Wait for replication
@@ -197,11 +197,11 @@ spec:
       feature-key-file: /etc/aerospike/secrets/features.conf
     network:
       service:
-        port: 3000
+        port: 3010
       fabric:
-        port: 3001
+        port: 3011
       heartbeat:
-        port: 3002
+        port: 3012
     namespaces:
       - name: test
         replication-factor: 1
@@ -267,11 +267,11 @@ dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG
 ```bash
 # Insert test data
 TEST_KEY="test-key-$(date +%s)"
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3010 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)"
 
 # Verify record was inserted in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3010 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
 
 # Wait for data replication
@@ -330,7 +330,7 @@ kubectl exec -n aerospike-test rabbitmq-0 -- rabbitmqctl list_queues name messag
 ```bash
 # After inserting a record, verify it exists
 TEST_KEY="test-key-$(date +%s)"
-kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c \
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3010 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
 ```
 

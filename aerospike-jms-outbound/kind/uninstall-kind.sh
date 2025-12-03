@@ -4,10 +4,14 @@ echo "Cleaning up JMS Outbound integration test environment..."
 
 # Uninstall Helm releases
 helm uninstall test-jms-outbound --namespace aerospike-test 2>/dev/null || true
-helm uninstall rabbitmq --namespace aerospike-test 2>/dev/null || true
+helm uninstall rabbitmq-jms-outbound --namespace aerospike-test 2>/dev/null || true
+
+# Delete RabbitMQ resources
+kubectl delete statefulset rabbitmq-jms-outbound -n aerospike-test 2>/dev/null || true
+kubectl delete service rabbitmq-jms-outbound rabbitmq-jms-outbound-headless -n aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
-kubectl delete aerospikecluster aerocluster-src -n aerospike-test 2>/dev/null || true
+kubectl delete aerospikecluster aerocluster-jms-outbound-src -n aerospike-test 2>/dev/null || true
 
 # Wait for clusters to be deleted
 sleep 5

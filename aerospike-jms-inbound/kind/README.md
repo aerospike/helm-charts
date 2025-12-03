@@ -46,15 +46,15 @@ Or deploy components manually:
 
 ```bash
 # Deploy RabbitMQ broker
-kubectl apply -f tests/integration-test/rabbitmq-deployment.yaml
+kubectl apply -f ../tests/integration-test/rabbitmq-deployment.yaml
 
 # Deploy Aerospike destination cluster
-kubectl apply -f tests/integration-test/aerocluster-dst.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-dst.yaml
 
 # Deploy JMS Inbound connector
 helm install test-jms-inbound ../aerospike-jms-inbound \
   --namespace aerospike-test \
-  --values tests/integration-test/jms-inbound-integration-values.yaml
+  --values ../tests/integration-test/jms-inbound-integration-values.yaml
 ```
 
 ## Cleanup

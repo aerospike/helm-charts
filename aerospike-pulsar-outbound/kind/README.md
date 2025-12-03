@@ -46,15 +46,15 @@ Or deploy components manually:
 
 ```bash
 # Deploy Pulsar broker
-kubectl apply -f tests/integration-test/pulsar-deployment.yaml
+kubectl apply -f ../tests/integration-test/pulsar-deployment.yaml
 
 # Deploy Pulsar Outbound connector
 helm install test-pulsar-outbound ../aerospike-pulsar-outbound \
   --namespace aerospike-test \
-  --values tests/integration-test/pulsar-outbound-integration-values.yaml
+  --values ../tests/integration-test/pulsar-outbound-integration-values.yaml
 
 # Deploy Aerospike cluster (after connector pods are ready)
-kubectl apply -f tests/integration-test/aerocluster-src-generated.yaml
+kubectl apply -f ../tests/integration-test/aerocluster-src-generated.yaml
 ```
 
 ## Cleanup
@@ -76,4 +76,3 @@ This will:
 ## Manual Steps
 
 If you prefer to set up manually, see [INTEGRATION-TEST.md](../tests/integration-test/INTEGRATION-TEST.md) for step-by-step instructions.
-

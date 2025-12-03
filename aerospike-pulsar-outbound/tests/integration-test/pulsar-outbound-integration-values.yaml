@@ -31,5 +31,5 @@ connectorConfig:
 
 # Only include TLS secrets if using TLS
 # connectorSecrets:
-#   - tls-certs
+#   - tls-certs-pulsar
 
