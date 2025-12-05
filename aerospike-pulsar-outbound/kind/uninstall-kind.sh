@@ -1,6 +1,25 @@
 #!/bin/bash -e
 
+CONTEXT="kind-pulsar-test-cluster"  # Explicit context for parallel execution safety
+
 echo "Cleaning up Pulsar Outbound integration test environment..."
+
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+# Verify context exists
+if ! kubectl cluster-info &>/dev/null; then
+    echo "⚠️  Warning: Cannot connect to cluster with context: ${CONTEXT}"
+    echo "   Cluster may already be deleted or context doesn't exist"
+    echo "   Continuing with cleanup anyway..."
+fi
 
 # Uninstall Helm releases
 helm uninstall test-pulsar-outbound --namespace aerospike-test 2>/dev/null || true
@@ -14,6 +33,7 @@ sleep 5
 
 # Delete secrets
 kubectl --namespace aerospike-test delete secret aerospike-secret 2>/dev/null || true
+kubectl --namespace aerospike-test delete secret tls-certs-pulsar 2>/dev/null || true
 
 # Delete RBAC resources
 kubectl delete clusterrolebinding aerospike-cluster-pulsar-test 2>/dev/null || true
@@ -32,9 +52,10 @@ kubectl delete crd aerospikeclusters.asdb.aerospike.com 2>/dev/null || true
 # Delete Kind cluster
 kind delete cluster --name pulsar-test-cluster 2>/dev/null || true
 
-# Clean up Docker network
-docker network rm kind 2>/dev/null || true
+# Clean up Docker network (only if no other Kind clusters are using it)
+if [ "$(kind get clusters 2>/dev/null | wc -l)" -eq 0 ]; then
+    docker network rm kind 2>/dev/null || true
+fi
 
 echo ""
 echo "✅ Cleanup complete!"
-

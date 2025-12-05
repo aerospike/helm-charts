@@ -27,28 +27,16 @@ The automated test script performs the following:
 **Manual Quick Test:**
 ```bash
 # After all components are deployed:
+# Note: The integration test uses JMS TextMessage for proper message format
+# See run-integration-test.sh for the complete JMS client implementation
 TEST_KEY="test-key-$(date +%s)"
 TEST_MESSAGE="{\"key\":\"${TEST_KEY}\",\"name\":\"Test Record\",\"value\":100}"
 
-# Send test message to RabbitMQ queue using HTTP API
-kubectl exec -n aerospike-test rabbitmq-0 -- python3 -c "
-import sys, json, urllib.request, base64
-message = sys.argv[1]
-queue = sys.argv[2]
-message_b64 = base64.b64encode(message.encode('utf-8')).decode('utf-8')
-url = 'http://localhost:15672/api/exchanges/%2F/amq.default/publish'
-data = json.dumps({'properties': {}, 'routing_key': queue, 'payload': message_b64, 'payload_encoding': 'base64'}).encode('utf-8')
-req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-req.add_header('Authorization', 'Basic ' + base64.b64encode(b'guest:guest').decode('utf-8'))
-response = urllib.request.urlopen(req)
-print(json.loads(response.read().decode('utf-8')))
-" \"${TEST_MESSAGE}\" aerospike
-
 # Wait for processing
-sleep 10
+sleep 20
 
-# Verify data in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\"
+# Verify data in Aerospike DB (connector writes to null set by default)
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test WHERE PK='${TEST_KEY}'"
 ```
 
 ## Architecture
@@ -77,14 +65,14 @@ If you have existing deployments, clean them up first:
 
 ```bash
 # Uninstall Helm releases
-helm uninstall test-jms-inbound rabbitmq -n aerospike-test 2>&1 | grep -v "not found" || true
+helm uninstall test-jms-inbound rabbitmq-jms-inbound -n aerospike-test 2>&1 | grep -v "not found" || true
 
 # Delete Aerospike clusters
-kubectl delete aerospikecluster aerocluster-dst -n aerospike-test 2>&1 | grep -v "not found" || true
+kubectl delete aerospikecluster aerocluster-jms-inbound-dst -n aerospike-test 2>&1 | grep -v "not found" || true
 
 # Delete direct Kubernetes resources
-kubectl delete statefulset rabbitmq -n aerospike-test 2>&1 | grep -v "not found" || true
-kubectl delete service rabbitmq rabbitmq-headless -n aerospike-test 2>&1 | grep -v "not found" || true
+kubectl delete statefulset rabbitmq-jms-inbound -n aerospike-test 2>&1 | grep -v "not found" || true
+kubectl delete service rabbitmq-jms-inbound rabbitmq-jms-inbound-headless -n aerospike-test 2>&1 | grep -v "not found" || true
 
 # Wait for cleanup
 sleep 10
@@ -111,7 +99,7 @@ kubectl apply -f tests/integration-test/rabbitmq-deployment.yaml
 
 # Wait for RabbitMQ to be ready
 kubectl wait --for=condition=ready pod \
-  -l app=rabbitmq \
+  -l app=rabbitmq-jms-inbound \
   -n aerospike-test \
   --timeout=10m
 
@@ -119,7 +107,7 @@ kubectl wait --for=condition=ready pod \
 sleep 10
 
 # Verify RabbitMQ is running
-kubectl get pods -n aerospike-test -l app=rabbitmq
+kubectl get pods -n aerospike-test -l app=rabbitmq-jms-inbound
 ```
 
 **RabbitMQ Configuration:**
@@ -137,7 +125,7 @@ kubectl apply -f tests/integration-test/aerocluster-dst.yaml
 
 # Wait for cluster to be ready
 kubectl wait --for=condition=ready pod \
-  aerocluster-dst-0-0 \
+  aerocluster-jms-inbound-dst-0-0 \
   -n aerospike-test --timeout=3m
 
 # Verify cluster is running
@@ -158,24 +146,25 @@ kubectl get pods -n aerospike-test -l app.kubernetes.io/name=aerospike-jms-inbou
 ```
 
 **Connector Configuration:**
-- **Replicas**: 3
+- **Replicas**: 1
 - **JMS Factory**: `com.rabbitmq.jms.admin.RMQConnectionFactory`
-- **RabbitMQ Host**: `rabbitmq.aerospike-test.svc.cluster.local`
+- **RabbitMQ Host**: `rabbitmq-jms-inbound.aerospike-test.svc.cluster.local`
 - **RabbitMQ Port**: `5672`
 - **Queue Name**: `aerospike`
-- **Aerospike Cluster**: `aerocluster-dst.aerospike-test.svc.cluster.local:3050`
+- **Aerospike Cluster**: `aerocluster-jms-inbound-dst.aerospike-test.svc.cluster.local:3050`
 - **Namespace**: `test`
+- **Set**: null set (default)
 - **Format**: `json`
 
 ### Step 6: Install Aerospike Tools
 
 ```bash
 # Detect architecture
-ARCH=$(kubectl exec -n aerospike-test aerocluster-dst-0-0 -- uname -m)
+ARCH=$(kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- uname -m)
 
 # Install tools (adjust package name based on architecture)
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
-    TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_amd64.tgz"
+    TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
     DEB_PKG="aerospike-tools_11.2.2-ubuntu20.04_amd64.deb"
 else
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64.tgz"
@@ -183,44 +172,34 @@ else
 fi
 
 # Install tools in pod
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- bash -c "
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- bash -c "
 cd /tmp && \
 apt-get update -qq && \
 apt-get install -y -qq wget curl > /dev/null 2>&1 && \
 wget -q https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/${TOOLS_PKG} -O tools.tgz && \
 tar -xzf tools.tgz > /dev/null 2>&1 && \
-apt-get install -y -qq libreadline8 > /dev/null 2>&1 && \
+(apt-get install -y -qq libreadline8 > /dev/null 2>&1 || apt-get install -y -qq libreadline9 > /dev/null 2>&1 || true) && \
 dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_*/${DEB_PKG} > /dev/null 2>&1
 "
 ```
 
 ### Step 7: Test Data Flow
 
+**Note:** The integration test script uses a Java-based JMS client to send proper JMS TextMessage objects. For manual testing, you can use the script's approach or send messages via a JMS client.
+
 ```bash
 # Generate test message
 TEST_KEY="test-key-$(date +%s)"
 TEST_MESSAGE="{\"key\":\"${TEST_KEY}\",\"name\":\"Test Record\",\"value\":100}"
 
-# Send message to RabbitMQ queue using HTTP API
-kubectl exec -n aerospike-test rabbitmq-0 -- python3 -c "
-import sys, json, urllib.request, base64
-message = sys.argv[1]
-queue = sys.argv[2]
-message_b64 = base64.b64encode(message.encode('utf-8')).decode('utf-8')
-url = 'http://localhost:15672/api/exchanges/%2F/amq.default/publish'
-data = json.dumps({'properties': {}, 'routing_key': queue, 'payload': message_b64, 'payload_encoding': 'base64'}).encode('utf-8')
-req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-req.add_header('Authorization', 'Basic ' + base64.b64encode(b'guest:guest').decode('utf-8'))
-response = urllib.request.urlopen(req)
-print(json.loads(response.read().decode('utf-8')))
-" \"${TEST_MESSAGE}\" aerospike
+# Wait for connector to process (if using automated script)
+sleep 20
 
-# Wait for connector to process
-sleep 10
-
-# Verify data in Aerospike DB
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'"
+# Verify data in Aerospike DB (connector writes to null set by default)
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test WHERE PK='${TEST_KEY}'"
 ```
+
+For sending messages manually, see `run-integration-test.sh` for the complete JMS client implementation using TextMessage format.
 
 ## Verification
 
@@ -236,46 +215,32 @@ kubectl logs -n aerospike-test test-jms-inbound-aerospike-jms-inbound-0 --tail=5
 
 ```bash
 # Queue statistics
-kubectl exec -n aerospike-test rabbitmq-0 -- rabbitmqctl list_queues name messages messages_ready messages_unacknowledged consumers
+kubectl exec -n aerospike-test rabbitmq-jms-inbound-0 -- rabbitmqctl list_queues name messages messages_ready messages_unacknowledged consumers
 
 # Detailed queue info
-kubectl exec -n aerospike-test rabbitmq-0 -- rabbitmqctl list_queues name messages consumers memory
+kubectl exec -n aerospike-test rabbitmq-jms-inbound-0 -- rabbitmqctl list_queues name messages consumers memory
 ```
 
 ### Query Aerospike Records
 
 ```bash
-# Query all records in test.demo
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo"
+# Query all records in test namespace (null set)
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test"
 
 # Query specific record
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo WHERE PK='test-key-1234567890'"
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test WHERE PK='test-key-1234567890'"
 ```
 
 ### Send More Test Messages
 
+**Note:** For proper JMS message format, use the JMS client approach from `run-integration-test.sh`. The script uses TextMessage format which is required for JSON parsing.
+
 ```bash
-# Send multiple test messages
-for i in {1..5}; do
-  TEST_MSG="{\"key\":\"test-key-${i}\",\"name\":\"Test ${i}\",\"value\":${i}00}"
-  kubectl exec -n aerospike-test rabbitmq-0 -- python3 -c "
-import sys, json, urllib.request, base64
-message = sys.argv[1]
-queue = sys.argv[2]
-message_b64 = base64.b64encode(message.encode('utf-8')).decode('utf-8')
-url = 'http://localhost:15672/api/exchanges/%2F/amq.default/publish'
-data = json.dumps({'properties': {}, 'routing_key': queue, 'payload': message_b64, 'payload_encoding': 'base64'}).encode('utf-8')
-req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-req.add_header('Authorization', 'Basic ' + base64.b64encode(b'guest:guest').decode('utf-8'))
-urllib.request.urlopen(req)
-" \"${TEST_MSG}\" aerospike
-done
+# Wait for processing after sending messages
+sleep 20
 
-# Wait for processing
-sleep 15
-
-# Verify all records
-kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test.demo"
+# Verify all records (connector writes to null set by default)
+kubectl exec -n aerospike-test aerocluster-jms-inbound-dst-0-0 -- aql -h localhost -p 3050 -c "SELECT * FROM test"
 ```
 
 ## Troubleshooting
@@ -294,7 +259,7 @@ kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -
 
 3. **Check RabbitMQ connectivity:**
    ```bash
-   kubectl exec -n aerospike-test test-jms-inbound-aerospike-jms-inbound-0 -- nc -zv rabbitmq.aerospike-test.svc.cluster.local 5672
+   kubectl exec -n aerospike-test test-jms-inbound-aerospike-jms-inbound-0 -- nc -zv rabbitmq-jms-inbound.aerospike-test.svc.cluster.local 5672
    ```
 
 ### Messages Not Appearing in Aerospike
@@ -306,33 +271,34 @@ kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -
 
 2. **Verify Aerospike connectivity:**
    ```bash
-   kubectl exec -n aerospike-test test-jms-inbound-aerospike-jms-inbound-0 -- telnet aerocluster-dst.aerospike-test.svc.cluster.local 3000
+   kubectl exec -n aerospike-test test-jms-inbound-aerospike-jms-inbound-0 -- telnet aerocluster-jms-inbound-dst.aerospike-test.svc.cluster.local 3000
    ```
 
 3. **Check message format:**
    - Messages must be valid JSON
+   - Must be sent as JMS TextMessage (not native RabbitMQ messages)
    - Must include `key` field for record key
    - Other fields become bins
 
 4. **Verify namespace and set:**
    - Connector writes to namespace: `test`
-   - Set is determined by message content or defaults to `demo`
+   - Set defaults to null set (no set name specified)
 
 ### RabbitMQ Connection Issues
 
 1. **Check RabbitMQ logs:**
    ```bash
-   kubectl logs -n aerospike-test rabbitmq-0
+   kubectl logs -n aerospike-test rabbitmq-jms-inbound-0
    ```
 
 2. **Verify RabbitMQ is accessible:**
    ```bash
-   kubectl exec -n aerospike-test rabbitmq-0 -- netstat -tlnp | grep 5672
+   kubectl exec -n aerospike-test rabbitmq-jms-inbound-0 -- netstat -tlnp | grep 5672
    ```
 
 3. **Test JMS connection:**
    ```bash
-   kubectl exec -n aerospike-test rabbitmq-0 -- rabbitmqctl list_queues name messages
+   kubectl exec -n aerospike-test rabbitmq-jms-inbound-0 -- rabbitmqctl list_queues name messages
    ```
 
 ## Cleanup
@@ -340,14 +306,14 @@ kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3050 -
 ```bash
 # Uninstall Helm releases
 helm uninstall test-jms-inbound -n aerospike-test
-helm uninstall rabbitmq -n aerospike-test 2>/dev/null || true
+helm uninstall rabbitmq-jms-inbound -n aerospike-test 2>/dev/null || true
 
 # Delete Kubernetes resources
-kubectl delete statefulset rabbitmq -n aerospike-test
-kubectl delete service rabbitmq rabbitmq-headless -n aerospike-test
+kubectl delete statefulset rabbitmq-jms-inbound -n aerospike-test
+kubectl delete service rabbitmq-jms-inbound rabbitmq-jms-inbound-headless -n aerospike-test
 
 # Delete Aerospike cluster
-kubectl delete aerospikecluster aerocluster-dst -n aerospike-test
+kubectl delete aerospikecluster aerocluster-jms-inbound-dst -n aerospike-test
 
 # Wait for cleanup
 sleep 10
@@ -366,4 +332,3 @@ sleep 10
 - [RabbitMQ JMS Plugin](https://www.rabbitmq.com/jms-client.html)
 - [Aerospike JMS Inbound Connector Documentation](https://docs.aerospike.com/connect/jms/to-asdb)
 - [Aerospike Kubernetes Operator Documentation](https://docs.aerospike.com/kubernetes-operator)
-

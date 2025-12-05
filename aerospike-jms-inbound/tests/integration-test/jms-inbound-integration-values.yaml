@@ -36,12 +36,15 @@ connectorConfig:
   # The Aerospike cluster connection properties.
   aerospike:
     seeds:
-      - aerocluster-dst.aerospike-test.svc.cluster.local:
+      - aerocluster-jms-inbound-dst.aerospike-test.svc.cluster.local:
           port: 3050
 
   # The logging properties.
   logging:
     enable-console-logging: true
+    levels:
+      com.aerospike: debug
+      com.aerospike.connect: debug
 
 # Only include TLS secrets if using TLS
 # connectorSecrets:

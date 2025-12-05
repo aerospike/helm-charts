@@ -17,6 +17,7 @@ KAFKA_RELEASE="kafka"
 CONNECTOR_RELEASE="test-kafka-outbound"
 SRC_CLUSTER="aerocluster-kafka-src"
 KAFKA_TOPIC="aerospike"
+CONTEXT="kind-kafka-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'
@@ -38,6 +39,24 @@ print_error() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+# Verify context exists
+if ! kubectl cluster-info &>/dev/null; then
+    print_error "Cannot connect to cluster with context: ${CONTEXT}"
+    print_error "Please ensure the Kind cluster is created: kind get clusters"
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
 print_info "🚀 Setting up Kafka Outbound Integration Test Environment"
 print_info "======================================================"
 echo ""
@@ -45,11 +64,13 @@ echo ""
 # Verify existing files exist
 if [ ! -f "$SCRIPT_DIR/kafka-deployment.yaml" ]; then
     print_error "kafka-deployment.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/kafka-outbound-integration-values.yaml" ]; then
     print_error "kafka-outbound-integration-values.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
@@ -62,20 +83,20 @@ if [ -f "$CONNECTOR_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$CONNECTOR_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$CONNECTOR_VALUES_FILE"; then
         if grep -q "tls-certs-kafka" "$CONNECTOR_VALUES_FILE"; then
             print_info "Checking for TLS secret 'tls-certs-kafka'..."
-            if ! kubectl get secret tls-certs-kafka -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs-kafka' not found in namespace $NAMESPACE"
+            if ! kubectl get secret tls-certs-kafka -n "${NAMESPACE}" &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-kafka' not found in namespace ${NAMESPACE}"
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-                TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
+                TLS_CERTS_DIR="${CHART_ROOT}/examples/tls/tls-certs"
                 if [ -d "$TLS_CERTS_DIR" ]; then
-                    print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs-kafka --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                    print_info "Creating TLS secret from ${TLS_CERTS_DIR}..."
+                    if kubectl create secret generic tls-certs-kafka --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs-kafka' is required but $TLS_CERTS_DIR not found."
-                    print_info "  kubectl create secret generic tls-certs-kafka --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_warning "TLS secret 'tls-certs-kafka' is required but ${TLS_CERTS_DIR} not found."
+                    print_info "  kubectl create secret generic tls-certs-kafka --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
                 fi
             else
                 print_info "✅ TLS secret 'tls-certs-kafka' already exists"
@@ -87,30 +108,30 @@ fi
 
 # Check for existing deployments and clean up if needed
 print_info "Checking for existing deployments..."
-EXISTING_HELM=$(helm list -n ${NAMESPACE} --short 2>/dev/null | grep -E "(${CONNECTOR_RELEASE}|${KAFKA_RELEASE})" || true)
-EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n ${NAMESPACE} -o name 2>/dev/null | grep -E "${SRC_CLUSTER}" || true)
+EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${CONNECTOR_RELEASE}|${KAFKA_RELEASE})" || true)
+EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n "${NAMESPACE}" -o name 2>/dev/null | grep -E "${SRC_CLUSTER}" || true)
 
 if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     print_warning "Found existing deployments. Cleaning up..."
     echo ""
     
-    if helm list -n ${NAMESPACE} --short | grep -q "^${CONNECTOR_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${CONNECTOR_RELEASE}$"; then
         print_info "Uninstalling existing ${CONNECTOR_RELEASE}..."
-        helm uninstall ${CONNECTOR_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${CONNECTOR_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
-    if helm list -n ${NAMESPACE} --short | grep -q "^${KAFKA_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${KAFKA_RELEASE}$"; then
         print_info "Uninstalling existing ${KAFKA_RELEASE}..."
-        helm uninstall ${KAFKA_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${KAFKA_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     # Also clean up direct Kubernetes resources
-    kubectl delete statefulset kafka -n ${NAMESPACE} 2>/dev/null || true
-    kubectl delete service kafka kafka-headless -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete statefulset kafka -n "${NAMESPACE}" 2>/dev/null || true
+    kubectl delete service kafka kafka-headless -n "${NAMESPACE}" 2>/dev/null || true
     
-    if kubectl get aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" &>/dev/null; then
         print_info "Deleting existing ${SRC_CLUSTER}..."
-        kubectl delete aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} 2>/dev/null || true
+        kubectl delete aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     print_info "Waiting for cleanup to complete (10 seconds)..."
@@ -148,9 +169,8 @@ sed "s|- kafka.aerospike-test.svc.cluster.local:9092|- ${KAFKA_BOOTSTRAP_SERVERS
 
 # Step 3: Deploy Kafka Outbound connector
 print_info "Step 3: Deploying Kafka Outbound connector..."
-WORKSPACE="$(cd "$SCRIPT_DIR/../.." && pwd)"
-helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/../.." \
-  -n ${NAMESPACE} \
+helm install "${CONNECTOR_RELEASE}" "$SCRIPT_DIR/../.." \
+  -n "${NAMESPACE}" \
   -f "$TEMP_VALUES" \
   --wait --timeout=2m
 
@@ -160,12 +180,13 @@ echo ""
 
 # Step 4: Get connector pod DNS names and create source cluster YAML
 print_info "Step 4: Getting Kafka Outbound connector pod DNS names..."
-CONNECTOR_PODS=$(kubectl get pods -n $NAMESPACE \
+CONNECTOR_PODS=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-kafka-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$CONNECTOR_PODS" ]; then
     print_error "No Kafka Outbound connector pods found. Please check deployment."
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
@@ -241,7 +262,7 @@ print_info "Waiting for pod to be created..."
 timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod ${SRC_CLUSTER}-0-0 -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${SRC_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
         break
     fi
     sleep 2
@@ -251,8 +272,8 @@ done
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
 kubectl wait --for=condition=ready pod \
-  ${SRC_CLUSTER}-0-0 \
-  -n ${NAMESPACE} --timeout=3m
+  "${SRC_CLUSTER}-0-0" \
+  -n "${NAMESPACE}" --timeout=3m
 print_info "✅ Source cluster ready"
 echo ""
 
@@ -261,7 +282,7 @@ print_info "Step 7: Installing Aerospike tools in DB pod..."
 echo ""
 
 # Detect architecture
-ARCH=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- uname -m 2>/dev/null || echo "aarch64")
+ARCH=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
     # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
@@ -295,7 +316,7 @@ fi
 
 if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
     # Install from copied local file
-    kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- bash -c "
+    kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- bash -c "
     set -e
     cd /tmp && \
     apt-get update -qq && \
@@ -309,7 +330,7 @@ if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
 else
     # Fall back to download method
     print_info "Local tools file not found, downloading from Aerospike..."
-    kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- bash -c "
+    kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- bash -c "
     set -e
     cd /tmp && \
     apt-get update -qq && \
@@ -332,7 +353,7 @@ echo ""
 # Step 8: Create Kafka topic (if needed)
 print_info "Step 8: Creating Kafka topic '${KAFKA_TOPIC}'..."
 # Find Kafka pod name
-KAFKA_POD=$(kubectl get pods -n ${NAMESPACE} -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+KAFKA_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
 if [ -z "$KAFKA_POD" ]; then
     print_warning "Kafka pod not found, skipping topic creation"
@@ -344,13 +365,13 @@ else
     KAFKA_TOPICS_SCRIPT="/opt/kafka/bin/kafka-topics.sh"
     
     # Check if topic exists
-    TOPIC_LIST=$(kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c "${KAFKA_TOPICS_SCRIPT} --list --bootstrap-server localhost:9092 2>&1" || echo "")
+    TOPIC_LIST=$(kubectl exec -n "${NAMESPACE}" "${KAFKA_POD}" -- bash -c "${KAFKA_TOPICS_SCRIPT} --list --bootstrap-server localhost:9092 2>&1" || echo "")
     
     if echo "$TOPIC_LIST" | grep -q "^${KAFKA_TOPIC}$"; then
         print_info "✅ Kafka topic already exists"
     else
         # Create topic (Kafka 4.1.0 auto-creates topics, but we'll try explicit creation)
-        CREATE_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c "${KAFKA_TOPICS_SCRIPT} --create --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partitions 3 --replication-factor 1 2>&1" || echo "")
+        CREATE_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${KAFKA_POD}" -- bash -c "${KAFKA_TOPICS_SCRIPT} --create --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partitions 3 --replication-factor 1 2>&1" || echo "")
         
         if echo "$CREATE_OUTPUT" | grep -qE "(Created topic|already exists)"; then
             print_info "✅ Kafka topic created or already exists"
@@ -369,7 +390,7 @@ echo ""
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3020 -c \
+INSERT_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- aql -h localhost -p 3020 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if echo "$INSERT_OUTPUT" | grep -q "OK"; then
@@ -387,7 +408,7 @@ sleep 10
 print_info "Verifying data in Kafka topic '${KAFKA_TOPIC}'..."
 print_info "Checking messages in Kafka partitions..."
 # Find Kafka pod name
-KAFKA_POD=$(kubectl get pods -n ${NAMESPACE} -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+KAFKA_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 FOUND_MESSAGE=false
 if [ -n "$KAFKA_POD" ]; then
     KAFKA_CONSUMER_SCRIPT="/opt/kafka/bin/kafka-console-consumer.sh"
@@ -395,12 +416,12 @@ if [ -n "$KAFKA_POD" ]; then
     for PARTITION in 0 1 2; do
         print_info "Checking partition ${PARTITION}..."
         if command -v gtimeout &> /dev/null; then
-            KAFKA_MESSAGES=$(gtimeout 10 kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || true)
+            KAFKA_MESSAGES=$(gtimeout 10 kubectl exec -n "${NAMESPACE}" "${KAFKA_POD}" -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || true)
         elif command -v timeout &> /dev/null; then
-            KAFKA_MESSAGES=$(timeout 10 kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || true)
+            KAFKA_MESSAGES=$(timeout 10 kubectl exec -n "${NAMESPACE}" "${KAFKA_POD}" -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || true)
         else
             # Fallback: run consumer with timeout
-            KAFKA_MESSAGES=$(kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || echo "")
+            KAFKA_MESSAGES=$(kubectl exec -n "${NAMESPACE}" "${KAFKA_POD}" -- bash -c "${KAFKA_CONSUMER_SCRIPT} --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --partition ${PARTITION} --from-beginning --max-messages 10 --timeout-ms 8000 2>&1" || echo "")
         fi
         
         # Check if test key is in this partition
@@ -419,11 +440,20 @@ if [ -n "$KAFKA_POD" ]; then
     done
     
     if [ "$FOUND_MESSAGE" = false ]; then
-        print_warning "⚠️  Test key '${TEST_KEY}' not found in Kafka partitions"
-        print_info "💡 Messages are distributed across partitions. Data flow is working (check metrics above)."
+        print_error "❌ Test FAILED: Test key '${TEST_KEY}' not found in Kafka partitions"
+        print_warning "This may indicate:"
+        print_warning "  - Kafka Outbound connector is not forwarding data correctly"
+        print_warning "  - Data replication delay (try waiting longer)"
+        print_warning "  - Network connectivity issues"
+        echo ""
+        echo "INTEGRATION_TEST_FAILED"
+        exit 1
     fi
 else
-    print_warning "Kafka pod not found for message verification"
+    print_error "❌ Test FAILED: Kafka pod not found for message verification"
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
 fi
 echo ""
 
@@ -433,15 +463,15 @@ echo ""
 
 # Check Kafka Outbound connector metrics across all pods
 print_info "Kafka Outbound Connector Pod Metrics:"
-CONNECTOR_POD_COUNT=$(kubectl get pods -n ${NAMESPACE} \
+CONNECTOR_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-kafka-outbound \
   --no-headers | wc -l | tr -d ' ')
 
 for i in $(seq 0 $((CONNECTOR_POD_COUNT - 1))); do
     POD_NAME="${CONNECTOR_RELEASE}-aerospike-kafka-outbound-${i}"
-    if kubectl get pod ${POD_NAME} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
         echo "Kafka Outbound Pod $i (${POD_NAME}):"
-        METRICS=$(kubectl logs -n ${NAMESPACE} ${POD_NAME} --tail=20 2>/dev/null | \
+        METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \
           grep -E "(records-sent|records-failed|requests-total|requests-success)" | tail -5 || echo "No metrics found")
         if [ -n "$METRICS" ] && [ "$METRICS" != "No metrics found" ]; then
             echo "$METRICS"
@@ -455,7 +485,7 @@ echo ""
 # Step 11: Final Status Check
 print_info "Step 11: Final status check..."
 echo ""
-kubectl get pods -n ${NAMESPACE} -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
+kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
   | grep -E "(NAME|aerocluster|kafka-outbound|kafka)" || true
 echo ""
 
@@ -474,5 +504,7 @@ print_info "   - $SCRIPT_DIR/kafka-outbound-integration-values.yaml (Connector c
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with connector pod DNS)"
 echo ""
 print_info "💡 To manually verify Kafka messages:"
-KAFKA_POD=$(kubectl get pods -n ${NAMESPACE} -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "kafka-0")
+KAFKA_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=kafka -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "kafka-0")
 print_info "   kubectl exec -n ${NAMESPACE} ${KAFKA_POD} -- bash -c \"/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic ${KAFKA_TOPIC} --from-beginning\""
+echo ""
+echo "INTEGRATION_TEST_PASSED"

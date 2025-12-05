@@ -18,6 +18,7 @@ CONNECTOR_RELEASE="test-pulsar-outbound"
 SRC_CLUSTER="aerocluster-pulsar-src"
 PULSAR_TOPIC="persistent://public/default/aerospike"
 PULSAR_TOPIC_NAME="aerospike"
+CONTEXT="kind-pulsar-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'
@@ -39,6 +40,24 @@ print_error() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+# Verify context exists
+if ! kubectl cluster-info &>/dev/null; then
+    print_error "Cannot connect to cluster with context: ${CONTEXT}"
+    print_error "Please ensure the Kind cluster is created: kind get clusters"
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
 print_info "🚀 Setting up Pulsar Outbound Integration Test Environment"
 print_info "======================================================"
 echo ""
@@ -46,11 +65,13 @@ echo ""
 # Verify existing files exist
 if [ ! -f "$SCRIPT_DIR/pulsar-deployment.yaml" ]; then
     print_error "pulsar-deployment.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/pulsar-outbound-integration-values.yaml" ]; then
     print_error "pulsar-outbound-integration-values.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
@@ -63,20 +84,20 @@ if [ -f "$CONNECTOR_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$CONNECTOR_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$CONNECTOR_VALUES_FILE"; then
         if grep -q "tls-certs-pulsar" "$CONNECTOR_VALUES_FILE"; then
             print_info "Checking for TLS secret 'tls-certs-pulsar'..."
-            if ! kubectl get secret tls-certs-pulsar -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs-pulsar' not found in namespace $NAMESPACE"
+            if ! kubectl get secret tls-certs-pulsar -n "${NAMESPACE}" &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-pulsar' not found in namespace ${NAMESPACE}"
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-                TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
-                if [ -d "$TLS_CERTS_DIR" ]; then
-                    print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs-pulsar --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                TLS_CERTS_DIR="${CHART_ROOT}/examples/tls/tls-certs"
+                if [ -d "${TLS_CERTS_DIR}" ]; then
+                    print_info "Creating TLS secret from ${TLS_CERTS_DIR}..."
+                    if kubectl create secret generic tls-certs-pulsar --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs-pulsar' is required but $TLS_CERTS_DIR not found."
-                    print_info "  kubectl create secret generic tls-certs-pulsar --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_warning "TLS secret 'tls-certs-pulsar' is required but ${TLS_CERTS_DIR} not found."
+                    print_info "  kubectl create secret generic tls-certs-pulsar --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
                 fi
             else
                 print_info "✅ TLS secret 'tls-certs-pulsar' already exists"
@@ -88,30 +109,30 @@ fi
 
 # Check for existing deployments and clean up if needed
 print_info "Checking for existing deployments..."
-EXISTING_HELM=$(helm list -n ${NAMESPACE} --short 2>/dev/null | grep -E "(${CONNECTOR_RELEASE}|${PULSAR_RELEASE})" || true)
-EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n ${NAMESPACE} -o name 2>/dev/null | grep -E "${SRC_CLUSTER}" || true)
+EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${CONNECTOR_RELEASE}|${PULSAR_RELEASE})" || true)
+EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n "${NAMESPACE}" -o name 2>/dev/null | grep -E "${SRC_CLUSTER}" || true)
 
 if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     print_warning "Found existing deployments. Cleaning up..."
     echo ""
     
-    if helm list -n ${NAMESPACE} --short | grep -q "^${CONNECTOR_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${CONNECTOR_RELEASE}$"; then
         print_info "Uninstalling existing ${CONNECTOR_RELEASE}..."
-        helm uninstall ${CONNECTOR_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${CONNECTOR_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
-    if helm list -n ${NAMESPACE} --short | grep -q "^${PULSAR_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${PULSAR_RELEASE}$"; then
         print_info "Uninstalling existing ${PULSAR_RELEASE}..."
-        helm uninstall ${PULSAR_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${PULSAR_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     # Also clean up direct Kubernetes resources
-    kubectl delete statefulset pulsar -n ${NAMESPACE} 2>/dev/null || true
-    kubectl delete service pulsar pulsar-headless -n ${NAMESPACE} 2>/dev/null || true
+    kubectl delete statefulset pulsar -n "${NAMESPACE}" 2>/dev/null || true
+    kubectl delete service pulsar pulsar-headless -n "${NAMESPACE}" 2>/dev/null || true
     
-    if kubectl get aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" &>/dev/null; then
         print_info "Deleting existing ${SRC_CLUSTER}..."
-        kubectl delete aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} 2>/dev/null || true
+        kubectl delete aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     print_info "Waiting for cleanup to complete (10 seconds)..."
@@ -127,7 +148,7 @@ kubectl apply -f "$SCRIPT_DIR/pulsar-deployment.yaml"
 print_info "Waiting for Pulsar pods to be ready (this may take a few minutes)..."
 kubectl wait --for=condition=ready pod \
   -l app=pulsar \
-  -n ${NAMESPACE} \
+  -n "${NAMESPACE}" \
   --timeout=10m || print_warning "Pulsar pods may still be starting"
 
 print_info "✅ Pulsar broker deployed"
@@ -146,9 +167,8 @@ sed "s|serviceUrl: pulsar://pulsar.aerospike-test.svc.cluster.local:6650|service
 
 # Step 3: Deploy Pulsar Outbound connector
 print_info "Step 3: Deploying Pulsar Outbound connector..."
-WORKSPACE="$(cd "$SCRIPT_DIR/../.." && pwd)"
-helm install ${CONNECTOR_RELEASE} "$SCRIPT_DIR/../.." \
-  -n ${NAMESPACE} \
+helm install "${CONNECTOR_RELEASE}" "$SCRIPT_DIR/../.." \
+  -n "${NAMESPACE}" \
   -f "$TEMP_VALUES" \
   --wait --timeout=2m
 
@@ -158,19 +178,22 @@ echo ""
 
 # Step 4: Get connector pod DNS names and create source cluster YAML
 print_info "Step 4: Getting Pulsar Outbound connector pod DNS names..."
-CONNECTOR_PODS=$(kubectl get pods -n $NAMESPACE \
+CONNECTOR_PODS=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-pulsar-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$CONNECTOR_PODS" ]; then
     print_error "No Pulsar Outbound connector pods found. Please check deployment."
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 CONNECTOR_POD_DNS=""
-for pod in $CONNECTOR_PODS; do
-    CONNECTOR_POD_DNS="${CONNECTOR_POD_DNS}            - ${pod}.${CONNECTOR_RELEASE}-aerospike-pulsar-outbound.${NAMESPACE}.svc.cluster.local:8080\n"
-done
+while IFS= read -r pod; do
+    if [ -n "$pod" ]; then
+        CONNECTOR_POD_DNS="${CONNECTOR_POD_DNS}            - ${pod}.${CONNECTOR_RELEASE}-aerospike-pulsar-outbound.${NAMESPACE}.svc.cluster.local:8080\n"
+    fi
+done <<< "$CONNECTOR_PODS"
 
 print_info "Pulsar Outbound connector pods found:"
 echo -e "$CONNECTOR_POD_DNS"
@@ -239,7 +262,7 @@ print_info "Waiting for pod to be created..."
 timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod ${SRC_CLUSTER}-0-0 -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${SRC_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
         break
     fi
     sleep 2
@@ -249,8 +272,8 @@ done
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
 kubectl wait --for=condition=ready pod \
-  ${SRC_CLUSTER}-0-0 \
-  -n ${NAMESPACE} --timeout=3m
+  "${SRC_CLUSTER}-0-0" \
+  -n "${NAMESPACE}" --timeout=3m
 print_info "✅ Source cluster ready"
 echo ""
 
@@ -259,7 +282,7 @@ print_info "Step 7: Installing Aerospike tools in DB pod..."
 echo ""
 
 # Detect architecture
-ARCH=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- uname -m 2>/dev/null || echo "aarch64")
+ARCH=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
     # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
@@ -285,7 +308,7 @@ print_info "Installing tools in source DB pod..."
 if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
     print_info "Found local tools file: $LOCAL_TOOLS_FILE"
     print_info "Copying tools file into pod..."
-    kubectl cp "${LOCAL_TOOLS_FILE}" ${NAMESPACE}/${SRC_CLUSTER}-0-0:/tmp/tools.tgz || {
+    kubectl cp "${LOCAL_TOOLS_FILE}" "${NAMESPACE}/${SRC_CLUSTER}-0-0:/tmp/tools.tgz" || {
         print_warning "Failed to copy local tools file, falling back to download"
         LOCAL_TOOLS_FILE=""
     }
@@ -293,7 +316,7 @@ fi
 
 if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
     # Install from copied local file
-    kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- bash -c "
+    kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- bash -c "
     set -e
     cd /tmp && \
     apt-get update -qq && \
@@ -305,7 +328,7 @@ if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
 else
     # Fall back to download method
     print_info "Local tools file not found, downloading from Aerospike..."
-    kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- bash -c "
+    kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- bash -c "
     set -e
     cd /tmp && \
     apt-get update -qq && \
@@ -324,7 +347,7 @@ echo ""
 
 # Step 8: Create Pulsar topic (if needed)
 print_info "Step 8: Creating Pulsar topic '${PULSAR_TOPIC}'..."
-PULSAR_POD=$(kubectl get pods -n ${NAMESPACE} -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+PULSAR_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
 if [ -z "$PULSAR_POD" ]; then
     print_warning "Pulsar pod not found, skipping topic creation"
@@ -334,17 +357,17 @@ else
     
     # Create namespace if it doesn't exist
     print_info "Creating Pulsar namespace 'public/default' if needed..."
-    kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin namespaces create public/default 2>/dev/null || \
+    kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bin/pulsar-admin namespaces create public/default 2>/dev/null || \
       print_info "Namespace already exists or will be auto-created"
     
     # Check if topic exists
-    TOPIC_LIST=$(kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics list public/default 2>&1 || echo "")
+    TOPIC_LIST=$(kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bin/pulsar-admin topics list public/default 2>&1 || echo "")
     
     if echo "$TOPIC_LIST" | grep -q "${PULSAR_TOPIC_NAME}"; then
         print_info "✅ Pulsar topic already exists"
     else
         # Create topic
-        CREATE_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics create ${PULSAR_TOPIC} 2>&1 || echo "")
+        CREATE_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bin/pulsar-admin topics create "${PULSAR_TOPIC}" 2>&1 || echo "")
         
         if echo "$CREATE_OUTPUT" | grep -qE "(Created|already exists)"; then
             print_info "✅ Pulsar topic created or already exists"
@@ -362,7 +385,7 @@ echo ""
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3030 -c \
+INSERT_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- aql -h localhost -p 3030 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if echo "$INSERT_OUTPUT" | grep -q "OK"; then
@@ -378,75 +401,88 @@ sleep 10
 
 # Verify data in Pulsar
 print_info "Verifying data in Pulsar topic '${PULSAR_TOPIC}'..."
-PULSAR_POD=$(kubectl get pods -n ${NAMESPACE} -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+PULSAR_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 FOUND_MESSAGE=false
-if [ -n "$PULSAR_POD" ]; then
-    # Check Pulsar topic statistics first (most reliable indicator)
-    print_info "Checking Pulsar topic statistics..."
-    PULSAR_STATS=$(kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics stats ${PULSAR_TOPIC} 2>&1 | grep -E "(msgInCount|msgInCounter|msgOutCount|msgOutCounter|storageSize)" | head -5 || echo "")
-    if [ -n "$PULSAR_STATS" ]; then
-        print_info "Topic statistics:"
-        echo "$PULSAR_STATS" | sed 's/^/  /'
-        # Extract msgInCounter and storageSize to verify messages were written
-        MSG_IN_COUNT=$(echo "$PULSAR_STATS" | grep -E "msgInCount|msgInCounter" | sed 's/.*"msgInCount[^"]*" : \([0-9]*\).*/\1/' || echo "0")
-        STORAGE_SIZE=$(echo "$PULSAR_STATS" | grep -E "storageSize" | sed 's/.*"storageSize" : \([0-9]*\).*/\1/' || echo "0")
-        if [ "$MSG_IN_COUNT" -gt 0 ] 2>/dev/null; then
-            print_info "✅ Found ${MSG_IN_COUNT} message(s) written to Pulsar topic (storage: ${STORAGE_SIZE} bytes)"
-            FOUND_MESSAGE=true
-        else
-            print_warning "⚠️  No messages found in topic statistics (msgInCounter: ${MSG_IN_COUNT})"
-            FOUND_MESSAGE=false
-        fi
+if [ -z "$PULSAR_POD" ]; then
+    print_error "❌ Test FAILED: Pulsar pod not found for message verification"
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
+# Check Pulsar topic statistics first (most reliable indicator)
+print_info "Checking Pulsar topic statistics..."
+PULSAR_STATS=$(kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bin/pulsar-admin topics stats "${PULSAR_TOPIC}" 2>&1 | grep -E "(msgInCount|msgInCounter|msgOutCount|msgOutCounter|storageSize)" | head -5 || echo "")
+if [ -n "$PULSAR_STATS" ]; then
+    print_info "Topic statistics:"
+    echo "  ${PULSAR_STATS//$'\n'/$'\n'  }"
+    # Extract msgInCounter and storageSize to verify messages were written
+    MSG_IN_COUNT=$(echo "$PULSAR_STATS" | grep -E "msgInCount|msgInCounter" | sed 's/.*"msgInCount[^"]*" : \([0-9]*\).*/\1/' || echo "0")
+    STORAGE_SIZE=$(echo "$PULSAR_STATS" | grep -E "storageSize" | sed 's/.*"storageSize" : \([0-9]*\).*/\1/' || echo "0")
+    if [ "$MSG_IN_COUNT" -gt 0 ] 2>/dev/null; then
+        print_info "✅ Found ${MSG_IN_COUNT} message(s) written to Pulsar topic (storage: ${STORAGE_SIZE} bytes)"
+        FOUND_MESSAGE=true
     else
-        print_warning "Could not retrieve topic statistics"
+        print_warning "⚠️  No messages found in topic statistics (msgInCounter: ${MSG_IN_COUNT})"
         FOUND_MESSAGE=false
     fi
-    echo ""
+else
+    print_warning "Could not retrieve topic statistics"
+    FOUND_MESSAGE=false
+fi
+echo ""
+
+# Attempt to peek at messages using a subscription with cursor reset to earliest
+# This allows reading messages from the beginning even if they were already consumed
+if [ "${FOUND_MESSAGE}" = true ]; then
+    print_info "Attempting to peek at message content..."
+    UNIQUE_SUB="verify-$(date +%s)-$$"
     
-    # Attempt to peek at messages using a subscription with cursor reset to earliest
-    # This allows reading messages from the beginning even if they were already consumed
-    if [ "${FOUND_MESSAGE}" = true ]; then
-        print_info "Attempting to peek at message content..."
-        UNIQUE_SUB="verify-$(date +%s)-$$"
-        
-        # Create subscription and reset cursor to earliest, then try to consume
-        print_info "Creating subscription '${UNIQUE_SUB}' and resetting cursor to earliest..."
-        kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bash -c "bin/pulsar-admin topics create-subscription ${PULSAR_TOPIC} -s ${UNIQUE_SUB} 2>&1 || true" >/dev/null 2>&1
-        kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bash -c "bin/pulsar-admin topics reset-cursor ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -m earliest 2>&1 || true" >/dev/null 2>&1
-        
-        # Try to consume with timeout
-        print_info "Consuming messages (timeout: 5 seconds)..."
-        PULSAR_PEEK=$(kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bash -c "timeout 5 bin/pulsar-client consume ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -n 1 2>&1 || echo 'Timeout'" 2>&1 | grep -vE "(^INFO|^Nov|^\[pulsar|^2025|AutoConfigured|Subscribed|Connected|command terminated|Exclusive consumer)" | grep -v "^$" | head -10 || echo "")
-        
-        if [ -n "$PULSAR_PEEK" ] && ! echo "$PULSAR_PEEK" | grep -qE "(Timeout|error|Error|ConsumerBusy)"; then
-            if echo "$PULSAR_PEEK" | grep -q "${TEST_KEY}"; then
-                print_info "✅ Successfully peeked at message content - test key found!"
-                echo "$PULSAR_PEEK" | grep -E "(metadata|userKey|${TEST_KEY})" | head -3
-            else
-                print_info "Peeked at messages (test key not found in output, but stats confirm delivery)"
-                echo "$PULSAR_PEEK" | head -3
-            fi
+    # Create subscription and reset cursor to earliest, then try to consume
+    print_info "Creating subscription '${UNIQUE_SUB}' and resetting cursor to earliest..."
+    kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bash -c "bin/pulsar-admin topics create-subscription ${PULSAR_TOPIC} -s ${UNIQUE_SUB} 2>&1 || true" >/dev/null 2>&1
+    kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bash -c "bin/pulsar-admin topics reset-cursor ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -m earliest 2>&1 || true" >/dev/null 2>&1
+    
+    # Try to consume with timeout
+    print_info "Consuming messages (timeout: 5 seconds)..."
+    PULSAR_PEEK=$(kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bash -c "timeout 5 bin/pulsar-client consume ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -n 1 2>&1 || echo 'Timeout'" 2>&1 | grep -vE "(^INFO|^Nov|^\[pulsar|^2025|AutoConfigured|Subscribed|Connected|command terminated|Exclusive consumer)" | grep -v "^$" | head -10 || echo "")
+    
+    if [ -n "$PULSAR_PEEK" ] && ! echo "$PULSAR_PEEK" | grep -qE "(Timeout|error|Error|ConsumerBusy)"; then
+        if echo "$PULSAR_PEEK" | grep -q "${TEST_KEY}"; then
+            print_info "✅ Successfully peeked at message content - test key found!"
+            echo "$PULSAR_PEEK" | grep -E "(metadata|userKey|${TEST_KEY})" | head -3
         else
-            print_info "Message peek timed out or subscription conflict (this is OK)"
-            print_info "Topic statistics above confirm successful delivery"
+            print_info "Peeked at messages (test key not found in output, but stats confirm delivery)"
+            echo "$PULSAR_PEEK" | head -3
         fi
-        
-        # Clean up subscription
-        kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bash -c "bin/pulsar-admin topics unsubscribe ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -f 2>&1 || true" >/dev/null 2>&1
-        
-        print_info ""
-        print_info "💡 To manually verify message content:"
-        print_info "   SUB=\$(date +%s)"
-        print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics create-subscription ${PULSAR_TOPIC} -s verify-\$SUB"
-        print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics reset-cursor ${PULSAR_TOPIC} -s verify-\$SUB -m earliest"
-        print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-client consume ${PULSAR_TOPIC} -s verify-\$SUB -n 10"
-        print_info ""
-        print_info "💡 To check topic statistics again:"
-        print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics stats ${PULSAR_TOPIC}"
+    else
+        print_info "Message peek timed out or subscription conflict (this is OK)"
+        print_info "Topic statistics above confirm successful delivery"
     fi
     
-else
-    print_warning "Pulsar pod not found for message verification"
+    # Clean up subscription
+    kubectl exec -n "${NAMESPACE}" "${PULSAR_POD}" -- bash -c "bin/pulsar-admin topics unsubscribe ${PULSAR_TOPIC} -s ${UNIQUE_SUB} -f 2>&1 || true" >/dev/null 2>&1
+    
+    print_info ""
+    print_info "💡 To manually verify message content:"
+    print_info "   SUB=\$(date +%s)"
+    print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics create-subscription ${PULSAR_TOPIC} -s verify-\$SUB"
+    print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics reset-cursor ${PULSAR_TOPIC} -s verify-\$SUB -m earliest"
+    print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-client consume ${PULSAR_TOPIC} -s verify-\$SUB -n 10"
+    print_info ""
+    print_info "💡 To check topic statistics again:"
+    print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-admin topics stats ${PULSAR_TOPIC}"
+fi
+
+if [ "$FOUND_MESSAGE" = false ]; then
+    print_error "❌ Test FAILED: No messages found in Pulsar topic"
+    print_warning "This may indicate:"
+    print_warning "  - Pulsar Outbound connector is not forwarding data correctly"
+    print_warning "  - Data replication delay (try waiting longer)"
+    print_warning "  - Network connectivity issues"
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
 fi
 echo ""
 
@@ -456,15 +492,15 @@ echo ""
 
 # Check Pulsar Outbound connector metrics across all pods
 print_info "Pulsar Outbound Connector Pod Metrics:"
-CONNECTOR_POD_COUNT=$(kubectl get pods -n ${NAMESPACE} \
+CONNECTOR_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-pulsar-outbound \
   --no-headers | wc -l | tr -d ' ')
 
 for i in $(seq 0 $((CONNECTOR_POD_COUNT - 1))); do
     POD_NAME="${CONNECTOR_RELEASE}-aerospike-pulsar-outbound-${i}"
-    if kubectl get pod ${POD_NAME} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
         echo "Pulsar Outbound Pod $i (${POD_NAME}):"
-        METRICS=$(kubectl logs -n ${NAMESPACE} ${POD_NAME} --tail=20 2>/dev/null | \
+        METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \
           grep -E "(records-sent|records-failed|requests-total|requests-success)" | tail -5 || echo "No metrics found")
         if [ -n "$METRICS" ] && [ "$METRICS" != "No metrics found" ]; then
             echo "$METRICS"
@@ -478,7 +514,7 @@ echo ""
 # Step 11: Final Status Check
 print_info "Step 11: Final status check..."
 echo ""
-kubectl get pods -n ${NAMESPACE} -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
+kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
   | grep -E "(NAME|aerocluster|pulsar-outbound|pulsar)" || true
 echo ""
 
@@ -497,5 +533,7 @@ print_info "   - $SCRIPT_DIR/pulsar-outbound-integration-values.yaml (Connector 
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with connector pod DNS)"
 echo ""
 print_info "💡 To manually verify Pulsar messages:"
-PULSAR_POD=$(kubectl get pods -n ${NAMESPACE} -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "pulsar-0")
+PULSAR_POD=$(kubectl get pods -n "${NAMESPACE}" -l app=pulsar -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "pulsar-0")
 print_info "   kubectl exec -n ${NAMESPACE} ${PULSAR_POD} -- bin/pulsar-client consume ${PULSAR_TOPIC} -s test-subscription -n 10"
+echo ""
+echo "INTEGRATION_TEST_PASSED"

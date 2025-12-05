@@ -31,36 +31,58 @@ else
 fi
 
 echo "Installing Kind"
+CONTEXT="kind-jms-test-cluster"  # Explicit context for parallel execution safety
 kind create cluster --config "$WORKSPACE/aerospike-jms-outbound/kind/config/kind-cluster.yaml"
-kubectl cluster-info --context kind-jms-test-cluster
+# kind create cluster automatically sets the context, but we'll use wrapper functions for safety
+
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+kubectl cluster-info
 
 echo "Deploying OLM"
-curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.32.0/install.sh \
-| bash -s v0.32.0
+# Check if OLM is already installed (idempotent check for parallel execution)
+if ! kubectl get namespace olm &>/dev/null; then
+    echo "Installing OLM..."
+    curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.32.0/install.sh \
+    | bash -s v0.32.0 || {
+        echo "OLM installation had errors (may be due to parallel execution), checking if OLM is ready..."
+    }
+else
+    echo "OLM namespace already exists, skipping installation"
+fi
 
-# Wait for OLM to be ready
+# Wait for OLM to be ready (handle race conditions from parallel execution)
 echo "Waiting for OLM to initialize..."
-sleep 30
-
-# Wait for OLM CRDs to be available
-echo "Waiting for OLM CRDs..."
-kubectl wait --for=condition=Established --timeout=120s crd/clusterserviceversions.operators.coreos.com 2>/dev/null || true
-kubectl wait --for=condition=Established --timeout=120s crd/subscriptions.operators.coreos.com 2>/dev/null || true
-
-# Wait for OLM deployments
-kubectl wait --for=condition=available --timeout=120s deployment/olm-operator -n olm 2>/dev/null || true
-kubectl wait --for=condition=available --timeout=120s deployment/catalog-operator -n olm 2>/dev/null || true
+for i in {1..60}; do
+    if kubectl get namespace olm &>/dev/null && \
+       kubectl wait --for=condition=Established --timeout=5s crd/clusterserviceversions.operators.coreos.com &>/dev/null && \
+       kubectl wait --for=condition=available --timeout=5s deployment/olm-operator -n olm &>/dev/null; then
+        echo "OLM is ready"
+        break
+    fi
+    sleep 2
+done
 
 echo "Deploying AKO"
-kubectl create -f https://operatorhub.io/install/aerospike-kubernetes-operator.yaml
+# Use idempotent apply instead of create to handle parallel execution
+kubectl apply -f https://operatorhub.io/install/aerospike-kubernetes-operator.yaml || {
+    echo "AKO installation had errors (may already exist), checking status..."
+}
 echo "Waiting for AKO"
-while true; do
-  if kubectl --namespace operators get deployment/aerospike-operator-controller-manager &> /dev/null; then
-    kubectl --namespace operators wait \
-    --for=condition=available --timeout=180s deployment/aerospike-operator-controller-manager
-    break
-  fi
-  sleep 2
+for i in {1..90}; do
+    if kubectl --namespace operators get deployment/aerospike-operator-controller-manager &>/dev/null; then
+        kubectl --namespace operators wait \
+        --for=condition=available --timeout=180s deployment/aerospike-operator-controller-manager && break
+    fi
+    sleep 2
 done
 
 echo "Grant permissions to the target namespace"
