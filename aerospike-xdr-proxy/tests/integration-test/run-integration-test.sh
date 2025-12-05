@@ -14,6 +14,7 @@ NAMESPACE="aerospike-test"
 PROXY_RELEASE="test-xdr-proxy"
 SRC_CLUSTER="aerocluster-xdr-src"
 DST_CLUSTER="aerocluster-xdr-dst"
+CONTEXT="kind-xdr-proxy-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'
@@ -35,6 +36,24 @@ print_error() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+# Verify context exists
+if ! kubectl cluster-info &>/dev/null; then
+    print_error "Cannot connect to cluster with context: ${CONTEXT}"
+    print_error "Please ensure the Kind cluster is created: kind get clusters"
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
 print_info "🚀 Setting up Integration Test Environment"
 print_info "=========================================="
 echo ""
@@ -42,11 +61,13 @@ echo ""
 # Verify existing files exist
 if [ ! -f "$SCRIPT_DIR/aerocluster-dst.yaml" ]; then
     print_error "aerocluster-dst.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
     print_error "xdr-proxy-values.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
@@ -60,23 +81,23 @@ if [ -f "$PROXY_VALUES_FILE" ]; then
     if grep -q "proxySecrets:" "$PROXY_VALUES_FILE" && ! grep -q "^#.*proxySecrets:" "$PROXY_VALUES_FILE"; then
         if grep -q "tls-certs-xdr-proxy" "$PROXY_VALUES_FILE"; then
             print_info "Checking for TLS secret 'tls-certs-xdr-proxy'..."
-            if ! kubectl get secret tls-certs-xdr-proxy -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs-xdr-proxy' not found in namespace $NAMESPACE"
+            if ! kubectl get secret tls-certs-xdr-proxy -n "${NAMESPACE}" &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-xdr-proxy' not found in namespace ${NAMESPACE}"
                 
                 # Try to create from examples/tls/tls-certs directory (relative to chart root)
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-                TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
-                if [ -d "$TLS_CERTS_DIR" ]; then
-                    print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs-xdr-proxy --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                TLS_CERTS_DIR="${CHART_ROOT}/examples/tls/tls-certs"
+                if [ -d "${TLS_CERTS_DIR}" ]; then
+                    print_info "Creating TLS secret from ${TLS_CERTS_DIR}..."
+                    if kubectl create secret generic tls-certs-xdr-proxy --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway (may fail if TLS is required)..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs-xdr-proxy' is required but $TLS_CERTS_DIR not found."
+                    print_warning "TLS secret 'tls-certs-xdr-proxy' is required but ${TLS_CERTS_DIR} not found."
                     print_warning "Please create it manually if TLS is configured:"
-                    print_info "  kubectl create secret generic tls-certs-xdr-proxy --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_info "  kubectl create secret generic tls-certs-xdr-proxy --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
                 fi
             else
                 print_info "✅ TLS secret 'tls-certs-xdr-proxy' already exists"
@@ -151,19 +172,22 @@ echo ""
 
 # Step 3: Get XDR Proxy pod DNS names and create source cluster YAML
 print_info "Step 3: Getting XDR Proxy pod DNS names..."
-PROXY_PODS=$(kubectl get pods -n $NAMESPACE \
+PROXY_PODS=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-xdr-proxy \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$PROXY_PODS" ]; then
     print_error "No XDR Proxy pods found. Please check deployment."
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 PROXY_POD_DNS=""
-for pod in $PROXY_PODS; do
-    PROXY_POD_DNS="${PROXY_POD_DNS}            - ${pod}.${PROXY_RELEASE}-aerospike-xdr-proxy.${NAMESPACE}.svc.cluster.local:8901\n"
-done
+while IFS= read -r pod; do
+    if [ -n "$pod" ]; then
+        PROXY_POD_DNS="${PROXY_POD_DNS}            - ${pod}.${PROXY_RELEASE}-aerospike-xdr-proxy.${NAMESPACE}.svc.cluster.local:8901\n"
+    fi
+done <<< "$PROXY_PODS"
 
 print_info "XDR Proxy pods found:"
 echo -e "$PROXY_POD_DNS"
@@ -252,7 +276,7 @@ print_info "Step 6: Installing Aerospike tools in DB pods..."
 echo ""
 
 # Detect architecture
-ARCH=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- uname -m 2>/dev/null || echo "aarch64")
+ARCH=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
     # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
@@ -281,7 +305,7 @@ install_tools_in_pod() {
     
     if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
         print_info "Copying tools file into ${POD_TYPE} pod..."
-        if kubectl cp "${LOCAL_TOOLS_FILE}" ${NAMESPACE}/${POD_NAME}:/tmp/tools.tgz 2>/dev/null; then
+        if kubectl cp "${LOCAL_TOOLS_FILE}" "${NAMESPACE}/${POD_NAME}:/tmp/tools.tgz" 2>/dev/null; then
             USE_LOCAL_FILE=true
         else
             print_warning "Failed to copy local tools file to ${POD_TYPE} pod, falling back to download"
@@ -290,7 +314,7 @@ install_tools_in_pod() {
     
     if [ "$USE_LOCAL_FILE" = true ]; then
         # Install from copied local file
-        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        kubectl exec -n "${NAMESPACE}" "${POD_NAME}" -- bash -c "
         set -e
         cd /tmp && \
         apt-get update -qq && \
@@ -301,7 +325,7 @@ install_tools_in_pod() {
         " || print_warning "Tools installation from local file in ${POD_TYPE} pod may have failed (check manually)"
     else
         # Fall back to download method
-        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        kubectl exec -n "${NAMESPACE}" "${POD_NAME}" -- bash -c "
         set -e
         cd /tmp && \
         apt-get update -qq && \
@@ -340,7 +364,7 @@ echo ""
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3040 -c \
+INSERT_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- aql -h localhost -p 3040 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if echo "$INSERT_OUTPUT" | grep -q "OK"; then
@@ -356,7 +380,7 @@ sleep 15
 
 # Verify data in destination DB
 print_info "Verifying data in destination DB..."
-RESULT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3043 -c \
+RESULT=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- aql -h localhost -p 3043 -c \
   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || true)
 
 # Check for error message (record not found)
@@ -368,6 +392,8 @@ if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
     print_warning "  - XDR replication is still in progress (try waiting longer)"
     print_warning "  - XDR Proxy is not forwarding requests correctly"
     print_warning "  - Network connectivity issues"
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 # Check for table format (indicates record was found - aql shows results in table format)
 elif echo "$RESULT" | grep -qE "(\+---|row in set)"; then
@@ -381,6 +407,8 @@ else
     echo ""
     print_warning "Unexpected output format. Please check manually:"
     print_info "  kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3043 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\""
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 echo ""
@@ -392,8 +420,8 @@ echo ""
 # Check XDR Proxy metrics
 print_info "XDR Proxy Metrics:"
 PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
-if kubectl get pod ${PROXY_POD_NAME} -n ${NAMESPACE} &>/dev/null; then
-    PROXY_METRICS=$(kubectl logs -n ${NAMESPACE} ${PROXY_POD_NAME} --tail=30 2>/dev/null | \
+if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
+    PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=30 2>/dev/null | \
       grep -E "(requests-total|requests-success|records)" | tail -10 || echo "No metrics found")
     if [ -n "$PROXY_METRICS" ] && [ "$PROXY_METRICS" != "No metrics found" ]; then
         echo "$PROXY_METRICS"
@@ -408,7 +436,7 @@ echo ""
 # Step 9: Final Status Check
 print_info "Step 9: Final status check..."
 echo ""
-kubectl get pods -n ${NAMESPACE} -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
+kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
   | grep -E "(NAME|aerocluster|xdr-proxy)" || true
 echo ""
 
@@ -424,3 +452,5 @@ print_info "📁 Files used:"
 print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
 print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with XDR Proxy pod DNS)"
+echo ""
+echo "INTEGRATION_TEST_PASSED"

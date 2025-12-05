@@ -17,7 +17,7 @@ proxyConfig:
   aerospike:
     # Destination Aerospike cluster endpoint
     seeds:
-      - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
+      - aerocluster-xdr-dst-0-0.aerospike-test.svc.cluster.local:
           port: 3043
     performance:
       max-connections-per-node: 100
