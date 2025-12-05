@@ -15,6 +15,7 @@ ESP_RELEASE="test-esp-outbound"
 PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-esp-src"
 DST_CLUSTER="aerocluster-esp-dst"
+CONTEXT="kind-esp-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'
@@ -36,6 +37,24 @@ print_error() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Helper functions that automatically use the correct context
+# This prevents race conditions when multiple scripts run in parallel
+kubectl() {
+    command kubectl --context="${CONTEXT}" "$@"
+}
+
+helm() {
+    command helm --kube-context="${CONTEXT}" "$@"
+}
+
+# Verify context exists
+if ! kubectl cluster-info &>/dev/null; then
+    print_error "Cannot connect to cluster with context: ${CONTEXT}"
+    print_error "Please ensure the Kind cluster is created: kind get clusters"
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
 print_info "🚀 Setting up Integration Test Environment"
 print_info "=========================================="
 echo ""
@@ -43,16 +62,19 @@ echo ""
 # Verify existing files exist
 if [ ! -f "$SCRIPT_DIR/aerocluster-dst.yaml" ]; then
     print_error "aerocluster-dst.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
     print_error "xdr-proxy-values.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" ]; then
     print_error "esp-outbound-integration-values.yaml not found in $SCRIPT_DIR"
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
@@ -66,23 +88,23 @@ if [ -f "$ESP_VALUES_FILE" ]; then
     if grep -q "connectorSecrets:" "$ESP_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$ESP_VALUES_FILE"; then
         if grep -q "tls-certs-esp" "$ESP_VALUES_FILE"; then
             print_info "Checking for TLS secret 'tls-certs-esp'..."
-            if ! kubectl get secret tls-certs-esp -n $NAMESPACE &>/dev/null; then
-                print_warning "TLS secret 'tls-certs-esp' not found in namespace $NAMESPACE"
+            if ! kubectl get secret tls-certs-esp -n "${NAMESPACE}" &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-esp' not found in namespace ${NAMESPACE}"
                 
                 # Try to create from examples/tls/tls-certs directory (relative to chart root)
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-                TLS_CERTS_DIR="$CHART_ROOT/examples/tls/tls-certs"
-                if [ -d "$TLS_CERTS_DIR" ]; then
-                    print_info "Creating TLS secret from $TLS_CERTS_DIR..."
-                    if kubectl create secret generic tls-certs-esp --from-file=$TLS_CERTS_DIR -n $NAMESPACE 2>/dev/null; then
+                TLS_CERTS_DIR="${CHART_ROOT}/examples/tls/tls-certs"
+                if [ -d "${TLS_CERTS_DIR}" ]; then
+                    print_info "Creating TLS secret from ${TLS_CERTS_DIR}..."
+                    if kubectl create secret generic tls-certs-esp --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway (may fail if TLS is required)..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs-esp' is required but $TLS_CERTS_DIR not found."
+                    print_warning "TLS secret 'tls-certs-esp' is required but ${TLS_CERTS_DIR} not found."
                     print_warning "Please create it manually if TLS is configured:"
-                    print_info "  kubectl create secret generic tls-certs-esp --from-file=<path-to-tls-certs> -n $NAMESPACE"
+                    print_info "  kubectl create secret generic tls-certs-esp --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
                 fi
             else
                 print_info "✅ TLS secret 'tls-certs-esp' already exists"
@@ -94,33 +116,33 @@ fi
 
 # Check for existing deployments and clean up if needed
 print_info "Checking for existing deployments..."
-EXISTING_HELM=$(helm list -n ${NAMESPACE} --short 2>/dev/null | grep -E "(${ESP_RELEASE}|${PROXY_RELEASE})" || true)
-EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n ${NAMESPACE} -o name 2>/dev/null | grep -E "(${SRC_CLUSTER}|${DST_CLUSTER})" || true)
+EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${ESP_RELEASE}|${PROXY_RELEASE})" || true)
+EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n "${NAMESPACE}" -o name 2>/dev/null | grep -E "(${SRC_CLUSTER}|${DST_CLUSTER})" || true)
 
 if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     print_warning "Found existing deployments. Cleaning up..."
     echo ""
     
     # Uninstall Helm releases
-    if helm list -n ${NAMESPACE} --short | grep -q "^${ESP_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${ESP_RELEASE}$"; then
         print_info "Uninstalling existing ${ESP_RELEASE}..."
-        helm uninstall ${ESP_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${ESP_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
-    if helm list -n ${NAMESPACE} --short | grep -q "^${PROXY_RELEASE}$"; then
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${PROXY_RELEASE}$"; then
         print_info "Uninstalling existing ${PROXY_RELEASE}..."
-        helm uninstall ${PROXY_RELEASE} -n ${NAMESPACE} 2>/dev/null || true
+        helm uninstall "${PROXY_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     # Delete Aerospike clusters
-    if kubectl get aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" &>/dev/null; then
         print_info "Deleting existing ${SRC_CLUSTER}..."
-        kubectl delete aerospikecluster ${SRC_CLUSTER} -n ${NAMESPACE} 2>/dev/null || true
+        kubectl delete aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
-    if kubectl get aerospikecluster ${DST_CLUSTER} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get aerospikecluster "${DST_CLUSTER}" -n "${NAMESPACE}" &>/dev/null; then
         print_info "Deleting existing ${DST_CLUSTER}..."
-        kubectl delete aerospikecluster ${DST_CLUSTER} -n ${NAMESPACE} 2>/dev/null || true
+        kubectl delete aerospikecluster "${DST_CLUSTER}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     print_info "Waiting for cleanup to complete (10 seconds)..."
@@ -137,7 +159,7 @@ print_info "Waiting for pod to be created..."
 timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod ${DST_CLUSTER}-0-0 -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${DST_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
         break
     fi
     sleep 2
@@ -147,41 +169,44 @@ done
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
 kubectl wait --for=condition=ready pod \
-  ${DST_CLUSTER}-0-0 \
-  -n ${NAMESPACE} --timeout=3m
+  "${DST_CLUSTER}-0-0" \
+  -n "${NAMESPACE}" --timeout=3m
 print_info "✅ Destination cluster ready"
 echo ""
 
 # Step 2: Deploy XDR Proxy
 print_info "Step 2: Deploying XDR Proxy..."
 WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-helm install ${PROXY_RELEASE} "$WORKSPACE/aerospike-xdr-proxy" \
-  -n ${NAMESPACE} -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
+helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
+  -n "${NAMESPACE}" -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
 print_info "✅ XDR Proxy deployed"
 echo ""
 
 # Step 3: Deploy ESP Outbound
 print_info "Step 3: Deploying ESP Outbound connector..."
-helm install ${ESP_RELEASE} "$SCRIPT_DIR/../.." \
-  -n ${NAMESPACE} -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" --wait --timeout=2m
+helm install "${ESP_RELEASE}" "$SCRIPT_DIR/../.." \
+  -n "${NAMESPACE}" -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" --wait --timeout=2m
 print_info "✅ ESP Outbound deployed"
 echo ""
 
 # Step 4: Get ESP Outbound pod DNS names and create source cluster YAML
 print_info "Step 4: Getting ESP Outbound pod DNS names..."
-ESP_PODS=$(kubectl get pods -n $NAMESPACE \
+ESP_PODS=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-esp-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$ESP_PODS" ]; then
     print_error "No ESP Outbound pods found. Please check deployment."
+    echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
 ESP_POD_DNS=""
-for pod in $ESP_PODS; do
-    ESP_POD_DNS="${ESP_POD_DNS}            - ${pod}.${ESP_RELEASE}-aerospike-esp-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
-done
+while IFS= read -r pod; do
+    if [ -n "$pod" ]; then
+        ESP_POD_DNS="${ESP_POD_DNS}            - ${pod}.${ESP_RELEASE}-aerospike-esp-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
+    fi
+done <<< "$ESP_PODS"
 
 print_info "ESP Outbound pods found:"
 echo -e "$ESP_POD_DNS"
@@ -250,7 +275,7 @@ print_info "Waiting for pod to be created..."
 timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod ${SRC_CLUSTER}-0-0 -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${SRC_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
         break
     fi
     sleep 2
@@ -260,8 +285,8 @@ done
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
 kubectl wait --for=condition=ready pod \
-  ${SRC_CLUSTER}-0-0 \
-  -n ${NAMESPACE} --timeout=3m
+  "${SRC_CLUSTER}-0-0" \
+  -n "${NAMESPACE}" --timeout=3m
 print_info "✅ Source cluster ready"
 echo ""
 
@@ -270,7 +295,7 @@ print_info "Step 7: Installing Aerospike tools in DB pods..."
 echo ""
 
 # Detect architecture
-ARCH=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- uname -m 2>/dev/null || echo "aarch64")
+ARCH=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
     # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
@@ -299,16 +324,16 @@ install_tools_in_pod() {
     
     if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
         print_info "Copying tools file into ${POD_TYPE} pod..."
-        if kubectl cp "${LOCAL_TOOLS_FILE}" ${NAMESPACE}/${POD_NAME}:/tmp/tools.tgz 2>/dev/null; then
+        if kubectl cp "${LOCAL_TOOLS_FILE}" "${NAMESPACE}/${POD_NAME}:/tmp/tools.tgz" 2>/dev/null; then
             USE_LOCAL_FILE=true
         else
             print_warning "Failed to copy local tools file to ${POD_TYPE} pod, falling back to download"
         fi
     fi
     
-    if [ "$USE_LOCAL_FILE" = true ]; then
+    if [ "${USE_LOCAL_FILE}" = true ]; then
         # Install from copied local file
-        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        kubectl exec -n "${NAMESPACE}" "${POD_NAME}" -- bash -c "
         set -e
         cd /tmp && \
         apt-get update -qq && \
@@ -319,7 +344,7 @@ install_tools_in_pod() {
         " || print_warning "Tools installation from local file in ${POD_TYPE} pod may have failed (check manually)"
     else
         # Fall back to download method
-        kubectl exec -n ${NAMESPACE} ${POD_NAME} -- bash -c "
+        kubectl exec -n "${NAMESPACE}" "${POD_NAME}" -- bash -c "
         set -e
         cd /tmp && \
         apt-get update -qq && \
@@ -358,7 +383,7 @@ echo ""
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
-INSERT_OUTPUT=$(kubectl exec -n ${NAMESPACE} ${SRC_CLUSTER}-0-0 -- aql -h localhost -p 3000 -c \
+INSERT_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- aql -h localhost -p 3000 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
 if echo "$INSERT_OUTPUT" | grep -q "OK"; then
@@ -369,20 +394,43 @@ else
 fi
 
 # Wait for data to flow through pipeline
-print_info "Waiting for data replication (10 seconds)..."
+# ESP Outbound -> XDR Proxy -> Destination DB pipeline needs more time
+print_info "Waiting for data replication (20 seconds)..."
 sleep 10
 
 # Verify data in destination DB
 print_info "Verifying data in destination DB..."
-RESULT=$(kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3003 -c \
-  "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 | grep -v "^OK" || true)
+RESULT=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- aql -h localhost -p 3003 -c \
+  "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || true)
 
-if echo "$RESULT" | grep -q "${TEST_KEY}"; then
-    print_info "✅ Test data found in destination DB!"
+# Check for error message (record not found)
+if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
+    print_error "❌ Test FAILED: Data not found in destination DB"
+    echo "$RESULT"
+    echo ""
+    print_warning "This may indicate:"
+    print_warning "  - XDR replication is still in progress (try waiting longer)"
+    print_warning "  - ESP Outbound connector is not forwarding data correctly"
+    print_warning "  - XDR Proxy is not forwarding requests correctly"
+    print_warning "  - Network connectivity issues"
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
+fi
+
+# Check for actual record data (table format with PK column)
+if echo "$RESULT" | grep -qE "^\+.*\+|^\|.*PK.*\|" || echo "$RESULT" | grep -q "\"${TEST_KEY}\""; then
+    print_info "✅ Test PASSED: Data found in destination DB!"
     echo "$RESULT"
 else
-    print_warning "⚠️  Test data not found in destination DB (this may be normal if replication is still in progress)"
+    print_error "❌ Test FAILED: Could not verify data in destination DB"
     echo "$RESULT"
+    echo ""
+    print_warning "To debug, manually check:"
+    print_info "  kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3003 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\""
+    echo ""
+    echo "INTEGRATION_TEST_FAILED"
+    exit 1
 fi
 echo ""
 
@@ -392,15 +440,15 @@ echo ""
 
 # Check ESP Outbound metrics across all pods
 print_info "ESP Outbound Pod Metrics:"
-ESP_POD_COUNT=$(kubectl get pods -n ${NAMESPACE} \
+ESP_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-esp-outbound \
   --no-headers | wc -l | tr -d ' ')
 
 for i in $(seq 0 $((ESP_POD_COUNT - 1))); do
     POD_NAME="${ESP_RELEASE}-aerospike-esp-outbound-${i}"
-    if kubectl get pod ${POD_NAME} -n ${NAMESPACE} &>/dev/null; then
+    if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
         echo "ESP Outbound Pod $i (${POD_NAME}):"
-        METRICS=$(kubectl logs -n ${NAMESPACE} ${POD_NAME} --tail=20 2>/dev/null | \
+        METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \
           grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
         if [ -n "$METRICS" ] && [ "$METRICS" != "No metrics found" ]; then
             echo "$METRICS"
@@ -414,8 +462,8 @@ echo ""
 # Check XDR Proxy metrics
 print_info "XDR Proxy Metrics:"
 PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
-if kubectl get pod ${PROXY_POD_NAME} -n ${NAMESPACE} &>/dev/null; then
-    PROXY_METRICS=$(kubectl logs -n ${NAMESPACE} ${PROXY_POD_NAME} --tail=20 2>/dev/null | \
+if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
+    PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=20 2>/dev/null | \
       grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
     if [ -n "$PROXY_METRICS" ] && [ "$PROXY_METRICS" != "No metrics found" ]; then
         echo "$PROXY_METRICS"
@@ -430,7 +478,7 @@ echo ""
 # Step 10: Final Status Check
 print_info "Step 10: Final status check..."
 echo ""
-kubectl get pods -n ${NAMESPACE} -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
+kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
   | grep -E "(NAME|aerocluster|esp-outbound|xdr-proxy)" || true
 echo ""
 
@@ -446,3 +494,6 @@ print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
 print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SCRIPT_DIR/esp-outbound-integration-values.yaml (ESP config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ESP pod DNS)"
+echo ""
+echo "INTEGRATION_TEST_PASSED"
+

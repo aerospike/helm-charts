@@ -13,7 +13,7 @@ proxyConfig:
       port: 8902
   aerospike:
     seeds:
-      - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
+      - aerocluster-esp-dst-0-0.aerospike-test.svc.cluster.local:
           port: 3003
     performance:
       max-connections-per-node: 100
