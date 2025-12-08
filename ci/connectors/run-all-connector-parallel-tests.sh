@@ -14,35 +14,49 @@ set -o pipefail
 # Detect if colors are supported
 # In Jenkins: disable colors by default unless JENKINS_COLORS=true is set (AnsiColor plugin)
 # Otherwise: check if terminal supports colors
-if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ]; then
-    # In Jenkins - only use colors if explicitly enabled (AnsiColor plugin)
-    if [ "${JENKINS_COLORS:-false}" = "true" ] && [ -z "${NO_COLOR:-}" ]; then
+USE_COLORS=false
+
+if [ -z "${NO_COLOR:-}" ]; then
+    if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ]; then
+        # In Jenkins - only use colors if explicitly enabled AND ANSI Color plugin is active
+        if [ "${JENKINS_COLORS:-false}" = "true" ]; then
+            # Test if ANSI Color plugin is actually working by checking for plugin-specific env vars
+            # or by testing if stdout is a TTY (plugin makes it a TTY)
+            if [ -t 1 ] || [ -n "${ANSI_COLOR:-}" ]; then
+                USE_COLORS=true
+            else
+                # ANSI Color plugin not active - disable colors to avoid escape codes in output
+                USE_COLORS=false
+            fi
+        fi
+    elif [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+        # Interactive terminal with color support
         USE_COLORS=true
-    else
-        USE_COLORS=false
     fi
-elif [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
-    # Interactive terminal with color support
-    USE_COLORS=true
-else
-    # Colors not supported
-    USE_COLORS=false
 fi
 
 # Colors for better console output
 if [ "$USE_COLORS" = true ]; then
-        GREEN='\033[0;32m'
-        RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    RED='\033[0;31m'
     BLUE='\033[0;34m'
     CYAN='\033[0;36m'
     NC='\033[0m' # No Color
 else
     # Disable colors - use empty strings
-        GREEN=''
-        RED=''
+    GREEN=''
+    RED=''
     BLUE=''
     CYAN=''
     NC=''
+    
+    # Diagnostic message for Jenkins users
+    if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ] && [ "${JENKINS_COLORS:-false}" = "true" ]; then
+        # User wants colors but they're disabled - ANSI Color plugin not active
+        echo "[WARN] JENKINS_COLORS=true is set, but ANSI Color plugin is not active in this job." >&2
+        echo "[WARN] Colors are disabled to prevent escape codes from appearing in output." >&2
+        echo "[WARN] To enable colors: Install AnsiColor plugin AND enable it in job configuration (Build Environment -> 'Color ANSI Console Output')." >&2
+    fi
 fi
 
 # Connectors to test
@@ -60,7 +74,6 @@ CONNECTORS=(
 TEST_RESULTS=()
 TEST_ERRORS=()
 TEST_DURATIONS=()
-INSTALL_PIDS=()  # Track background process PIDs
 
 # Helper function to get result for a connector
 get_result() {
@@ -209,7 +222,7 @@ detect_connector_status() {
     elif [ -f "/tmp/${connector}-install.log" ]; then
         # Install log exists - check if install completed
         if grep -q "Kind cluster setup complete" "/tmp/${connector}-install.log" 2>/dev/null || \
-           grep -q "Kind cluster installed successfully" "/tmp/${connector}-parallel.log" 2>/dev/null; then
+           grep -q "Kind cluster installed successfully" "/tmp/${connector}-install.log" 2>/dev/null; then
             status="Installing (cluster ready)"
         else
             status="Installing Kind..."
@@ -226,7 +239,12 @@ show_progress() {
     echo "════════════════════════════════════════════════════════════════"
     echo "Progress Update (Elapsed: ${elapsed}s)"
     echo "════════════════════════════════════════════════════════════════"
-    for connector in "${CONNECTORS[@]}"; do
+    # Show progress for installed connectors only (those being tested)
+    local connectors_to_show=("${INSTALLED_CONNECTORS[@]}")
+    if [ ${#connectors_to_show[@]} -eq 0 ]; then
+        connectors_to_show=("${CONNECTORS[@]}")
+    fi
+    for connector in "${connectors_to_show[@]}"; do
         local result
         result=$(get_result "$connector")
         local duration
@@ -276,19 +294,53 @@ fi
 
 print_header "Starting Parallel Integration Tests for All Connectors"
 print_info "Total connectors to test: ${#CONNECTORS[@]}"
-print_info "Mode: PARALLEL (install+test phase, then cleanup phase)"
+print_info "Mode: Sequential Install → Parallel Tests → Sequential Uninstall"
 echo ""
 
-# Function to run install+test for a single connector (runs in background)
-run_connector_install_and_test() {
+# Function to install Kind cluster for a single connector (runs sequentially)
+run_connector_install() {
+    local connector=$1
+    local connector_dir="${REPO_ROOT}/${connector}"
+    local install_script="${connector_dir}/kind/install-kind.sh"
+    
+    print_info "Installing Kind cluster for: ${connector}"
+    
+    if [ ! -f "$install_script" ]; then
+        local error_msg="install-kind.sh not found at ${install_script}"
+        print_error "$error_msg"
+        set_result "$connector" "FAILED"
+        set_error "$connector" "$error_msg"
+        return 1
+    fi
+    
+    # Run install with real-time output (sequential, so safe to print to console)
+    # Also save to file for later reference
+    bash "$install_script" 2>&1 | tee "/tmp/${connector}-install.log"
+    local install_exit_code=${PIPESTATUS[0]}
+    
+    if [ "$install_exit_code" -eq 0 ]; then
+        print_success "Kind cluster installed successfully for ${connector}"
+        return 0
+    else
+        local error_msg="Failed to install Kind cluster for ${connector} (exit code: $install_exit_code). Check /tmp/${connector}-install.log"
+        print_error "$error_msg"
+        set_result "$connector" "FAILED"
+        set_error "$connector" "$error_msg"
+        return 1
+    fi
+}
+
+# Function to run integration test for a single connector (runs in parallel)
+run_connector_test() {
     local connector=$1
     local start_time
-	start_time=$(date +%s)
+    start_time=$(date +%s)
     local result="FAILED"
     local error_msg=""
+    local test_exit_code=1
     
     # Create a log file for this connector's output
-    local connector_log="/tmp/${connector}-parallel.log"
+    local connector_log="/tmp/${connector}-test-parallel.log"
     
     {
         echo "=========================================="
@@ -299,112 +351,78 @@ run_connector_install_and_test() {
         
         # Paths (connectors are at repo root level)
         local connector_dir="${REPO_ROOT}/${connector}"
-        local install_script="${connector_dir}/kind/install-kind.sh"
         local test_script="${connector_dir}/tests/integration-test/run-integration-test.sh"
         
-        # Verify scripts exist
-        if [ ! -f "$install_script" ]; then
-            error_msg="install-kind.sh not found at ${install_script}"
-            echo "[ERROR] $error_msg"
-            set_result "$connector" "FAILED"
-            set_error "$connector" "$error_msg"
-            return 1
-        fi
-        
+        # Verify script exists
         if [ ! -f "$test_script" ]; then
             error_msg="run-integration-test.sh not found at ${test_script}"
             echo "[ERROR] $error_msg"
-            set_result "$connector" "FAILED"
-            set_error "$connector" "$error_msg"
+            echo "RESULT:FAILED" > "/tmp/${connector}-result.txt"
+            echo "ERROR:${error_msg}" > "/tmp/${connector}-error.txt"
             return 1
         fi
         
-        # Track if install succeeded (needed for cleanup)
-        local install_succeeded=false
-        
-        # Step 1: Install Kind cluster
-        echo "[INFO] Step 1: Installing Kind cluster..."
+        # Run integration test
+        echo "[INFO] Running integration test..."
+        local test_output="/tmp/${connector}-test.log"
         # Always write to file only during parallel execution to avoid interleaving
-        bash "$install_script" > "/tmp/${connector}-install.log" 2>&1
-        local install_exit_code=$?
+        bash "$test_script" > "$test_output" 2>&1
+        test_exit_code=$?
         
-        if [ "$install_exit_code" -eq 0 ]; then
-            echo "[SUCCESS] Kind cluster installed successfully"
-            install_succeeded=true
-        else
-            error_msg="Failed to install Kind cluster (exit code: $install_exit_code). Check /tmp/${connector}-install.log"
-            echo "[ERROR] $error_msg"
-            set_result "$connector" "FAILED"
-            set_error "$connector" "$error_msg"
-            install_succeeded=false
+        # Check for explicit markers in output (for better log parsing)
+        local has_pass_marker=false
+        local has_fail_marker=false
+        if [ -f "$test_output" ]; then
+            # Look for standardized markers first
+            if grep -q "^INTEGRATION_TEST_PASSED$" "$test_output" 2>/dev/null; then
+                has_pass_marker=true
+            fi
+            if grep -q "^INTEGRATION_TEST_FAILED$" "$test_output" 2>/dev/null; then
+                has_fail_marker=true
+            fi
         fi
         
-        # Step 2: Run integration test (only if install succeeded)
-        if [ "$install_succeeded" = true ]; then
-            echo "[INFO] Step 2: Running integration test..."
-            local test_output="/tmp/${connector}-test.log"
-            # Always write to file only during parallel execution to avoid interleaving
-            bash "$test_script" > "$test_output" 2>&1
-            local test_exit_code=$?
-            
-            # Check for explicit markers in output (for better log parsing)
-            local has_pass_marker=false
-            local has_fail_marker=false
-            if [ -f "$test_output" ]; then
-                # Look for standardized markers first
-                if grep -q "^INTEGRATION_TEST_PASSED$" "$test_output" 2>/dev/null; then
-                    has_pass_marker=true
-                fi
-                if grep -q "^INTEGRATION_TEST_FAILED$" "$test_output" 2>/dev/null; then
-                    has_fail_marker=true
-                fi
-            fi
-            
-            if [ "$test_exit_code" -eq 0 ]; then
-                if [ "$has_fail_marker" = true ]; then
-                    # Exit code says pass but marker says fail - trust the marker
-                    echo "[WARN] Exit code indicates pass, but INTEGRATION_TEST_FAILED marker found in log"
-                    result="FAILED"
-                    error_msg="Integration test failed (INTEGRATION_TEST_FAILED marker found). Check ${test_output}"
-                elif [ "$has_pass_marker" = true ]; then
-                    echo "[SUCCESS] Integration test passed (exit code: 0, INTEGRATION_TEST_PASSED marker found)"
-                    result="PASSED"
-                else
-                    echo "[SUCCESS] Integration test passed (exit code: 0)"
-                    result="PASSED"
-                fi
+        if [ "$test_exit_code" -eq 0 ]; then
+            if [ "$has_fail_marker" = true ]; then
+                # Exit code says pass but marker says fail - trust the marker
+                echo "[WARN] Exit code indicates pass, but INTEGRATION_TEST_FAILED marker found in log"
+                result="FAILED"
+                error_msg="Integration test failed (INTEGRATION_TEST_FAILED marker found). Check ${test_output}"
+            elif [ "$has_pass_marker" = true ]; then
+                echo "[SUCCESS] Integration test passed (exit code: 0, INTEGRATION_TEST_PASSED marker found)"
+                result="PASSED"
             else
-                if [ "$has_pass_marker" = true ] && [ "$has_fail_marker" = false ]; then
-                    # Exit code says fail but marker says pass - trust the marker (may be cleanup error)
-                    echo "[WARN] Exit code indicates failure, but INTEGRATION_TEST_PASSED marker found in log"
-                    echo "[INFO] Treating as PASSED (failure may be from cleanup)"
-                    result="PASSED"
-                else
-                    error_msg="Integration test failed (exit code: $test_exit_code). Check ${test_output}"
-                    echo "[ERROR] $error_msg"
-                    result="FAILED"
-                fi
-            fi
-            
-            # Capture error details if failed
-            if [ "$result" = "FAILED" ]; then
-                if [ -f "$test_output" ]; then
-                    set_error "$connector" "$(tail -50 "$test_output")"
-                else
-                    set_error "$connector" "$error_msg"
-                fi
+                echo "[SUCCESS] Integration test passed (exit code: 0)"
+                result="PASSED"
             fi
         else
-            echo "[WARN] Skipping integration test due to install failure"
-            result="FAILED"
+            if [ "$has_pass_marker" = true ] && [ "$has_fail_marker" = false ]; then
+                # Exit code says fail but marker says pass - trust the marker (may be cleanup error)
+                echo "[WARN] Exit code indicates failure, but INTEGRATION_TEST_PASSED marker found in log"
+                echo "[INFO] Treating as PASSED (failure may be from cleanup)"
+                result="PASSED"
+            else
+                error_msg="Integration test failed (exit code: $test_exit_code). Check ${test_output}"
+                echo "[ERROR] $error_msg"
+                result="FAILED"
+            fi
         fi
         
-        # Record results
+        # Write result to temp file so parent process can read it
+        echo "RESULT:${result}" > "/tmp/${connector}-result.txt"
+        if [ "$result" = "FAILED" ]; then
+            if [ -f "$test_output" ]; then
+                echo "ERROR:$(tail -50 "$test_output")" > "/tmp/${connector}-error.txt"
+            else
+                echo "ERROR:${error_msg}" > "/tmp/${connector}-error.txt"
+            fi
+        fi
+        
+        # Record duration
         local end_time
         end_time=$(date +%s)
         local duration=$((end_time - start_time))
-        set_result "$connector" "$result"
-        set_duration "$connector" "$duration"
+        echo "DURATION:${duration}" > "/tmp/${connector}-duration.txt"
         
         echo ""
         echo "=========================================="
@@ -418,80 +436,122 @@ run_connector_install_and_test() {
         
     } > "$connector_log" 2>&1
     
+    # Read result from temp file and set it in parent process (outside subshell)
+    if [ -f "/tmp/${connector}-result.txt" ]; then
+        local saved_result
+        saved_result=$(grep "^RESULT:" "/tmp/${connector}-result.txt" | cut -d: -f2-)
+        if [ -n "$saved_result" ]; then
+            set_result "$connector" "$saved_result"
+            
+            if [ "$saved_result" = "FAILED" ] && [ -f "/tmp/${connector}-error.txt" ]; then
+                local saved_error
+                saved_error=$(grep "^ERROR:" "/tmp/${connector}-error.txt" | cut -d: -f2-)
+                if [ -n "$saved_error" ]; then
+                    set_error "$connector" "$saved_error"
+                fi
+            fi
+            
+            if [ -f "/tmp/${connector}-duration.txt" ]; then
+                local saved_duration
+                saved_duration=$(grep "^DURATION:" "/tmp/${connector}-duration.txt" | cut -d: -f2-)
+                if [ -n "$saved_duration" ]; then
+                    set_duration "$connector" "$saved_duration"
+                fi
+            fi
+        fi
+    fi
+    
     return 0
 }
 
-# Function to run uninstall for a single connector (runs in background)
+# Function to run uninstall for a single connector (runs sequentially)
 run_connector_uninstall() {
     local connector=$1
     
-    {
-        echo "=========================================="
-        echo "Uninstalling Connector: ${connector}"
-        echo "Started at: $(date)"
-        echo "=========================================="
-        echo ""
-        
-        local connector_dir="${REPO_ROOT}/${connector}"
-        local uninstall_script="${connector_dir}/kind/uninstall-kind.sh"
-        
-        if [ ! -f "$uninstall_script" ]; then
-            echo "[WARN] uninstall-kind.sh not found at ${uninstall_script}"
-            return 1
-        fi
-        
-        echo "[INFO] Uninstalling Kind cluster..."
-        # Always write to file only during parallel execution to avoid interleaving
-        bash "$uninstall_script" > "/tmp/${connector}-uninstall.log" 2>&1
-        local uninstall_exit_code=$?
-        
-        if [ "$uninstall_exit_code" -eq 0 ]; then
-            echo "[SUCCESS] Kind cluster uninstalled successfully"
-        else
-            echo "[WARN] Failed to uninstall Kind cluster (exit code: $uninstall_exit_code). Check /tmp/${connector}-uninstall.log"
-            echo "[WARN] You may need to manually clean up: kind delete cluster"
-        fi
-        
-        echo ""
-        echo "=========================================="
-        echo "Uninstall completed at: $(date)"
-        echo "=========================================="
-        
-    } > "/tmp/${connector}-uninstall-parallel.log" 2>&1
+    echo ""
+    echo "=========================================="
+    echo "Uninstalling Connector: ${connector}"
+    echo "Started at: $(date)"
+    echo "=========================================="
+    echo ""
     
-    # Don't print log here - will be printed sequentially if needed
+    local connector_dir="${REPO_ROOT}/${connector}"
+    local uninstall_script="${connector_dir}/kind/uninstall-kind.sh"
+    
+    if [ ! -f "$uninstall_script" ]; then
+        echo "[WARN] uninstall-kind.sh not found at ${uninstall_script}"
+        return 1
+    fi
+    
+    print_info "Uninstalling Kind cluster for: ${connector}"
+    # Run uninstall with real-time output (sequential, so safe to print to console)
+    # Also save to file for later reference
+    bash "$uninstall_script" 2>&1 | tee "/tmp/${connector}-uninstall.log"
+    local uninstall_exit_code=${PIPESTATUS[0]}
+    
+    if [ "$uninstall_exit_code" -eq 0 ]; then
+        print_success "Kind cluster uninstalled successfully for ${connector}"
+    else
+        echo "[WARN] Failed to uninstall Kind cluster for ${connector} (exit code: $uninstall_exit_code). Check /tmp/${connector}-uninstall.log"
+        echo "[WARN] You may need to manually clean up: kind delete cluster"
+    fi
+    
+    echo ""
+    echo "=========================================="
+    echo "Uninstall completed at: $(date)"
+    echo "=========================================="
+    echo ""
     
     return 0
 }
-
-# Phase 1: Run install+test for all connectors in parallel
-print_header "Phase 1: Installing Kind Clusters and Running Integration Tests (Parallel)"
 
 declare TOTAL_START_TIME
 TOTAL_START_TIME=$(date +%s)
 PASSED_COUNT=0
 FAILED_COUNT=0
 
-# Start all connector tests in background
+# Track which connectors installed successfully
+INSTALLED_CONNECTORS=()
+
+# Phase 1: Sequential Install - Install Kind clusters for all connectors one by one
+print_header "Phase 1: Installing Kind Clusters (Sequential)"
+
 for connector in "${CONNECTORS[@]}"; do
-    print_info "Starting parallel test for: ${connector}"
-    run_connector_install_and_test "$connector" &
-    INSTALL_PIDS+=("$!")
+    if run_connector_install "$connector"; then
+        INSTALLED_CONNECTORS+=("$connector")
+    fi
 done
 
-# Wait for all background processes to complete with progress updates
-print_info "Running ${#CONNECTORS[@]} tests in parallel..."
-print_info "Progress updates will be shown every 10 seconds..."
+print_info "Phase 1 complete: ${#INSTALLED_CONNECTORS[@]} of ${#CONNECTORS[@]} connectors installed successfully"
 echo ""
 
-# Progress monitoring loop
-last_progress_time=$(date +%s)
-WAITED_PIDS=()  # Track which PIDs we've already waited for
+# Phase 2: Parallel Tests - Run integration tests for all successfully installed connectors in parallel
+if [ ${#INSTALLED_CONNECTORS[@]} -gt 0 ]; then
+    print_header "Phase 2: Running Integration Tests (Parallel)"
+    
+    TEST_PIDS=()
+    
+    # Start all connector tests in background
+    for connector in "${INSTALLED_CONNECTORS[@]}"; do
+        print_info "Starting test for: ${connector}"
+        run_connector_test "$connector" &
+        TEST_PIDS+=("$!")
+    done
 
-# Wait for processes and show progress
-while [ ${#WAITED_PIDS[@]} -lt ${#CONNECTORS[@]} ]; do
-    # Check for completed processes
-    for pid in "${INSTALL_PIDS[@]}"; do
+    # Wait for all background processes to complete with progress updates
+    print_info "Running ${#INSTALLED_CONNECTORS[@]} tests in parallel..."
+    print_info "Progress updates will be shown every 10 seconds..."
+    echo ""
+    
+    # Progress monitoring loop
+    declare last_progress_time
+    last_progress_time=$(date +%s)
+    WAITED_PIDS=()  # Track which PIDs we've already waited for
+    
+    # Wait for processes and show progress
+    while [ ${#WAITED_PIDS[@]} -lt ${#INSTALLED_CONNECTORS[@]} ]; do
+        # Check for completed processes
+        for pid in "${TEST_PIDS[@]}"; do
         # Check if we've already waited for this PID
         already_waited=false
         for waited_pid in "${WAITED_PIDS[@]}"; do
@@ -513,86 +573,72 @@ while [ ${#WAITED_PIDS[@]} -lt ${#CONNECTORS[@]} ]; do
     elapsed=$((current_time - TOTAL_START_TIME))
     time_since_last_progress=$((current_time - last_progress_time))
     
-    if [ "$time_since_last_progress" -ge 10 ] && [ ${#WAITED_PIDS[@]} -lt ${#CONNECTORS[@]} ]; then
-        show_progress "$elapsed"
-        last_progress_time=$current_time
-    fi
+        if [ "$time_since_last_progress" -ge 10 ] && [ ${#WAITED_PIDS[@]} -lt ${#INSTALLED_CONNECTORS[@]} ]; then
+            show_progress "$elapsed"
+            last_progress_time=$current_time
+        fi
+        
+        # Small sleep to avoid busy waiting
+        sleep 1
+    done
     
-    # Small sleep to avoid busy waiting
+    # Final wait to ensure all processes are done (safety check)
+    for pid in "${TEST_PIDS[@]}"; do
+        wait "$pid" 2>/dev/null || true
+    done
+    
+    # Small delay to ensure all result writes are complete
     sleep 1
-done
-
-# Final wait to ensure all processes are done (safety check)
-for pid in "${INSTALL_PIDS[@]}"; do
-    wait "$pid" 2>/dev/null || true
-done
-
-# Count results
-for connector in "${CONNECTORS[@]}"; do
-    result=$(get_result "$connector")
-    if [ "$result" = "PASSED" ]; then
-        PASSED_COUNT=$((PASSED_COUNT + 1))
-    elif [ "$result" = "FAILED" ]; then
-        FAILED_COUNT=$((FAILED_COUNT + 1))
+    
+    # Count results - include both tested connectors and connectors that failed to install
+    for connector in "${CONNECTORS[@]}"; do
+        result=$(get_result "$connector")
+        if [ "$result" = "PASSED" ]; then
+            PASSED_COUNT=$((PASSED_COUNT + 1))
+        elif [ "$result" = "FAILED" ]; then
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+        elif [ "$result" = "UNKNOWN" ]; then
+            # Connector was installed but test result not set - treat as failed
+            echo "[WARN] Connector ${connector} has no test result - treating as FAILED" >&2
+            set_result "$connector" "FAILED"
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+        fi
+    done
+    
+    print_info "Phase 2 complete: Passed: ${PASSED_COUNT}, Failed: ${FAILED_COUNT}"
+    echo ""
+    
+    # Print all connector test logs sequentially (clean, separated output)
+    if [ "${JENKINS_CONSOLE_OUTPUT:-false}" = "true" ]; then
+        print_header "Phase 2: Detailed Test Logs (Sequential Output)"
+        echo ""
+        for connector in "${INSTALLED_CONNECTORS[@]}"; do
+            connector_log="/tmp/${connector}-test-parallel.log"
+            if [ -f "$connector_log" ]; then
+                echo "════════════════════════════════════════════════════════════════"
+                echo "Connector: ${connector}"
+                echo "════════════════════════════════════════════════════════════════"
+                cat "$connector_log"
+                echo ""
+                echo ""
+            fi
+        done
     fi
-done
-
-print_info "Phase 1 complete: Passed: ${PASSED_COUNT}, Failed: ${FAILED_COUNT}"
-echo ""
-
-# Print all connector logs sequentially (clean, separated output)
-if [ "${JENKINS_CONSOLE_OUTPUT:-false}" = "true" ]; then
-    print_header "Phase 1: Detailed Logs (Sequential Output)"
-    echo ""
-    for connector in "${CONNECTORS[@]}"; do
-        connector_log="/tmp/${connector}-parallel.log"
-        if [ -f "$connector_log" ]; then
-            echo "════════════════════════════════════════════════════════════════"
-            echo "Connector: ${connector}"
-            echo "════════════════════════════════════════════════════════════════"
-            cat "$connector_log"
-            echo ""
-            echo ""
-        fi
-    done
+else
+    print_error "No connectors installed successfully. Skipping tests."
+    FAILED_COUNT=${#CONNECTORS[@]}
 fi
 
-# Phase 2: Run uninstall for all connectors in parallel
-print_header "Phase 2: Uninstalling Kind Clusters (Parallel)"
+# Phase 3: Sequential Uninstall - Uninstall Kind clusters for all connectors one by one
+print_header "Phase 3: Uninstalling Kind Clusters (Sequential)"
 
-UNINSTALL_PIDS=()
 for connector in "${CONNECTORS[@]}"; do
-    print_info "Starting uninstall for: ${connector}"
-    run_connector_uninstall "$connector" &
-    UNINSTALL_PIDS+=("$!")
+    print_info "Uninstalling Kind cluster for: ${connector}"
+    run_connector_uninstall "$connector"
 done
 
-# Wait for all uninstall processes to complete
-print_info "Waiting for all uninstalls to complete..."
-
-for pid in "${UNINSTALL_PIDS[@]}"; do
-    wait "$pid"
-done
-
-print_info "Phase 2 complete: All clusters uninstalled"
+print_info "Phase 3 complete: All clusters uninstalled"
 echo ""
-
-# Print uninstall logs sequentially if console output is enabled
-if [ "${JENKINS_CONSOLE_OUTPUT:-false}" = "true" ]; then
-    print_header "Phase 2: Uninstall Logs (Sequential Output)"
-    echo ""
-    for connector in "${CONNECTORS[@]}"; do
-        uninstall_log="/tmp/${connector}-uninstall-parallel.log"
-        if [ -f "$uninstall_log" ]; then
-            echo "════════════════════════════════════════════════════════════════"
-            echo "Uninstall: ${connector}"
-            echo "════════════════════════════════════════════════════════════════"
-            cat "$uninstall_log"
-            echo ""
-            echo ""
-        fi
-    done
-fi
 
 TOTAL_END_TIME=$(date +%s)
 TOTAL_DURATION=$((TOTAL_END_TIME - TOTAL_START_TIME))

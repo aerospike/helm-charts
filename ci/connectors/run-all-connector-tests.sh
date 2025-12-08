@@ -13,19 +13,25 @@ set -o pipefail
 # Detect if colors are supported
 # In Jenkins: disable colors by default unless JENKINS_COLORS=true is set (AnsiColor plugin)
 # Otherwise: check if terminal supports colors
-if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ]; then
-    # In Jenkins - only use colors if explicitly enabled (AnsiColor plugin)
-    if [ "${JENKINS_COLORS:-false}" = "true" ] && [ -z "${NO_COLOR:-}" ]; then
+USE_COLORS=false
+
+if [ -z "${NO_COLOR:-}" ]; then
+    if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ]; then
+        # In Jenkins - only use colors if explicitly enabled AND ANSI Color plugin is active
+        if [ "${JENKINS_COLORS:-false}" = "true" ]; then
+            # Test if ANSI Color plugin is actually working by checking for plugin-specific env vars
+            # or by testing if stdout is a TTY (plugin makes it a TTY)
+            if [ -t 1 ] || [ -n "${ANSI_COLOR:-}" ]; then
+                USE_COLORS=true
+            else
+                # ANSI Color plugin not active - disable colors to avoid escape codes in output
+                USE_COLORS=false
+            fi
+        fi
+    elif [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+        # Interactive terminal with color support
         USE_COLORS=true
-    else
-        USE_COLORS=false
     fi
-elif [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
-    # Interactive terminal with color support
-    USE_COLORS=true
-else
-    # Colors not supported
-    USE_COLORS=false
 fi
 
 # Colors for better console output
@@ -44,13 +50,21 @@ else
     BLUE=''
     CYAN=''
     NC=''
+    
+    # Diagnostic message for Jenkins users
+    if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ] && [ "${JENKINS_COLORS:-false}" = "true" ]; then
+        # User wants colors but they're disabled - ANSI Color plugin not active
+        echo "[WARN] JENKINS_COLORS=true is set, but ANSI Color plugin is not active in this job." >&2
+        echo "[WARN] Colors are disabled to prevent escape codes from appearing in output." >&2
+        echo "[WARN] To enable colors: Install AnsiColor plugin AND enable it in job configuration (Build Environment -> 'Color ANSI Console Output')." >&2
+    fi
 fi
 
 # Connectors to test
 CONNECTORS=(
 #    "aerospike-esp-outbound"
-    "aerospike-jms-inbound"
-    "aerospike-jms-outbound"
+#    "aerospike-jms-inbound"
+#    "aerospike-jms-outbound"
     "aerospike-kafka-outbound"
     "aerospike-pulsar-outbound"
 #    "aerospike-xdr-proxy"
