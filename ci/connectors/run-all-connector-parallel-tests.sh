@@ -62,10 +62,10 @@ fi
 # Connectors to test
 CONNECTORS=(
 #    "aerospike-esp-outbound"
- #   "aerospike-jms-inbound"
+    "aerospike-jms-inbound"
     "aerospike-jms-outbound"
     "aerospike-kafka-outbound"
- #   "aerospike-pulsar-outbound"
+    "aerospike-pulsar-outbound"
  #   "aerospike-xdr-proxy"
 )
 
@@ -723,4 +723,3 @@ else
     echo ""
     exit 1
 fi
-
