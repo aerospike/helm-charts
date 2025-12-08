@@ -229,7 +229,7 @@ EOF
 # Step 4: Deploy source cluster
 print_info "Step 4: Deploying source Aerospike cluster..."
 kubectl apply -f "$SRC_CLUSTER_FILE" > /dev/null 2>&1
-timeout=120
+timeout=240
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
     if kubectl get pod "${SRC_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
