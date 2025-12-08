@@ -228,6 +228,8 @@ detect_connector_status() {
             status="Installing Kind..."
         fi
     fi
+	# TODO: to be deleted after testing and locking the file.
+	cp /tmp/*aerospike*-*.log /var/lib/jenkins/csv-backups/.
     
     echo "$status"
 }
@@ -436,30 +438,9 @@ run_connector_test() {
         
     } > "$connector_log" 2>&1
     
-    # Read result from temp file and set it in parent process (outside subshell)
-    if [ -f "/tmp/${connector}-result.txt" ]; then
-        local saved_result
-        saved_result=$(grep "^RESULT:" "/tmp/${connector}-result.txt" | cut -d: -f2-)
-        if [ -n "$saved_result" ]; then
-            set_result "$connector" "$saved_result"
-            
-            if [ "$saved_result" = "FAILED" ] && [ -f "/tmp/${connector}-error.txt" ]; then
-                local saved_error
-                saved_error=$(grep "^ERROR:" "/tmp/${connector}-error.txt" | cut -d: -f2-)
-                if [ -n "$saved_error" ]; then
-                    set_error "$connector" "$saved_error"
-                fi
-            fi
-            
-            if [ -f "/tmp/${connector}-duration.txt" ]; then
-                local saved_duration
-                saved_duration=$(grep "^DURATION:" "/tmp/${connector}-duration.txt" | cut -d: -f2-)
-                if [ -n "$saved_duration" ]; then
-                    set_duration "$connector" "$saved_duration"
-                fi
-            fi
-        fi
-    fi
+    # Note: Results are written to temp files inside the subshell above
+    # They will be read and set in the parent process after all background processes complete
+    # This ensures proper synchronization
     
     return 0
 }
@@ -588,7 +569,31 @@ if [ ${#INSTALLED_CONNECTORS[@]} -gt 0 ]; then
     done
     
     # Small delay to ensure all result writes are complete
-    sleep 1
+    sleep 2
+    
+    # Read results from temp files and set them in parent process (synchronously)
+    for connector in "${INSTALLED_CONNECTORS[@]}"; do
+        if [ -f "/tmp/${connector}-result.txt" ]; then
+            saved_result=$(grep "^RESULT:" "/tmp/${connector}-result.txt" 2>/dev/null | cut -d: -f2-)
+            if [ -n "$saved_result" ]; then
+                set_result "$connector" "$saved_result"
+                
+                if [ "$saved_result" = "FAILED" ] && [ -f "/tmp/${connector}-error.txt" ]; then
+                    saved_error=$(grep "^ERROR:" "/tmp/${connector}-error.txt" 2>/dev/null | cut -d: -f2-)
+                    if [ -n "$saved_error" ]; then
+                        set_error "$connector" "$saved_error"
+                    fi
+                fi
+                
+                if [ -f "/tmp/${connector}-duration.txt" ]; then
+                    saved_duration=$(grep "^DURATION:" "/tmp/${connector}-duration.txt" 2>/dev/null | cut -d: -f2-)
+                    if [ -n "$saved_duration" ]; then
+                        set_duration "$connector" "$saved_duration"
+                    fi
+                fi
+            fi
+        fi
+    done
     
     # Count results - include both tested connectors and connectors that failed to install
     for connector in "${CONNECTORS[@]}"; do
