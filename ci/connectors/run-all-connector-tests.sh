@@ -10,13 +10,41 @@
 set -o pipefail
 # Don't use 'set -e' globally - we handle errors explicitly in each section
 
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Detect if colors are supported
+# In Jenkins: disable colors by default unless JENKINS_COLORS=true is set (AnsiColor plugin)
+# Otherwise: check if terminal supports colors
+if [ -n "${JENKINS_CONSOLE_OUTPUT:-}" ]; then
+    # In Jenkins - only use colors if explicitly enabled (AnsiColor plugin)
+    if [ "${JENKINS_COLORS:-false}" = "true" ] && [ -z "${NO_COLOR:-}" ]; then
+        USE_COLORS=true
+    else
+        USE_COLORS=false
+    fi
+elif [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+    # Interactive terminal with color support
+    USE_COLORS=true
+else
+    # Colors not supported
+    USE_COLORS=false
+fi
+
+# Colors for better console output
+if [ "$USE_COLORS" = true ]; then
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    RED='\033[0;31m'
+    BLUE='\033[0;34m'
+    CYAN='\033[0;36m'
+    NC='\033[0m' # No Color
+else
+    # Disable colors - use empty strings
+    GREEN=''
+    YELLOW=''
+    RED=''
+    BLUE=''
+    CYAN=''
+    NC=''
+fi
 
 # Connectors to test
 CONNECTORS=(
@@ -40,7 +68,7 @@ get_result() {
     local result="UNKNOWN"
     for entry in "${TEST_RESULTS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            result="${entry#${connector}:}"
+            result="${entry#"${connector}":}"
             break
         fi
     done
@@ -56,15 +84,15 @@ set_result() {
     local i=0
     for entry in "${TEST_RESULTS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            new_array[$i]="${connector}:${result}"
+            new_array["$i"]="${connector}:${result}"
             found=true
         else
-            new_array[$i]="$entry"
+            new_array["$i"]="$entry"
         fi
         ((i++))
     done
     if [ "$found" = false ]; then
-        new_array[$i]="${connector}:${result}"
+        new_array["$i"]="${connector}:${result}"
     fi
     TEST_RESULTS=("${new_array[@]}")
 }
@@ -75,7 +103,7 @@ get_error() {
     local error=""
     for entry in "${TEST_ERRORS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            error="${entry#${connector}:}"
+            error="${entry#"${connector}":}"
             break
         fi
     done
@@ -91,15 +119,15 @@ set_error() {
     local i=0
     for entry in "${TEST_ERRORS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            new_array[$i]="${connector}:${error}"
+            new_array["$i"]="${connector}:${error}"
             found=true
         else
-            new_array[$i]="$entry"
+            new_array["$i"]="$entry"
         fi
         ((i++))
     done
     if [ "$found" = false ]; then
-        new_array[$i]="${connector}:${error}"
+        new_array["$i"]="${connector}:${error}"
     fi
     TEST_ERRORS=("${new_array[@]}")
 }
@@ -110,7 +138,7 @@ get_duration() {
     local duration="0"
     for entry in "${TEST_DURATIONS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            duration="${entry#${connector}:}"
+            duration="${entry#"${connector}":}"
             break
         fi
     done
@@ -126,15 +154,15 @@ set_duration() {
     local i=0
     for entry in "${TEST_DURATIONS[@]}"; do
         if [[ "$entry" == "${connector}:"* ]]; then
-            new_array[$i]="${connector}:${duration}"
+            new_array["$i"]="${connector}:${duration}"
             found=true
         else
-            new_array[$i]="$entry"
+            new_array["$i"]="$entry"
         fi
         ((i++))
     done
     if [ "$found" = false ]; then
-        new_array[$i]="${connector}:${duration}"
+        new_array["$i"]="${connector}:${duration}"
     fi
     TEST_DURATIONS=("${new_array[@]}")
 }
@@ -171,7 +199,7 @@ print_failure() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Script is in ci/connectors/, so repo root is 2 levels up
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || exit 1
 
 # Verify prerequisites
 print_header "Checking Prerequisites"
@@ -198,7 +226,8 @@ echo ""
 # Function to run a single connector test
 run_connector_test() {
     local connector=$1
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     local result="FAILED"
     local error_msg=""
     
@@ -250,7 +279,7 @@ run_connector_test() {
         local install_exit_code=$?
     fi
     
-    if [ $install_exit_code -eq 0 ]; then
+    if [ "$install_exit_code" -eq 0 ]; then
         print_success "Kind cluster installed successfully"
         install_succeeded=true
     else
@@ -289,7 +318,7 @@ run_connector_test() {
             fi
         fi
         
-        if [ $test_exit_code -eq 0 ]; then
+        if [ "$test_exit_code" -eq 0 ]; then
             if [ "$has_fail_marker" = true ]; then
                 # Exit code says pass but marker says fail - trust the marker
                 print_warning "Exit code indicates pass, but INTEGRATION_TEST_FAILED marker found in log"
@@ -340,7 +369,7 @@ run_connector_test() {
         local uninstall_exit_code=$?
     fi
     
-    if [ $uninstall_exit_code -eq 0 ]; then
+    if [ "$uninstall_exit_code" -eq 0 ]; then
         print_success "Kind cluster uninstalled successfully"
     else
         print_warning "Failed to uninstall Kind cluster (exit code: $uninstall_exit_code). Check /tmp/${connector}-uninstall.log"
@@ -348,7 +377,8 @@ run_connector_test() {
     fi
     
     # Record results
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     local duration=$((end_time - start_time))
     set_result "$connector" "$result"
     set_duration "$connector" "$duration"
@@ -364,6 +394,7 @@ run_connector_test() {
 }
 
 # Run tests for all connectors
+declare TOTAL_START_TIME
 TOTAL_START_TIME=$(date +%s)
 PASSED_COUNT=0
 FAILED_COUNT=0
@@ -387,6 +418,7 @@ for connector in "${CONNECTORS[@]}"; do
     sleep 2
 done
 
+declare TOTAL_END_TIME
 TOTAL_END_TIME=$(date +%s)
 TOTAL_DURATION=$((TOTAL_END_TIME - TOTAL_START_TIME))
 
@@ -417,7 +449,7 @@ echo -e "${BLUE}Total Duration:${NC} ${TOTAL_DURATION}s"
 echo ""
 
 # Print error details for failed tests
-if [ $FAILED_COUNT -gt 0 ]; then
+if [ "$FAILED_COUNT" -gt 0 ]; then
     print_header "Failed Test Details"
     for connector in "${CONNECTORS[@]}"; do
         result=$(get_result "$connector")
@@ -447,7 +479,7 @@ echo ""
 
 # Final status
 print_header "Final Status"
-if [ $FAILED_COUNT -eq 0 ]; then
+if [ "$FAILED_COUNT" -eq 0 ]; then
     print_success "🎉 All connector integration tests PASSED!"
     echo ""
     exit 0
