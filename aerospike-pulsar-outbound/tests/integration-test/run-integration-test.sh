@@ -259,7 +259,7 @@ kubectl apply -f "$SRC_CLUSTER_FILE"
 
 # Wait for pod to exist first
 print_info "Waiting for pod to be created..."
-timeout=240
+timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
     if kubectl get pod "${SRC_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then

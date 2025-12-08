@@ -148,7 +148,7 @@ echo ""
 # Step 2: Deploy Aerospike destination cluster
 print_info "Step 2: Deploying Aerospike destination cluster..."
 kubectl apply -f "$SCRIPT_DIR/aerocluster-dst.yaml" > /dev/null 2>&1
-timeout=240
+timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
     if kubectl get pod "${DST_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
