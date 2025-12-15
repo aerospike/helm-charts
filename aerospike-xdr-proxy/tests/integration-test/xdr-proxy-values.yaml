@@ -1,0 +1,31 @@
+replicaCount: 1
+
+# XDR Proxy configuration for integration test
+# This proxy forwards XDR requests from source cluster to destination cluster
+
+proxyConfig:
+  service:
+    # Clear-text (non-TLS) setup for integration test
+    # Note: When receiving XDR protocol directly from Aerospike servers,
+    # protocol should be set to null to use default XDR protocol handling
+    port: 8901
+    socket-receive-buffer-bytes: 131072
+    protocol: null  # Set to null to accept XDR protocol from Aerospike servers
+    manage:
+      address: 0.0.0.0
+      port: 8902
+  aerospike:
+    # Destination Aerospike cluster endpoint
+    seeds:
+      - aerocluster-xdr-dst-0-0.aerospike-test.svc.cluster.local:
+          port: 3043
+    performance:
+      max-connections-per-node: 100
+      event-loop-size: 15
+  logging:
+    enable-console-logging: true
+
+# No TLS secrets needed for clear-text (HTTP) connections
+# To enable TLS, uncomment and configure:
+# proxySecrets:
+#   - tls-certs-xdr-proxy

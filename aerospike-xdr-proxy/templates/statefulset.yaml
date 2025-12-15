@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "aerospike-xdr-proxy.fullname" . }}
+  labels:
+    app: {{ include "aerospike-xdr-proxy.fullname" . }}
+    {{- include "aerospike-xdr-proxy.labels" . | nindent 4 }}
+
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  serviceName: {{ include "aerospike-xdr-proxy.fullname" . }}
+  selector:
+    matchLabels:
+      {{- include "aerospike-xdr-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include "aerospike-xdr-proxy.proxyConfig" . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app: {{ include "aerospike-xdr-proxy.fullname" . }}
+        {{- include "aerospike-xdr-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aerospike-xdr-proxy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        {{- if .Values.initContainers }}
+        - name: aerospike-xdr-proxy-init
+          emptyDir: {}
+        {{- end }}
+        - name: aerospike-xdr-proxy-configmap
+          configMap:
+            name: {{ include "aerospike-xdr-proxy.fullname" . }}
+            optional: false
+        {{- if and .Values.proxySecrets (not (kindIs "slice" .Values.proxySecrets)) }}
+        {{- fail "proxySecrets should be a list of strings"}}
+        {{- end}}
+        {{- if and .Values.proxySecrets (kindIs "slice" .Values.proxySecrets) }}
+        {{- range $secret := .Values.proxySecrets }}
+        - name: {{ $secret }}
+          secret:
+            secretName: {{ $secret }}
+            optional: false
+        {{- end}}
+        {{- end}}
+      {{ if .Values.initContainers }}
+      initContainers:
+      {{- toYaml .Values.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ include "aerospike-xdr-proxy.servicePort" . }}
+              protocol: TCP
+            - name: manage
+              containerPort: {{ include "aerospike-xdr-proxy.managePort" . }}
+              protocol: TCP
+          volumeMounts:
+            - name: aerospike-xdr-proxy-configmap
+              mountPath: /etc/aerospike-xdr-proxy
+            {{- if and .Values.proxySecrets (not (kindIs "slice" .Values.proxySecrets)) }}
+            {{- fail "proxySecrets should be a list of strings" }}
+            {{- end }}
+            {{- if and .Values.proxySecrets (kindIs "slice" .Values.proxySecrets) }}
+            {{- range $secret := .Values.proxySecrets }}
+            - name: {{ $secret }}
+              mountPath: /etc/aerospike-xdr-proxy/secrets/{{ $secret }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.initContainers }}
+            - name: aerospike-xdr-proxy-init
+              mountPath: /opt/aerospike-xdr-proxy/usr-lib/aerospike-xdr-proxy-custom-transformers.jar
+              subPath: aerospike-xdr-proxy-custom-transformers.jar
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /manage/rest/v1
+              port: {{ include "aerospike-xdr-proxy.managePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /manage/rest/v1
+              port: {{ include "aerospike-xdr-proxy.managePort" . }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

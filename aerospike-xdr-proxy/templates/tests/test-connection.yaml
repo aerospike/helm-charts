@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "aerospike-xdr-proxy.fullname" . }}-test-connection"
+  labels:
+    {{- include "aerospike-xdr-proxy.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: test-connection
+      image: busybox
+      command: ['sh']
+      args:
+      - -c
+      - |
+        echo "Testing connection to {{ include "aerospike-xdr-proxy.fullname" . }}"
+        nc -z {{ include "aerospike-xdr-proxy.fullname" . }} {{ include "aerospike-xdr-proxy.servicePort" . }}
+        if [ $? -eq 0 ]; then
+          echo "Connection successful"
+        else
+          echo "Connection failed"
+          exit 1
+        fi
+  restartPolicy: Never
+

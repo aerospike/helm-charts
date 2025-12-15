@@ -1,0 +1,123 @@
+# Default values for aerospike-esp-outbound.
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: aerospike/aerospike-esp-outbound
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Default Connector configuration.
+# Visit: https://docs.aerospike.com/connect/esp/from-asdb/configuring
+connectorConfig:
+  service:
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  routing:
+    mode: static-multi-destination
+    destinations:
+      - dc1
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  destinations:
+    dc1:
+      urls:
+        - https://connector.aerospike.com:8443
+      tls:
+        trust-store:
+          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
+          store-password-file: secrets/tls-certs/storepass
+      health-check:
+        call-timeout: 5100
+      connect-timeout: 5000
+      connection-ttl: 300000
+      max-connections-per-endpoint: 20
+      call-timeout: 5100
+      protocol: HTTP_2
+      http2-max-concurrent-streams: 100
+
+  logging:
+    enable-console-logging: true
+
+# List of secrets mounted to /etc/aerospike-esp-outbound/secrets for each connector pod.
+# Can be used for TLS certificates and credentials
+connectorSecrets: []
+
+# List of initContainers to be added for each connector pod.
+# Can be used to copy custom code plugins jars to /opt/aerospike-esp-outbound-init
+initContainers: []
+  # - name: aerospike-esp-outbound-init
+  #   image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
+  #   imagePullPolicy: IfNotPresent
+  #   command: ["/bin/sh", "-c"]
+  #   # Update args to copy all the jars from init container to emptyDir volume path
+  #   args:
+  #     - |
+  #       set -e
+  #       cp -r /etc/aerospike-connector-custom-transformers/aerospike-esp-outbound-custom-transformers.jar /opt/aerospike-esp-outbound-init
+  #   volumeMounts:
+  #     - name: aerospike-esp-outbound-init
+  #       mountPath: /opt/aerospike-esp-outbound-init
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

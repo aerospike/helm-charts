@@ -1,0 +1,52 @@
+replicaCount: 3
+
+image:
+  tag: "2.4.13"
+
+connectorConfig:
+  service:
+    # Clear-text (non-TLS) setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # For TLS configuration, see: https://docs.aerospike.com/connect/esp/from-asdb/configuring/service#configuring-tls
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  # See: https://docs.aerospike.com/connect/esp/from-asdb/configuring/routing
+  routing:
+    mode: static-multi-destination
+    destinations:
+      - dc1
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  # See: https://docs.aerospike.com/connect/esp/from-asdb/configuring/destinations
+  destinations:
+    dc1:
+      urls:
+        # Example HTTP endpoint (change to your actual ESP endpoint)
+        - http://connector.example.com:8080
+      # Explicitly remove TLS config since we're using HTTP
+      # For HTTPS connections with TLS, see the TLS example: ../tls/as-esp-outbound-tls-values.yaml
+      tls: null
+      health-check:
+        call-timeout: 5100
+      connect-timeout: 5000
+      connection-ttl: 300000
+      max-connections-per-endpoint: 20
+      call-timeout: 5100
+      protocol: HTTP_2
+      http2-max-concurrent-streams: 100
+
+  logging:
+    enable-console-logging: true
+
+# No TLS secrets needed for HTTP connections
+# connectorSecrets: [] 
