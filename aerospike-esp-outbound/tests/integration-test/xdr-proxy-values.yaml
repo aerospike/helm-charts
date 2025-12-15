@@ -1,0 +1,25 @@
+replicaCount: 1
+
+# Note: This values file is for the aerospike-xdr-proxy helm chart
+# The chart uses proxyConfig instead of connectorConfig
+
+proxyConfig:
+  service:
+    port: 8901
+    socket-receive-buffer-bytes: 131072
+    protocol: HTTP_2
+    manage:
+      address: 0.0.0.0
+      port: 8902
+  aerospike:
+    seeds:
+      - aerocluster-esp-dst-0-0.aerospike-test.svc.cluster.local:
+          port: 3003
+    performance:
+      max-connections-per-node: 100
+      event-loop-size: 15
+  logging:
+    enable-console-logging: true
+
+# Note: The aerospike-xdr-proxy chart has built-in probes for manage port
+# No need to override - probes are configured in the StatefulSet template

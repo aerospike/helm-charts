@@ -1,0 +1,47 @@
+replicaCount: 1
+
+image:
+  tag: "2.4.13"
+
+connectorConfig:
+  service:
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  routing:
+    mode: static-multi-destination
+    destinations:
+      - dc1
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  destinations:
+    dc1:
+      urls:
+        # Point to XDR Proxy service (port 8901) - using HTTP, not HTTPS
+        - http://xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local:8901
+      # Explicitly remove TLS config since we're using HTTP
+      tls: null
+      health-check:
+        call-timeout: 5100
+      connect-timeout: 5000
+      connection-ttl: 300000
+      max-connections-per-endpoint: 20
+      call-timeout: 5100
+      protocol: HTTP_2
+      http2-max-concurrent-streams: 100
+
+  logging:
+    enable-console-logging: true
+
+# Only include TLS secrets if using HTTPS
+# connectorSecrets:
+#   - tls-certs-esp
