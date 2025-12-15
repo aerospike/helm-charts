@@ -1,0 +1,10 @@
+# Configuration for the XDR Proxy connector.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-xdr-proxy.fullname" . }}
+  labels:
+    {{- include "aerospike-xdr-proxy.labels" . | nindent 4 }}
+data:
+  aerospike-xdr-proxy.yml: |-
+    {{- include "aerospike-xdr-proxy.proxyConfig" . | nindent 4 }}

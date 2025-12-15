@@ -1,0 +1,12 @@
+1. Get the list of XDR Proxy pods by running the command:
+
+kubectl get pods --namespace {{ .Release.Namespace }} --selector=app={{- include "aerospike-xdr-proxy.fullname" . }} --no-headers -o custom-columns=":metadata.name"
+
+2. Configure ESP Outbound connector to use these XDR Proxy pods
+
+Use the following command to get the pod DNS names and port to use:
+
+kubectl get pods --namespace {{ .Release.Namespace }} --selector=app={{- include "aerospike-xdr-proxy.fullname" . }} --no-headers -o custom-columns=":metadata.name" \
+    | sed -e "s/$/.{{- include "aerospike-xdr-proxy.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ include "aerospike-xdr-proxy.servicePort" . }}/g"
+
+Visit https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html for details

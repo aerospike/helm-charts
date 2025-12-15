@@ -1,0 +1,48 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster-xdr-src
+  namespace: aerospike-test
+spec:
+  size: 1
+  image: aerospike/aerospike-server-enterprise:8.0.0.8
+  podSpec:
+    multiPodPerHost: true
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        port: 3040
+      fabric:
+        port: 3041
+      heartbeat:
+        port: 3042
+    namespaces:
+      - name: test
+        replication-factor: 1
+        storage-engine:
+          type: memory
+          data-size: 300000000  # 300MB - minimum required for Aerospike 8.0.0.8
+    xdr:
+      dcs:
+        - name: xdr-proxy
+          connector: true
+          namespaces:
+            - name: test
+          node-address-ports:
+            # XDR Proxy pod DNS names
+            # Note: For dynamic generation with actual pod names, use run-integration-test.sh
+            # This is a template - update with actual XDR Proxy pod DNS names after deployment
+            - test-xdr-proxy-aerospike-xdr-proxy-0.test-xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local:8901
