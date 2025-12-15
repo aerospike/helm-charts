@@ -1,0 +1,47 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: aerocluster-pulsar-src
+  namespace: aerospike-test
+spec:
+  size: 1
+  image: aerospike/aerospike-server-enterprise:8.0.0.8
+  podSpec:
+    multiPodPerHost: true
+  storage:
+    volumes:
+      - name: aerospike-secret
+        source:
+          secret:
+            secretName: aerospike-secret
+        aerospike:
+          path: /etc/aerospike/secrets
+  validationPolicy:
+    skipWorkDirValidate: true
+    skipXdrDlogFileValidate: true
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secrets/features.conf
+    network:
+      service:
+        port: 3030
+      fabric:
+        port: 3031
+      heartbeat:
+        port: 3032
+    namespaces:
+      - name: test
+        replication-factor: 1
+        storage-engine:
+          type: memory
+          data-size: 3000000000
+    xdr:
+      dcs:
+        - name: pulsar
+          connector: true
+          namespaces:
+            - name: test
+          node-address-ports:
+            - test-pulsar-outbound-aerospike-pulsar-outbound-0.test-pulsar-outbound-aerospike-pulsar-outbound.aerospike-test.svc.cluster.local:8080
+            - test-pulsar-outbound-aerospike-pulsar-outbound-1.test-pulsar-outbound-aerospike-pulsar-outbound.aerospike-test.svc.cluster.local:8080
+            - test-pulsar-outbound-aerospike-pulsar-outbound-2.test-pulsar-outbound-aerospike-pulsar-outbound.aerospike-test.svc.cluster.local:8080

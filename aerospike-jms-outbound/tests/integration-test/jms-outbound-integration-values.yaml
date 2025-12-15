@@ -1,0 +1,39 @@
+replicaCount: 1
+
+# Use default appVersion from Chart.yaml (4.2.12) - remove tag override to use default
+# image:
+#   tag: ""
+
+connectorConfig:
+  service:
+    port: 8080
+    manage:
+      port: 8081
+
+  # JMS connection configuration for RabbitMQ
+  jms:
+    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+    config:
+      host: rabbitmq-jms-outbound.aerospike-test.svc.cluster.local
+      port: 5672
+      username: guest
+      password: guest
+
+  # Format of the JMS destination message.
+  # Using json format instead of flat-json to put key in value fields
+  format:
+    mode: json
+
+  # Aerospike record routing to a JMS destination.
+  routing:
+    mode: static
+    type: queue
+    destination: aerospike
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# Only include TLS secrets if using TLS
+# connectorSecrets:
+#   - tls-certs-jms-outbound

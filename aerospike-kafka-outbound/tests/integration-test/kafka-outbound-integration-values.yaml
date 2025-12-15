@@ -1,0 +1,43 @@
+replicaCount: 1
+
+image:
+  tag: "5.3.12"
+
+connectorConfig:
+  service:
+    port: 8080
+    manage:
+      port: 8081
+
+  # Format of the Kafka destination message.
+  format:
+    mode: flat-json
+    metadata-key: metadata
+
+  # Aerospike record routing to a Kafka destination.
+  routing:
+    mode: static
+    destination: aerospike
+
+  # Kafka producer initialization properties.
+  producer-props:
+    bootstrap.servers:
+      # Kafka broker service (will be set dynamically by script)
+      - kafka.aerospike-test.svc.cluster.local:9092
+    # Ensure messages are acknowledged and sent immediately
+    acks: "1"
+    retries: 3
+    max.in.flight.requests.per.connection: 5
+    enable.idempotence: "false"
+    # Send messages immediately without batching
+    linger.ms: "0"
+    batch.size: "16384"
+    buffer.memory: "33554432"
+
+  # The logging properties.
+  logging:
+    enable-console-logging: true
+
+# Only include TLS secrets if using TLS
+# connectorSecrets:
+#   - tls-certs-kafka
