@@ -64,6 +64,3 @@ connectorConfig:
   # The logging properties.
   logging:
     enable-console-logging: true
-
-
-

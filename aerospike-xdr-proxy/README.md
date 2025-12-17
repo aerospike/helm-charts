@@ -41,7 +41,25 @@ deployed proxy pods.
 ./tests/deploy-test.sh --uninstall
 ```
 
-### Option 2: Using Helm Directly
+### Option 2: Setting Up a Local Test Cluster
+
+If you don't have a Kubernetes cluster, you can set up a local kind cluster:
+
+```bash
+# Set up complete kind cluster with OLM and operator
+cd kind
+./install-kind.sh
+
+# Navigate back to chart directory
+cd ..
+
+# Deploy the chart
+./tests/deploy-test.sh --values examples/clear-text/as-xdr-proxy-values.yaml
+```
+
+For more details on kind setup, see [kind/README.md](kind/README.md).
+
+### Option 3: Using Helm Directly
 
 ```bash
 # Create namespace
@@ -73,14 +91,6 @@ Install the Aerospike XDR Proxy connector helm chart
 helm install aerospike-xdr-proxy aerospike/aerospike-xdr-proxy
 ```
 
-## Docker Image
-
-The default image used is `aerospike/aerospike-xdr-proxy:3.2.13`. You can pull it manually:
-
-```shell
-docker pull aerospike/aerospike-xdr-proxy:3.2.13
-```
-
 ## Supported configuration
 
 ## Configuration
@@ -99,6 +109,336 @@ docker pull aerospike/aerospike-xdr-proxy:3.2.13
 | `affinity`         | [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)  rules if any for the pods.                                          | `{}`                           |
 | `nodeSelector`     | [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector)  for the pods.                                                                | `{}`                           |
 | `tolerations`      | [Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)  for the pods.                                                                        | `{}`                           |
+
+## Deploy the proxy
+
+We recommend creating a new `.yaml` for providing configuration values to the helm chart for deployment.
+See the [examples](examples) folder for examples.
+
+A sample values yaml file is shown below:
+
+```yaml
+replicaCount: 3
+
+image:
+  tag: "latest"
+
+proxyConfig:
+  service:
+    address: 0.0.0.0
+    port: 8901
+    socket-receive-buffer-bytes: 131072
+    protocol: null  # Accepts XDR protocol from Aerospike servers
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  aerospike:
+    seeds:
+      - aerocluster-dst-0-0.aerospike-test.svc.cluster.local:
+          port: 3000
+    performance:
+      max-connections-per-node: 100
+      event-loop-size: 15
+
+  logging:
+    enable-console-logging: true
+```
+
+Here `replicaCount` is the count of proxy pods that are deployed. 
+The proxy configuration is provided as yaml under the key `proxyConfig`.
+See [Aerospike XDR Proxy configuration](https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html) for details.
+
+Update the `aerospike.seeds` configuration to point to your destination Aerospike cluster.
+
+We recommend naming the file with the name of the proxy cluster. For example if you want to name your proxy cluster as
+`as-xdr-proxy`, create a file `as-xdr-proxy-values.yaml`.
+Once you have created this custom values file, deploy the proxy, using the following command.
+
+### Create a new namespace
+We recommend using `aerospike` namespace for the proxy cluster. If the namespace does not exist run the following command:
+```shell
+kubectl create namespace aerospike
+```
+
+### Create secrets
+
+You can create additional secrets, for confidential data like TLS certificates, that are mounted to the proxy pods.
+The proxy can then be configured to use these secrets. See [examples/tls](examples/tls) for example.
+
+If deploying with TLS, create the required secrets:
+
+```bash
+# Create namespace (if not already created)
+kubectl create namespace aerospike-test
+
+# Create TLS secret
+# Use the sample TLS certificates from examples/tls/tls-certs folder
+kubectl -n aerospike-test create secret generic tls-certs --from-file=examples/tls/tls-certs
+```
+
+### Deploy the proxy cluster
+
+```shell
+# helm install --namespace <target namespace> <helm release name/cluster name> -f <path to custom values yaml> aerospike/aerospike-xdr-proxy
+helm install --namespace aerospike as-xdr-proxy -f as-xdr-proxy-values.yaml aerospike/aerospike-xdr-proxy
+```
+
+Here `as-xdr-proxy` is the release name for the proxy cluster and also its cluster name.
+
+On successful deployment you should see output similar to below:
+
+```shell
+NAME: as-xdr-proxy
+LAST DEPLOYED: Mon Oct 17 20:44:34 2022
+NAMESPACE: aerospike
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the list of proxy pods  by running the command:
+
+kubectl get pods --namespace aerospike --selector=app=as-xdr-proxy-aerospike-xdr-proxy --no-headers -o custom-columns=":metadata.name"
+
+2. Configure XDR to use each of these proxy pods in the datacenter section
+
+Use the following command to get the pod DNS names and port to use.
+
+kubectl get pods --namespace aerospike --selector=app=as-xdr-proxy-aerospike-xdr-proxy --no-headers -o custom-columns=":metadata.name" \
+    | sed -e "s/$/.as-xdr-proxy-aerospike-xdr-proxy 8901/g"
+
+Visit https://docs.aerospike.com/connect/common/change-notification for details
+```
+
+## List pods for the proxy
+To list the pods for the proxy run the following command:
+```shell
+# kubectl get pods --namespace aerospike --selector=app=<helm release name>-aerospike-xdr-proxy
+kubectl get pods --namespace aerospike --selector=app=as-xdr-proxy-aerospike-xdr-proxy
+```
+
+You should see output similar to the following:
+```shell
+NAME                                           READY   STATUS    RESTARTS   AGE
+as-xdr-proxy-aerospike-xdr-proxy-0            1/1     Running   0          7m19s
+as-xdr-proxy-aerospike-xdr-proxy-1            1/1     Running   0          7m40s
+as-xdr-proxy-aerospike-xdr-proxy-2            1/1     Running   0          7m51s
+```
+
+## Configure XDR to ship to proxy pods
+
+Pod DNS names can be used directly if the Aerospike cluster is also running in the same Kubernetes cluster. 
+To get the pod DNS names and ports to be added to XDR DC section, run the following command.
+
+```shell
+# kubectl get pods --namespace <target namespace> --selector=app=<helm release name>-aerospike-xdr-proxy --no-headers -o custom-columns=":metadata.name" \
+#    | sed -e "s/$/.<helm release name>-aerospike-xdr-proxy <service port or service TLS port as desired>/g"
+kubectl get pods --namespace aerospike --selector=app=as-xdr-proxy-aerospike-xdr-proxy --no-headers -o custom-columns=":metadata.name" \
+    | sed -e "s/$/.as-xdr-proxy-aerospike-xdr-proxy 8901/g"
+```
+
+You should see output similar to the following
+```shell
+as-xdr-proxy-aerospike-xdr-proxy-0.as-xdr-proxy-aerospike-xdr-proxy 8901
+as-xdr-proxy-aerospike-xdr-proxy-1.as-xdr-proxy-aerospike-xdr-proxy 8901
+as-xdr-proxy-aerospike-xdr-proxy-2.as-xdr-proxy-aerospike-xdr-proxy 8901
+```
+
+ 
+If you are using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator), 
+see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
+
+## Get logs for all proxy instances
+
+```shell
+# kubectl -n aerospike logs -f statefulset/<helm release name>-aerospike-xdr-proxy
+# Skip the -f flag to get a one time dump of the log
+kubectl -n aerospike logs -f statefulset/as-xdr-proxy-aerospike-xdr-proxy
+```
+
+## Get logs for a single proxy pod
+
+```shell
+# kubectl -n aerospike logs -f <helm release name>-aerospike-xdr-proxy-0
+# Skip the -f flag to get a one time dump of the log
+kubectl -n aerospike logs -f as-xdr-proxy-aerospike-xdr-proxy-0
+```
+
+## Verify Deployment
+
+After deployment, verify all resources are created:
+
+```bash
+# Check pod status
+kubectl get pods -n aerospike-test
+
+# Check StatefulSet
+kubectl get statefulset -n aerospike-test
+
+# Check service
+kubectl get service -n aerospike-test
+
+# Check ConfigMap
+kubectl get configmap -n aerospike-test
+
+# View pod logs
+kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-xdr-proxy --tail=50
+
+# Describe a pod for detailed information
+kubectl describe pod -n aerospike-test -l app.kubernetes.io/name=aerospike-xdr-proxy
+```
+
+## Test Connectivity
+
+```bash
+# Get pod DNS names for XDR configuration
+kubectl get pods -n aerospike-test \
+  --selector=app.kubernetes.io/name=aerospike-xdr-proxy \
+  --no-headers -o custom-columns=":metadata.name" \
+  | sed -e "s/$/.test-xdr-proxy-aerospike-xdr-proxy 8901/g"
+
+# Test service DNS resolution
+kubectl run test-pod --image=busybox --rm -it --restart=Never \
+  --namespace aerospike-test \
+  -- nslookup test-xdr-proxy-aerospike-xdr-proxy
+
+# Test port connectivity
+kubectl run test-pod --image=busybox --rm -it --restart=Never \
+  --namespace aerospike-test \
+  -- nc -z test-xdr-proxy-aerospike-xdr-proxy 8901
+```
+
+## Run Helm Tests
+
+```bash
+# Run the built-in Helm tests
+helm test test-xdr-proxy --namespace aerospike-test
+
+# Check test results
+kubectl get pods -n aerospike-test -l helm.sh/hook=test
+```
+
+## Updating proxy configuration
+
+Edit the `proxyConfig` section in the custom values file and save the changes.
+
+Upgrade the proxy deployment using the following command. 
+
+```shell
+#helm upgrade --namespace <target namespace> <helm release name> -f <path to custom values yaml file> aerospike/aerospike-xdr-proxy
+helm upgrade --namespace aerospike as-xdr-proxy -f as-xdr-proxy-values.yaml aerospike/aerospike-xdr-proxy
+```
+
+On successful execution of the command the proxy pods will undergo a rolling restart and come up with the new configuration.
+
+To verify the changes are applied
+ - [List the pods](#list-pods-for-the-proxy)
+ - [Verify the configuration in proxy logs](#get-logs-for-all-proxy-instances)
+
+**_NOTE:_** The changes might take some time to apply. If you do not see the desired proxy config try again after some time. 
+If proxy pods are not being listed or report status as crashed see [troubleshooting](#troubleshooting).
+
+## Scaling up/down the proxies
+
+Edit the `replicaCount` to the desired proxy count and upgrade the proxy deployment using the following command.
+
+```shell
+#helm upgrade --namespace <target namespace> <helm release name> -f <path to custom values yaml file> aerospike/aerospike-xdr-proxy
+helm upgrade --namespace aerospike as-xdr-proxy -f as-xdr-proxy-values.yaml aerospike/aerospike-xdr-proxy
+```
+
+Verify that the proxies have been scaled.
+ - [List the pods](#list-pods-for-the-proxy) and verify the count of proxies is as desired
+
+**_NOTE:_** The changes might take some time to apply. If you do not see the desired count try again after some time. 
+If proxy pods are not being listed or report status as crashed see [troubleshooting](#troubleshooting).
+
+### Update the XDR DC section
+If you have scaled up add the new PODs to the XDR DC section else on scale down remove to additional pods DNS names.
+
+## Uninstalling
+
+```bash
+# Using the deployment script
+./tests/deploy-test.sh --uninstall
+
+# Or using Helm directly
+helm uninstall test-xdr-proxy --namespace aerospike-test
+
+# Delete namespace (optional)
+kubectl delete namespace aerospike-test
+
+# If using TLS, delete the secret (optional)
+kubectl delete secret tls-certs --namespace aerospike-test
+```
+
+## Production Deployment
+
+For production deployment:
+
+1. Use a dedicated namespace
+2. Configure resource limits and requests
+3. Enable autoscaling if needed
+4. Set up monitoring and alerting
+5. Configure TLS with proper certificates
+6. Use a private container registry
+7. Set up backup and disaster recovery procedures
+
+## Additional Resources
+
+- [Aerospike XDR Proxy Documentation](https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+
+## Troubleshooting
+
+### Proxy pods not listed
+
+Check for any error events on the StatefulSet created for the proxies.
+```shell
+# kubectl  -n aerospike describe statefulset <helm release name>-aerospike-xdr-proxy
+kubectl  -n aerospike describe statefulset as-xdr-proxy-aerospike-xdr-proxy
+```
+
+### Proxy pods stuck in `init` or `pending` state
+
+Check for any error events on the pod created for the proxies.
+```shell
+# kubectl  -n aerospike describe pod <helm release name>-aerospike-xdr-proxy-0
+kubectl  -n aerospike describe pod as-xdr-proxy-aerospike-xdr-proxy-0
+```
+
+The most likely reason is secret listed in `proxySecrets` has not been created in the proxy namespace.
+
+### Proxy pods in crashed state
+
+The most likely reason is proxy configuration provided in `proxyConfig` is invalid. 
+Verify this by [viewing the proxy logs](#get-logs-for-all-proxy-instances), fix and [update](#updating-proxy-configuration)
+the proxy configuration.
+
+### Common Issues
+
+1. **Pods not starting**
+   - Check pod logs: `kubectl logs -n aerospike-test <pod-name>`
+   - Check events: `kubectl describe pod -n aerospike-test <pod-name>`
+   - Verify image exists: `docker pull aerospike/aerospike-xdr-proxy:latest`
+
+2. **Configuration errors**
+   - Verify ConfigMap: `kubectl get configmap -n aerospike-test -o yaml`
+   - Check configuration syntax in values file
+   - Verify configuration in pod:
+     ```bash
+     kubectl exec -n aerospike-test test-xdr-proxy-aerospike-xdr-proxy-0 \
+       -- cat /etc/aerospike-xdr-proxy/aerospike-xdr-proxy.yml
+     ```
+
+3. **TLS issues**
+   - Verify secrets exist: `kubectl get secrets -n aerospike-test`
+   - Check secret mounting: `kubectl describe pod -n aerospike-test <pod-name>`
+   - Verify TLS secret exists: `kubectl get secret -n aerospike-test tls-certs`
+
+4. **Connectivity issues**
+   - Verify service: `kubectl get svc -n aerospike-test`
+   - Test DNS resolution: `kubectl run test-pod --image=busybox --rm -it --restart=Never -- nslookup <service-name>`
 
 ## Examples
 

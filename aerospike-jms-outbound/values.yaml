@@ -6,8 +6,8 @@ replicaCount: 1
 image:
   repository: aerospike/aerospike-jms-outbound
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  # Overrides the image tag whose default is "latest".
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
