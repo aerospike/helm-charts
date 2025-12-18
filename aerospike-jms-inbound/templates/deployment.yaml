@@ -57,7 +57,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default 'latest' }}"
+          image: {{ printf "%s:%s" .Values.image.repository (.Values.image.tag | default "latest") | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
             - name: aerospike-jms-inbound-configmap
