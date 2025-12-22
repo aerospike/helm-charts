@@ -1,7 +1,5 @@
 replicaCount: 3
 
-  # Default Connector configuration.
-  # Visit: https://docs.aerospike.com/connect/esp/from-asdb/configuring
 connectorConfig:
   service:
     # TLS setup for secure communication between Aerospike server (XDR) and the connector.
