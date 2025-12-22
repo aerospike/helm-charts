@@ -50,4 +50,3 @@ initContainers:
 
 # No TLS secrets needed for clear-text (HTTP) connections
 # proxySecrets: []
-

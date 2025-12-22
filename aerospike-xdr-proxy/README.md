@@ -91,6 +91,14 @@ Install the Aerospike XDR Proxy connector helm chart
 helm install aerospike-xdr-proxy aerospike/aerospike-xdr-proxy
 ```
 
+## Docker Image
+
+The default image used is `aerospike/aerospike-xdr-proxy:latest`. You can pull it manually:
+
+```shell
+docker pull aerospike/aerospike-xdr-proxy:latest
+```
+
 ## Supported configuration
 
 ## Configuration
@@ -121,7 +129,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "latest"
+  tag: "3.2.14"
 
 proxyConfig:
   service:

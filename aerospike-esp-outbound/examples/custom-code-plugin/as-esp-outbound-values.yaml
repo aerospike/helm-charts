@@ -1,5 +1,7 @@
 replicaCount: 3
 
+# Default Connector configuration.
+# Visit: https://docs.aerospike.com/connect/esp/from-asdb/configuring
 connectorConfig:
   service:
     # TLS setup for communication between Aerospike server (XDR) and the
@@ -70,4 +72,3 @@ initContainers:
     volumeMounts:
       - name: aerospike-esp-outbound-init
         mountPath: /opt/aerospike-esp-outbound-init
-
