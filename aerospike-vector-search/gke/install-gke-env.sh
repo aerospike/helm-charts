@@ -1,7 +1,10 @@
 #!/bin/bash -e
 WORKSPACE="$(git rev-parse --show-toplevel)"
-PROJECT=""
+PROJECT="aerospike-dev"
 ZONE=""
+PASSWORD=""
+
+mkdir -p "$WORKSPACE/aerospike-vector-search/examples/gke/secrets"
 
 if [ -z "$PROJECT" ]; then
     echo "Set Project"
@@ -13,7 +16,7 @@ if [ -z "$ZONE" ]; then
     exit 1
 fi
 
-if [ ! -f "$WORKSPACE/aerospike-vector-search/gke/config/features.conf" ]; then
+if [ ! -f "$WORKSPACE/aerospike-vector-search/examples/gke/secrets/features.conf" ]; then
   echo "features.conf Not found"
   exit 1
 fi
@@ -49,7 +52,8 @@ kubectl create clusterrolebinding aerospike-cluster \
 
 echo "Set Secrets for Aerospike Cluster"
 kubectl --namespace aerospike create secret generic aerospike-secret \
---from-file=features.conf="$WORKSPACE/aerospike-vector-search/gke/config/features.conf"
+--from-file="$WORKSPACE/aerospike-vector-search/examples/gke/secrets"
+
 kubectl --namespace aerospike create secret generic auth-secret --from-literal=password='admin123'
 
 echo "Add Storage Class"
@@ -90,17 +94,13 @@ helm install avs-gke "$WORKSPACE/aerospike-vector-search" \
 
 echo "Deploying Quote-Search"
 
-git clone \
---depth 1 \
---branch main \
---no-checkout https://github.com/aerospike/aerospike-vector-search-examples.git
-cd aerospike-vector-search-examples
-git sparse-checkout set kubernetes/helm/quote-semantic-search
-git checkout main
-cd -
+docker run --name="quote-search" \
+--rm \
+--detach \
+--env AVS_HOST="$(kubectl get svc/istio-ingress --namespace istio-ingress -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')" \
+--env AVS_IS_LOADBALANCER="True" aerospike/quote-search-example:preview
 
-helm install quote-search "$PWD/aerospike-vector-search-examples/kubernetes/helm/quote-semantic-search" \
---values "$WORKSPACE/aerospike-vector-search/gke/config/quote-search-gke-values.yaml" \
---namespace aerospike \
---wait \
---timeout 7m0s
+echo "Run asvec cli"
+asvec index ls \
+-h "$(kubectl get svc/istio-ingress --namespace istio-ingress -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')" \
+--log-level DEBUG
