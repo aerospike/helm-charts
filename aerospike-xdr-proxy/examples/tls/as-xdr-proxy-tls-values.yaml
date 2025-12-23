@@ -43,4 +43,3 @@ proxyConfig:
 # See the README.md for instructions on creating the TLS secret
 proxySecrets:
   - tls-certs
-

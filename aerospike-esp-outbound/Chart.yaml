@@ -17,4 +17,4 @@ maintainers:
 version: 1.0.0
 
 # The default version of Aerospike ESP Outbound Connector
-appVersion: "2.4.13"
+appVersion: "2.4.14"

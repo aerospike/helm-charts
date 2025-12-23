@@ -1,8 +1,5 @@
 replicaCount: 3
 
-image:
-  tag: "2.4.13"
-
 connectorConfig:
   service:
     # TLS setup for secure communication between Aerospike server (XDR) and the connector.
@@ -65,4 +62,4 @@ connectorConfig:
 #   - storepass (password file)
 # See the README.md for instructions on creating the TLS secret
 connectorSecrets:
-  - tls-certs 
+  - tls-certs

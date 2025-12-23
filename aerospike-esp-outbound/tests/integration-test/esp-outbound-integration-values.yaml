@@ -1,8 +1,5 @@
 replicaCount: 1
 
-image:
-  tag: "2.4.13"
-
 connectorConfig:
   service:
     address: 0.0.0.0

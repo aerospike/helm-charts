@@ -16,4 +16,4 @@ maintainers:
 version: 1.0.0
 
 # The default version of Aerospike XDR Proxy Connector
-appVersion: "3.2.13"
+appVersion: "3.2.14"

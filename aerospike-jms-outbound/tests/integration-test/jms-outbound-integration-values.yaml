@@ -1,9 +1,5 @@
 replicaCount: 1
 
-# Use default appVersion from Chart.yaml (4.2.12) - remove tag override to use default
-# image:
-#   tag: ""
-
 connectorConfig:
   service:
     port: 8080

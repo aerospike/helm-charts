@@ -1,8 +1,5 @@
 replicaCount: 3
 
-image:
-  tag: "2.4.13"
-
 connectorConfig:
   service:
     # Clear-text (non-TLS) setup for communication between Aerospike server (XDR) and the
@@ -49,4 +46,4 @@ connectorConfig:
     enable-console-logging: true
 
 # No TLS secrets needed for HTTP connections
-# connectorSecrets: [] 
+# connectorSecrets: []

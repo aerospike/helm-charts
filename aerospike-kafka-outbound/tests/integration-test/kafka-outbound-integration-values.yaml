@@ -1,8 +1,5 @@
 replicaCount: 1
 
-image:
-  tag: "5.3.12"
-
 connectorConfig:
   service:
     port: 8080

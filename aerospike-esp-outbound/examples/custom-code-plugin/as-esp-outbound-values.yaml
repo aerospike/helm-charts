@@ -70,4 +70,3 @@ initContainers:
     volumeMounts:
       - name: aerospike-esp-outbound-init
         mountPath: /opt/aerospike-esp-outbound-init
-

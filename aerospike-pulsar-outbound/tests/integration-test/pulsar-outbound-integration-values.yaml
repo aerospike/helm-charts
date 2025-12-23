@@ -1,8 +1,5 @@
 replicaCount: 1
 
-image:
-  tag: "3.3.14"
-
 connectorConfig:
   service:
     port: 8080
@@ -32,4 +29,3 @@ connectorConfig:
 # Only include TLS secrets if using TLS
 # connectorSecrets:
 #   - tls-certs-pulsar
-

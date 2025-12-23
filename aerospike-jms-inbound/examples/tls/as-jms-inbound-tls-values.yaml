@@ -77,4 +77,3 @@ connectorConfig:
     enable-console-logging: true
     levels:
       root: DEBUG
-
