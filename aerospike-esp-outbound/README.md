@@ -440,7 +440,7 @@ the connector configuration.
 1. **Pods not starting**
    - Check pod logs: `kubectl logs -n aerospike-test <pod-name>`
    - Check events: `kubectl describe pod -n aerospike-test <pod-name>`
-   - Verify image exists: `docker pull aerospike/aerospike-esp-outbound:2.4.14`
+   - Verify image exists: `docker pull aerospike/aerospike-esp-outbound:latest`
 
 2. **Configuration errors**
    - Verify ConfigMap: `kubectl get configmap -n aerospike-test -o yaml`
