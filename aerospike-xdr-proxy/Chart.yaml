@@ -13,7 +13,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: 1.0.0
+version: "3.2.14"
 
 # The default version of Aerospike XDR Proxy Connector
 appVersion: "3.2.14"

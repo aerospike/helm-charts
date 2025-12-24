@@ -13,7 +13,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: 1.0.0
+version: "3.0.15"
 
 # The default version of Aerospike JMS Inbound Connector
 appVersion: "3.0.15"

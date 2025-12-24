@@ -1,76 +1,98 @@
 apiVersion: v1
 entries:
   aerospike-backup-service:
-    - apiVersion: v2
-      appVersion: 3.0.1
-      created: "2025-04-07T16:46:52.003749+03:00"
-      description: A Helm chart for Kubernetes
-      digest: 0627b94bcc6e74cea0ba4b14a95fa0fb7ce44b40e7cb2405d26d2ca2d236ca21
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.4.tgz
-      version: 2.0.4
-    - apiVersion: v2
-      appVersion: 3.0.0
-      created: "2025-01-14T18:14:43.615951+02:00"
-      description: A Helm chart for Kubernetes
-      digest: 1c721f4dccbbb4a91b0035bba1a1e9a9cc8166b8e413463dce41db922352b6ad
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.3.tgz
-      version: 2.0.3
-    - apiVersion: v2
-      appVersion: 2.0.1
-      created: "2025-01-01T15:02:20.853894+02:00"
-      description: A Helm chart for Kubernetes
-      digest: 94a19c4c6e902fa369049072afa37de60bc851dcc95252a14ce09e5eaec29dd0
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.2.tgz
-      version: 2.0.2
-    - apiVersion: v2
-      appVersion: 2.0.0
-      created: "2024-11-28T15:29:09.333555+02:00"
-      description: A Helm chart for Kubernetes
-      digest: 3f69e7a26bc4665a68ed8e24674d6985627ca06f0ec041e1840fa03ca272eda8
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.1.tgz
-      version: 2.0.1
-    - apiVersion: v2
-      appVersion: 2.0.0
-      created: "2024-11-28T15:29:09.33245+02:00"
-      description: A Helm chart for Kubernetes
-      digest: 6e048ad95a4eed3bcc16017716ced0a9903f229980c02ce286e911b8292cd09a
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.0.tgz
-      version: 2.0.0
-    - apiVersion: v2
-      appVersion: 1.0.0
-      created: "2024-09-09T13:21:53.536941-07:00"
-      description: A Helm chart for Kubernetes
-      digest: ec8484396b05af2ba532c0a88b3072d4d542c4a025a879fc09781e249600e825
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-1.0.0.tgz
-      version: 1.0.0
-    - apiVersion: v2
-      appVersion: 1.0.0
-      created: "2024-09-09T13:21:53.536338-07:00"
-      description: A Helm chart for Kubernetes
-      digest: 14cc5efd7357f65c0cf0f36be9e19a6276f9dc787ec131bbf602c725efbde3ab
-      name: aerospike-backup-service
-      type: application
-      urls:
-        - https://aerospike.github.io/helm-charts/aerospike-backup-service-0.1.0.tgz
-      version: 0.1.0
+  - apiVersion: v2
+    appVersion: 3.0.1
+    created: "2025-04-07T16:46:52.003749+03:00"
+    description: A Helm chart for Kubernetes
+    digest: 0627b94bcc6e74cea0ba4b14a95fa0fb7ce44b40e7cb2405d26d2ca2d236ca21
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.4.tgz
+    version: 2.0.4
+  - apiVersion: v2
+    appVersion: 3.0.0
+    created: "2025-01-14T18:14:43.615951+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 1c721f4dccbbb4a91b0035bba1a1e9a9cc8166b8e413463dce41db922352b6ad
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.3.tgz
+    version: 2.0.3
+  - apiVersion: v2
+    appVersion: 2.0.1
+    created: "2025-01-01T15:02:20.853894+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 94a19c4c6e902fa369049072afa37de60bc851dcc95252a14ce09e5eaec29dd0
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.2.tgz
+    version: 2.0.2
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2024-11-28T15:29:09.333555+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 3f69e7a26bc4665a68ed8e24674d6985627ca06f0ec041e1840fa03ca272eda8
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.1.tgz
+    version: 2.0.1
+  - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2024-11-28T15:29:09.33245+02:00"
+    description: A Helm chart for Kubernetes
+    digest: 6e048ad95a4eed3bcc16017716ced0a9903f229980c02ce286e911b8292cd09a
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-09-09T13:21:53.536941-07:00"
+    description: A Helm chart for Kubernetes
+    digest: ec8484396b05af2ba532c0a88b3072d4d542c4a025a879fc09781e249600e825
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-09-09T13:21:53.536338-07:00"
+    description: A Helm chart for Kubernetes
+    digest: 14cc5efd7357f65c0cf0f36be9e19a6276f9dc787ec131bbf602c725efbde3ab
+    name: aerospike-backup-service
+    type: application
+    urls:
+      - https://aerospike.github.io/helm-charts/aerospike-backup-service-0.1.0.tgz
+    version: 0.1.0
+  aerospike-esp-outbound:
+  - apiVersion: v2
+    appVersion: 2.4.14
+    created: "2025-12-24T10:31:47.023982+05:30"
+    description: A Helm chart for Aerospike Connect for ESP - Outbound
+    digest: f3ff67ba025aa64c3ced36890d4c7c59378d00dea4118a2046372b1ec19b7f1f
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Connector
+    - ESP
+    - Event Streaming
+    - Outbound
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-esp-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-esp-outbound-2.4.14.tgz
+    version: 2.4.14
   aerospike-graph:
   - apiVersion: v2
     appVersion: 2.2.0
@@ -102,6 +124,26 @@ entries:
     version: 2.0.0
   aerospike-jms-inbound:
   - apiVersion: v2
+    appVersion: 3.0.15
+    created: "2025-12-24T10:31:47.026525+05:30"
+    description: A Helm chart for Aerospike Connect for JMS - Inbound
+    digest: 979b26e9b35d0a93e39bc2e8085b239885a2689e1f43f12eb4909f3342642031
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - JMS
+    - Connector
+    - Inbound
+    - Sink
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-jms-inbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-jms-inbound-3.0.15.tgz
+    version: 3.0.15
+  - apiVersion: v2
     appVersion: 3.0.0
     created: "2025-01-14T18:14:43.619527+02:00"
     description: A Helm chart for Aerospike Connect for JMS - Inbound
@@ -112,6 +154,7 @@ entries:
     - JMS
     - Connector
     - Inbound
+    - Sink
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -122,10 +165,10 @@ entries:
     version: 1.0.0
   aerospike-jms-outbound:
   - apiVersion: v2
-    appVersion: 4.1.1
-    created: "2025-01-14T18:14:43.6209+02:00"
+    appVersion: 4.2.13
+    created: "2025-12-24T10:31:47.02845+05:30"
     description: A Helm chart for Aerospike Connect for JMS - Outbound
-    digest: d3f9f3cdd9bc57eaa945336f5c1c28c164b1c8a2c41f97eda9806276077c0a2c
+    digest: 4e3714436ed41e43585882a97b697b6246a6569663a5eaff87cd8bf5930a31a7
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
@@ -138,9 +181,48 @@ entries:
     name: aerospike-jms-outbound
     type: application
     urls:
+    - https://aerospike.github.io/helm-charts/aerospike-jms-outbound-4.2.13.tgz
+    version: 4.2.13
+  - apiVersion: v2
+    appVersion: 4.1.1
+    created: "2025-01-14T18:14:43.6209+02:00"
+    description: A Helm chart for Aerospike Connect for JMS - Outbound
+    digest: d3f9f3cdd9bc57eaa945336f5c1c28c164b1c8a2c41f97eda9806276077c0a2c
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - JMS
+    - Connector
+    - Outbound
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-jms-outbound
+    type: application
+    urls:
     - https://aerospike.github.io/helm-charts/aerospike-jms-outbound-1.0.0.tgz
     version: 1.0.0
   aerospike-kafka-outbound:
+  - apiVersion: v2
+    appVersion: 5.3.13
+    created: "2025-12-24T10:31:47.031367+05:30"
+    description: A Helm chart for Aerospike Connect for Kafka - Outbound
+    digest: e56766f9f4581f786b3e0a296930e3d3899ed3be4573214182b9546ce75558c9
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Kafka
+    - Connector
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-kafka-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-kafka-outbound-5.3.13.tgz
+    version: 5.3.13
   - apiVersion: v2
     appVersion: 5.1.2
     created: "2025-01-14T18:14:43.624+02:00"
@@ -151,6 +233,7 @@ entries:
     - Aerospike
     - Kafka
     - Connector
+    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -170,6 +253,7 @@ entries:
     - Aerospike
     - Kafka
     - Connector
+    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -212,6 +296,26 @@ entries:
     version: 0.1.0
   aerospike-pulsar-outbound:
   - apiVersion: v2
+    appVersion: 3.3.15
+    created: "2025-12-24T10:31:47.033954+05:30"
+    description: A Helm chart for Aerospike Connect for Pulsar - Outbound
+    digest: b73493c3664135966fe3a99384a9eafae309696bf6c06712d4e80debc46bdcf7
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Pulsar
+    - Connector
+    - Outbound
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-pulsar-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-3.3.15.tgz
+    version: 3.3.15
+  - apiVersion: v2
     appVersion: 3.2.1
     created: "2025-01-14T18:14:43.627957+02:00"
     description: A Helm chart for Aerospike Connect for Pulsar - Outbound
@@ -222,6 +326,7 @@ entries:
     - Pulsar
     - Connector
     - Outbound
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -299,4 +404,24 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-vector-search-0.1.0.tgz
     version: 0.1.0
-generated: "2025-01-14T18:14:43.605901+02:00"
+  aerospike-xdr-proxy:
+  - apiVersion: v2
+    appVersion: 3.2.14
+    created: "2025-12-24T10:31:47.035175+05:30"
+    description: A Helm chart for Aerospike XDR Proxy Connector
+    digest: 82f9f5c7d250dbee6998cf5c46beea26214c2a6a3e4f4b40220fa0ad9d59852d
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - XDR
+    - Proxy
+    - Connector
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-xdr-proxy
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-xdr-proxy-3.2.14.tgz
+    version: 3.2.14
+generated: "2025-12-24T10:31:47.022274+05:30"
