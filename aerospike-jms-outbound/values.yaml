@@ -15,55 +15,29 @@ fullnameOverride: ""
 
 # Default Connector configuration given below.
 # Visit: https://docs.aerospike.com/connect/jms/from-asdb/configuring/service
-connectorConfig: {}
-  # Uncomment the following lines, adjust them as necessary as per your environment, and remove the curly braces after 'connectorConfig:'.
+connectorConfig:
+  service:
+    port: 8080
+    manage:
+      port: 8081
 
-  # service:
-  #   port: 8080
-  #   manage:
-  #     port: 8081
-
-  # The connection properties to the JMS message broker. Uncomment and modify required message broker properties.
-  # jms:
-  #  # RabbitMQ example.
-  #   factory: com.rabbitmq.jms.admin.RMQConnectionFactory
-  #   config:
-  #     host: 127.0.0.1
-  #     port: 5672
-  #     username: guest
-  #     password: guest
-
-  #  # ActiveMQ example.
-  #   factory: org.apache.activemq.artemis.jndi.ActiveMQInitialContextFactory
-  #   jndi-cf-name: ConnectionFactory
-  #   config:
-  #     java.naming.provider.url: tcp://127.0.0.1:61616
-  #     java.naming.security.principal: admin
-  #     java.naming.security.credentials: password
-  #
-  #  # IBM MQ example.
-  #   factory: com.ibm.mq.jms.MQConnectionFactory
-  #   config:
-  #     hostName: 127.0.0.1
-  #     port: 1414
-  #     queueManager: QM1
-  #     transportType: 1
-  #     channel: DEV.APP.SVRCONN
+  # JMS connection configuration for RabbitMQ
+  jms:
+    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
+    config: {}
 
   # Format of the JMS destination message.
-  # format:
-  #   mode: flat-json
-  #   metadata-key: metadata
+  format:
+    mode: json
 
   # Aerospike record routing to a JMS destination.
-  # routing:
-  #   mode: static
-  #   type: queue
-  #   destination: aerospike
+  routing:
+    mode: set
+    type: queue
 
   # The logging properties.
-  # logging:
-  #   enable-console-logging: true
+  logging:
+    enable-console-logging: true
 
 # List of secrets mounted to /etc/aerospike-jms-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials
