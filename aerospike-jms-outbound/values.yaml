@@ -27,7 +27,6 @@ connectorConfig:
     config: {}
 
   # Format of the JMS destination message.
-  # Using json format instead of flat-json to put key in value fields
   format:
     mode: json
 
