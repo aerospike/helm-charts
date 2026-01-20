@@ -23,13 +23,11 @@ connectorConfig:
 
   # Format of the Kafka destination message.
   format:
-    mode: flat-json
-    metadata-key: metadata
+    mode: json
 
   # Aerospike record routing to a Kafka destination.
   routing:
-    mode: static
-    destination: aerospike
+    mode: set
 
   # Kafka producer initialization properties.
   producer-props:
