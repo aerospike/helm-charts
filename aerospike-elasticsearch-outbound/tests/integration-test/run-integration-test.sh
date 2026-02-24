@@ -159,7 +159,7 @@ print_info "Waiting for pod to be created..."
 timeout=120
 elapsed=0
 while [ $elapsed -lt $timeout ]; do
-    if kubectl get pod "${DST_CLUSTER}-0-0" -n "${NAMESPACE}" &>/dev/null; then
+    if kubectl get pod "${DST_CLUSTER}-0" -n "${NAMESPACE}" &>/dev/null; then
         break
     fi
     sleep 2
@@ -168,8 +168,13 @@ done
 
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
+print_info "kubectl get pod "${DST_CLUSTER}-0" -n "${NAMESPACE}" "
+print_info "kubectl wait --for=condition=ready pod \
+  "${DST_CLUSTER}-0" \
+  -n "${NAMESPACE}" --timeout=1m""
+
 kubectl wait --for=condition=ready pod \
-  "${DST_CLUSTER}-0-0" \
+  "${DST_CLUSTER}-0" \
   -n "${NAMESPACE}" --timeout=3m
 print_info "✅ Destination cluster ready"
 echo ""
