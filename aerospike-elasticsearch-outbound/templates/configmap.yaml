@@ -6,5 +6,5 @@ metadata:
   labels:
     {{- include "aerospike-elastic-outbound.labels" . | nindent 4 }}
 data:
-  aerospike-elastic-outbound.yml: |-
+  aerospike-elasticsearch-outbound.yml: |-
     {{- include "aerospike-elastic-outbound.connectorConfig" . | nindent 4 }}
