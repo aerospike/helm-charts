@@ -14,7 +14,7 @@ NAMESPACE="aerospike-test"
 ES_RELEASE="test-elastic-outbound"
 PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-elastic-src"
-DST_CLUSTER="aerocluster-elastic-dst"
+DST_CLUSTER="elasticsearch-service-dst"
 CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
@@ -151,8 +151,8 @@ if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
 fi
 
 # Step 1: Deploy destination cluster
-print_info "Step 1: Deploying destination Aerospike cluster..."
-kubectl apply -f "$SCRIPT_DIR/aerocluster-dst.yaml"
+print_info "Step 1: Deploying ElasticSearch server..."
+kubectl apply -f "$SCRIPT_DIR/elasticsearch-server.yaml"
 
 # Wait for pod to exist first
 print_info "Waiting for pod to be created..."
@@ -175,12 +175,12 @@ print_info "✅ Destination cluster ready"
 echo ""
 
 # Step 2: Deploy XDR Proxy
-print_info "Step 2: Deploying XDR Proxy..."
-WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
-  -n "${NAMESPACE}" -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
-print_info "✅ XDR Proxy deployed"
-echo ""
+print_info "Step 2: Deploying XDR Proxy... - skipping, as this is not required for ElasticSearch Outbound"
+# WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
+#   -n "${NAMESPACE}" -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
+# print_info "✅ XDR Proxy deployed"
+# echo ""
 
 # Step 3: Deploy ElasticSearch Outbound
 print_info "Step 3: Deploying ElasticSearch Outbound connector..."

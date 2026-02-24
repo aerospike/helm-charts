@@ -25,7 +25,7 @@ connectorConfig:
       type: on-prem
       nodes:
         - host:
-            hostname: localhost
+            hostname: elasticsearch-service-dst.aerospike-test.svc.cluster.local
             port: 9200
 
   logging:
