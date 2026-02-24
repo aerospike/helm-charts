@@ -382,6 +382,10 @@ echo ""
 print_info "Step 8: Testing data flow..."
 echo ""
 
+print_info "Sleeping for some 300 seconds to continue debugging, before data insertion"
+sleep 300
+
+
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-$(date +%s)"
