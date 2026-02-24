@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "aerospike-esp-outbound.fullname" . }}-test-connection"
+  labels:
+    {{- include "aerospike-esp-outbound.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: test-connection
+      image: busybox
+      command: ['sh']
+      args:
+      - -c
+      - |
+        echo "Testing connection to {{ include "aerospike-esp-outbound.fullname" . }}"
+        nc -z {{ include "aerospike-esp-outbound.fullname" . }} {{ include "aerospike-esp-outbound.servicePort" . }}
+        if [ $? -eq 0 ]; then
+          echo "Connection successful"
+        else
+          echo "Connection failed"
+          exit 1
+        fi
+  restartPolicy: Never

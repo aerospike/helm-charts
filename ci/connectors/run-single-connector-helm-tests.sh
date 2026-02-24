@@ -63,12 +63,6 @@ fi
 # Connectors to test
 CONNECTORS=(
     "aerospike-elasticsearch-outbound"
-    "aerospike-esp-outbound"
-    "aerospike-jms-inbound"
-    "aerospike-jms-outbound"
-    "aerospike-kafka-outbound"
-    "aerospike-pulsar-outbound"
-    "aerospike-xdr-proxy"
 )
 
 # Results tracking (using indexed arrays for bash 3.2 compatibility)

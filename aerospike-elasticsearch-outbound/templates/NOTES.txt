@@ -1,0 +1,12 @@
+1. Get the list of connector pods  by running the command:
+
+kubectl get pods --namespace {{ .Release.Namespace }} --selector=app={{- include "aerospike-esp-outbound.fullname" . }} --no-headers -o custom-columns=":metadata.name"
+
+2. Configure XDR to use each of these connector pods in the datacenter section
+
+Use the following command to get the pod DNS names and port to use.
+
+kubectl get pods --namespace {{ .Release.Namespace }} --selector=app={{- include "aerospike-esp-outbound.fullname" . }} --no-headers -o custom-columns=":metadata.name" \
+    | sed -e "s/$/.{{- include "aerospike-esp-outbound.fullname" . }} {{ include "aerospike-esp-outbound.servicePort" . }}/g"
+
+Visit https://docs.aerospike.com/connect/common/change-notification for details
