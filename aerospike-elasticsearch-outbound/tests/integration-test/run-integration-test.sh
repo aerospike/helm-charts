@@ -168,10 +168,6 @@ done
 
 # Wait for pod to be ready
 print_info "Waiting for pod to be ready..."
-print_info "kubectl get pod "${DST_CLUSTER}-0" -n "${NAMESPACE}" "
-print_info "kubectl wait --for=condition=ready pod \
-  "${DST_CLUSTER}-0" \
-  -n "${NAMESPACE}" --timeout=1m""
 
 kubectl wait --for=condition=ready pod \
   "${DST_CLUSTER}-0" \
