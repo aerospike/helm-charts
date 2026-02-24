@@ -177,6 +177,7 @@ echo ""
 
 # Step 2: Deploy XDR Proxy
 print_info "Step 2: Deploying XDR Proxy... - skipping, as this is not required for ElasticSearch Outbound"
+# TODO: Remove
 # WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 # helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
 #   -n "${NAMESPACE}" -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
@@ -393,6 +394,9 @@ else
     print_warning "⚠️  Data insertion may have failed (check logs)"
     echo "$INSERT_OUTPUT"
 fi
+
+print_info "Sleeping for some 300 seconds to continue debugging"
+sleep 300
 
 # Wait for data to flow through pipeline
 # ElasticSearch Outbound -> XDR Proxy -> Destination DB pipeline needs more time
