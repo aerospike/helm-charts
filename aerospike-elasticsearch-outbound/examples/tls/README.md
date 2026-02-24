@@ -52,13 +52,10 @@ The example configuration includes:
 
 ## Update ElasticSearch endpoint
 
-Edit the `as-elastic-outbound-tls-values.yaml` file and update the `destinations.dc1.urls` to point to your ElasticSearch endpoint:
+Edit the `as-elastic-outbound-tls-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
 
 ```yaml
-destinations:
-  dc1:
-    urls:
-      - https://your-elastic-endpoint:8443
+<TODO>: Add es-client
 ```
 
 ## Cleanup

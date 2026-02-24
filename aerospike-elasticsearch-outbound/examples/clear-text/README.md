@@ -1,6 +1,6 @@
-# Clear Text ESP Outbound Connector Example
+# Clear Text ElasticSearch Outbound Connector Example
 
-This example demonstrates how to deploy the Aerospike ESP Outbound Connector with clear text configuration.
+This example demonstrates how to deploy the Aerospike ElasticSearch Outbound Connector with clear text configuration.
 
 ## Prerequisites
 
@@ -18,12 +18,12 @@ kubectl create namespace aerospike
 
 2. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-esp-outbound -f as-esp-outbound-values.yaml ../../aerospike-esp-outbound
+helm install --namespace aerospike as-elastic-outbound -f as-elastic-outbound-values.yaml ../../aerospike-elastic-outbound
 ```
 
 3. Verify the deployment:
 ```shell
-kubectl get pods --namespace aerospike --selector=app=as-esp-outbound-aerospike-esp-outbound
+kubectl get pods --namespace aerospike --selector=app=as-elastic-outbound-aerospike-elastic-outbound
 ```
 
 ## Configuration
@@ -37,15 +37,12 @@ The example configuration includes:
 - Health checks and connection pooling
 - Console logging enabled
 
-## Update ESP endpoint
+## Update ElasticSearch endpoint
 
-Edit the `as-esp-outbound-values.yaml` file and update the `destinations.dc1.urls` to point to your ESP endpoint:
+Edit the `as-elastic-outbound-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
 
 ```yaml
-destinations:
-  dc1:
-    urls:
-      - http://your-esp-endpoint:8080
+<TODO> Add example with es-client
 ```
 
 **Note:** This example uses HTTP (clear-text). For HTTPS connections, use the [TLS example](../tls/README.md).
@@ -54,5 +51,5 @@ destinations:
 
 To remove the deployment:
 ```shell
-helm uninstall --namespace aerospike as-esp-outbound
+helm uninstall --namespace aerospike as-elastic-outbound
 ``` 

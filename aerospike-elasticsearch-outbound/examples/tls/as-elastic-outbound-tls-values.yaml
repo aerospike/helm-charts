@@ -13,46 +13,27 @@ connectorConfig:
     worker-threads: 100
     max-concurrent-requests: 100000
 
-  # See: https://aerospike.com/docs/connectors/streaming/esp/configure/routing
-  routing:
-    mode: static-multi-destination
-    destinations:
-      - dc1
-
   record-ordering:
     enable: false
     lut-cache-ttl-seconds: 30
 
-  # See: https://aerospike.com/docs/connectors/streaming/esp/configure/destinations
-  destinations:
-    dc1:
-      urls:
-        # Example HTTPS endpoint with TLS (change to your actual ESP endpoint)
-        - https://connector.aerospike.com:8443
-      # TLS configuration for mutual TLS authentication
-      # For TLS configuration details, see: https://aerospike.com/docs/connectors/streaming/esp/configure/service/#configuring-tls
-      tls:
-        trust-store:
-          # Path to trust store file (mounted from Kubernetes secret)
-          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
-          # Path to trust store password file (mounted from Kubernetes secret)
-          store-password-file: secrets/tls-certs/storepass
-        key-store:
-          # Path to key store file (mounted from Kubernetes secret)
-          store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
-          # Path to key store password file (mounted from Kubernetes secret)
-          store-password-file: secrets/tls-certs/storepass
-      health-check:
-        call-timeout: 5100
-      connect-timeout: 5000
-      connection-ttl: 300000
-      max-connections-per-endpoint: 20
-      call-timeout: 5100
-      protocol: HTTP_2
-      http2-max-concurrent-streams: 100
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
 
+  # The logging properties
   logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
     enable-console-logging: true
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
 
 # List of secrets containing TLS certificates
 # The secret 'tls-certs' will be mounted to /etc/aerospike-esp-outbound/secrets/tls-certs

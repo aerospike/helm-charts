@@ -11,14 +11,14 @@ connectorConfig:
     worker-threads: 100
     max-concurrent-requests: 100000
 
-  routing:
-    mode: static-multi-destination
-    destinations:
-      - dc1
-
   record-ordering:
     enable: false
     lut-cache-ttl-seconds: 30
+
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
 
   es-client:
     cluster-config:
