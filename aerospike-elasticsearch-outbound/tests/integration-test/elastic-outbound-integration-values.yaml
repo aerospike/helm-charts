@@ -20,21 +20,13 @@ connectorConfig:
     enable: false
     lut-cache-ttl-seconds: 30
 
-  destinations:
-    dc1:
-      urls:
-        # Point to XDR Proxy service (port 8901) - using HTTP, not HTTPS
-        - http://xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local:8901
-      # Explicitly remove TLS config since we're using HTTP
-      tls: null
-      health-check:
-        call-timeout: 5100
-      connect-timeout: 5000
-      connection-ttl: 300000
-      max-connections-per-endpoint: 20
-      call-timeout: 5100
-      protocol: HTTP_2
-      http2-max-concurrent-streams: 100
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
 
   logging:
     enable-console-logging: true
