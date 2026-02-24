@@ -175,15 +175,6 @@ kubectl wait --for=condition=ready pod \
 print_info "✅ Destination cluster ready"
 echo ""
 
-# Step 2: Deploy XDR Proxy
-print_info "Step 2: Deploying XDR Proxy... - skipping, as this is not required for ElasticSearch Outbound"
-# TODO: Remove
-# WORKSPACE="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-# helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
-#   -n "${NAMESPACE}" -f "$SCRIPT_DIR/xdr-proxy-values.yaml" --wait --timeout=2m
-# print_info "✅ XDR Proxy deployed"
-# echo ""
-
 # Step 3: Deploy ElasticSearch Outbound
 print_info "Step 3: Deploying ElasticSearch Outbound connector..."
 helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." \
@@ -367,9 +358,6 @@ if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
     print_info "Found local tools file: $LOCAL_TOOLS_FILE"
 fi
 
-print_info "Skipping tools installation in destination DB pod, as this is not required for ElasticSearch Outbound"
-# install_tools_in_pod "${DST_CLUSTER}-0-0" "destination"
-
 # Install tools in source DB pod
 print_info "Installing tools in source DB pod..."
 install_tools_in_pod "${SRC_CLUSTER}-0-0" "source"
@@ -384,10 +372,6 @@ echo ""
 print_info "Step 8: Testing data flow..."
 echo ""
 
-print_info "Sleeping for some 300 seconds to continue debugging, before data insertion"
-sleep 120
-
-
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
 TEST_KEY="test-key-1"
@@ -401,52 +385,14 @@ else
     echo "$INSERT_OUTPUT"
 fi
 
-print_info "Sleeping for some 300 seconds to continue debugging"
-sleep 120
 
 # Wait for data to flow through pipeline
 # ElasticSearch Outbound -> XDR Proxy -> Destination DB pipeline needs more time
 print_info "Waiting for data replication (20 seconds)..."
 sleep 10
 
-# Verify data in destination DB
-print_info "Verifying data in destination DB..., skipping, as this is not required for ElasticSearch Outbound"
-# RESULT=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- aql -h localhost -p 3003 -c \
-#   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || true)
-
-# # Check for error message (record not found)
-# if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
-#     print_error "❌ Test FAILED: Data not found in destination DB"
-#     echo "$RESULT"
-#     echo ""
-#     print_warning "This may indicate:"
-#     print_warning "  - XDR replication is still in progress (try waiting longer)"
-#     print_warning "  - ElasticSearch Outbound connector is not forwarding data correctly"
-#     print_warning "  - XDR Proxy is not forwarding requests correctly"
-#     print_warning "  - Network connectivity issues"
-#     echo ""
-#     echo "INTEGRATION_TEST_FAILED"
-#     exit 1
-# fi
-
-# Check for actual record data (table format with PK column)
-# if echo "$RESULT" | grep -qE "^\+.*\+|^\|.*PK.*\|" || echo "$RESULT" | grep -q "\"${TEST_KEY}\""; then
-#     print_info "✅ Test PASSED: Data found in destination DB!"
-#     echo "$RESULT"
-# else
-#     print_error "❌ Test FAILED: Could not verify data in destination DB"
-#     echo "$RESULT"
-#     echo ""
-#     print_warning "To debug, manually check:"
-#     print_info "  kubectl exec -n ${NAMESPACE} ${DST_CLUSTER}-0-0 -- aql -h localhost -p 3003 -c \"SELECT * FROM test.demo WHERE PK='${TEST_KEY}'\""
-#     echo ""
-#     echo "INTEGRATION_TEST_FAILED"
-#     exit 1
-# fi
-# echo ""
-
 # Step 9: Display Metrics
-print_info "Step 9: Checking component metrics..."
+print_info "Step 9: Checking outbound metrics..."
 echo ""
 
 # Check ElasticSearch Outbound metrics across all pods
