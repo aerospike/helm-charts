@@ -366,7 +366,9 @@ print_info "Installing tools in destination DB pod..."
 if [ -n "$LOCAL_TOOLS_FILE" ] && [ -f "$LOCAL_TOOLS_FILE" ]; then
     print_info "Found local tools file: $LOCAL_TOOLS_FILE"
 fi
-install_tools_in_pod "${DST_CLUSTER}-0-0" "destination"
+
+print_info "Skipping tools installation in destination DB pod, as this is not required for ElasticSearch Outbound"
+# install_tools_in_pod "${DST_CLUSTER}-0-0" "destination"
 
 # Install tools in source DB pod
 print_info "Installing tools in source DB pod..."
@@ -388,7 +390,7 @@ sleep 300
 
 # Insert test data in source DB
 print_info "Inserting test data in source DB..."
-TEST_KEY="test-key-$(date +%s)"
+TEST_KEY="test-key-1"
 INSERT_OUTPUT=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- aql -h localhost -p 3000 -c \
   "INSERT INTO test.demo (PK, name, value) VALUES ('${TEST_KEY}', 'Test Record', 100)" 2>&1)
 
@@ -408,24 +410,24 @@ print_info "Waiting for data replication (20 seconds)..."
 sleep 10
 
 # Verify data in destination DB
-print_info "Verifying data in destination DB..."
-RESULT=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- aql -h localhost -p 3003 -c \
-  "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || true)
+print_info "Verifying data in destination DB..., skipping, as this is not required for ElasticSearch Outbound"
+# RESULT=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- aql -h localhost -p 3003 -c \
+#   "SELECT * FROM test.demo WHERE PK='${TEST_KEY}'" 2>&1 || true)
 
-# Check for error message (record not found)
-if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
-    print_error "❌ Test FAILED: Data not found in destination DB"
-    echo "$RESULT"
-    echo ""
-    print_warning "This may indicate:"
-    print_warning "  - XDR replication is still in progress (try waiting longer)"
-    print_warning "  - ElasticSearch Outbound connector is not forwarding data correctly"
-    print_warning "  - XDR Proxy is not forwarding requests correctly"
-    print_warning "  - Network connectivity issues"
-    echo ""
-    echo "INTEGRATION_TEST_FAILED"
-    exit 1
-fi
+# # Check for error message (record not found)
+# if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
+#     print_error "❌ Test FAILED: Data not found in destination DB"
+#     echo "$RESULT"
+#     echo ""
+#     print_warning "This may indicate:"
+#     print_warning "  - XDR replication is still in progress (try waiting longer)"
+#     print_warning "  - ElasticSearch Outbound connector is not forwarding data correctly"
+#     print_warning "  - XDR Proxy is not forwarding requests correctly"
+#     print_warning "  - Network connectivity issues"
+#     echo ""
+#     echo "INTEGRATION_TEST_FAILED"
+#     exit 1
+# fi
 
 # Check for actual record data (table format with PK column)
 if echo "$RESULT" | grep -qE "^\+.*\+|^\|.*PK.*\|" || echo "$RESULT" | grep -q "\"${TEST_KEY}\""; then
@@ -469,19 +471,19 @@ done
 echo ""
 
 # Check XDR Proxy metrics
-print_info "XDR Proxy Metrics:"
+print_info "XDR Proxy Metrics:, skipping, as this is not required for ElasticSearch Outbound"
 PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
-if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
-    PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=20 2>/dev/null | \
-      grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
-    if [ -n "$PROXY_METRICS" ] && [ "$PROXY_METRICS" != "No metrics found" ]; then
-        echo "$PROXY_METRICS"
-    else
-        echo "  No requests yet"
-    fi
-else
-    print_warning "XDR Proxy pod not found"
-fi
+# if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
+#     PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=20 2>/dev/null | \
+#       grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
+#     if [ -n "$PROXY_METRICS" ] && [ "$PROXY_METRICS" != "No metrics found" ]; then
+#         echo "$PROXY_METRICS"
+#     else
+#         echo "  No requests yet"
+#     fi
+# else
+#     print_warning "XDR Proxy pod not found"
+# fi
 echo ""
 
 # Step 10: Final Status Check
