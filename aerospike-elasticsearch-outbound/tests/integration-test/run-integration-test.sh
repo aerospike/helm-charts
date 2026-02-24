@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Integration Test Runner Script
-# Sets up and tests: Source DB -> ESP Outbound -> XDR Proxy -> Destination DB
+# Sets up and tests: Source DB -> ElasticSearch Outbound -> XDR Proxy -> Destination DB
 # This script:
-# 1. Deploys all components (destination DB, XDR Proxy, ESP Outbound, source DB)
+# 1. Deploys all components (destination DB, XDR Proxy, ElasticSearch Outbound, source DB)
 # 2. Installs Aerospike tools
 # 3. Executes test data flow
 # 4. Displays metrics and status
@@ -11,7 +11,7 @@
 set -e
 
 NAMESPACE="aerospike-test"
-ESP_RELEASE="test-elastic-outbound"
+ES_RELEASE="test-elastic-outbound"
 PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-elastic-src"
 DST_CLUSTER="aerocluster-elastic-dst"
@@ -81,33 +81,33 @@ fi
 print_info "✅ Using existing configuration files from $SCRIPT_DIR"
 echo ""
 
-# Check if TLS secrets are needed for ESP Outbound
-ESP_VALUES_FILE="$SCRIPT_DIR/elastic-outbound-integration-values.yaml"
-if [ -f "$ESP_VALUES_FILE" ]; then
-    # Check if values file references tls-certs-esp secret (not commented out)
-    if grep -q "connectorSecrets:" "$ESP_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$ESP_VALUES_FILE"; then
-        if grep -q "tls-certs-esp" "$ESP_VALUES_FILE"; then
-            print_info "Checking for TLS secret 'tls-certs-esp'..."
-            if ! kubectl get secret tls-certs-esp -n "${NAMESPACE}" &>/dev/null; then
-                print_warning "TLS secret 'tls-certs-esp' not found in namespace ${NAMESPACE}"
+# Check if TLS secrets are needed for ElasticSearch Outbound
+ES_VALUES_FILE="$SCRIPT_DIR/elastic-outbound-integration-values.yaml"
+if [ -f "$ES_VALUES_FILE" ]; then
+    # Check if values file references tls-certs-elastic secret (not commented out)
+    if grep -q "connectorSecrets:" "$ES_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$ES_VALUES_FILE"; then
+        if grep -q "tls-certs-elastic" "$ES_VALUES_FILE"; then
+            print_info "Checking for TLS secret 'tls-certs-elastic'..."
+            if ! kubectl get secret tls-certs-elastic  -n "${NAMESPACE}" &>/dev/null; then
+                print_warning "TLS secret 'tls-certs-elastic' not found in namespace ${NAMESPACE}"
                 
                 # Try to create from examples/tls/tls-certs directory (relative to chart root)
                 CHART_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
                 TLS_CERTS_DIR="${CHART_ROOT}/examples/tls/tls-certs"
                 if [ -d "${TLS_CERTS_DIR}" ]; then
                     print_info "Creating TLS secret from ${TLS_CERTS_DIR}..."
-                    if kubectl create secret generic tls-certs-esp --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
+                    if kubectl create secret generic tls-certs-elastic  --from-file="${TLS_CERTS_DIR}" -n "${NAMESPACE}" 2>/dev/null; then
                         print_info "✅ TLS secret created successfully"
                     else
                         print_warning "Failed to create TLS secret. Continuing anyway (may fail if TLS is required)..."
                     fi
                 else
-                    print_warning "TLS secret 'tls-certs-esp' is required but ${TLS_CERTS_DIR} not found."
+                    print_warning "TLS secret 'tls-certs-elastic' is required but ${TLS_CERTS_DIR} not found."
                     print_warning "Please create it manually if TLS is configured:"
-                    print_info "  kubectl create secret generic tls-certs-esp --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
+                    print_info "  kubectl create secret generic tls-certs-elastic  --from-file=<path-to-tls-certs> -n ${NAMESPACE}"
                 fi
             else
-                print_info "✅ TLS secret 'tls-certs-esp' already exists"
+                print_info "✅ TLS secret 'tls-certs-elastic' already exists"
             fi
             echo ""
         fi
@@ -116,7 +116,7 @@ fi
 
 # Check for existing deployments and clean up if needed
 print_info "Checking for existing deployments..."
-EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${ESP_RELEASE}|${PROXY_RELEASE})" || true)
+EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${ES_RELEASE}|${PROXY_RELEASE})" || true)
 EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n "${NAMESPACE}" -o name 2>/dev/null | grep -E "(${SRC_CLUSTER}|${DST_CLUSTER})" || true)
 
 if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
@@ -124,9 +124,9 @@ if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
     echo ""
     
     # Uninstall Helm releases
-    if helm list -n "${NAMESPACE}" --short | grep -q "^${ESP_RELEASE}$"; then
-        print_info "Uninstalling existing ${ESP_RELEASE}..."
-        helm uninstall "${ESP_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
+    if helm list -n "${NAMESPACE}" --short | grep -q "^${ES_RELEASE}$"; then
+        print_info "Uninstalling existing ${ES_RELEASE}..."
+        helm uninstall "${ES_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
     
     if helm list -n "${NAMESPACE}" --short | grep -q "^${PROXY_RELEASE}$"; then
@@ -182,37 +182,37 @@ helm install "${PROXY_RELEASE}" "$WORKSPACE/aerospike-xdr-proxy" \
 print_info "✅ XDR Proxy deployed"
 echo ""
 
-# Step 3: Deploy ESP Outbound
-print_info "Step 3: Deploying ESP Outbound connector..."
-helm install "${ESP_RELEASE}" "$SCRIPT_DIR/../.." \
+# Step 3: Deploy ElasticSearch Outbound
+print_info "Step 3: Deploying ElasticSearch Outbound connector..."
+helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." \
   -n "${NAMESPACE}" -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" --wait --timeout=2m
-print_info "✅ ESP Outbound deployed"
+print_info "✅ ElasticSearch Outbound deployed"
 echo ""
 
-# Step 4: Get ESP Outbound pod DNS names and create source cluster YAML
-print_info "Step 4: Getting ESP Outbound pod DNS names..."
-ESP_PODS=$(kubectl get pods -n "${NAMESPACE}" \
+# Step 4: Get ElasticSearch Outbound pod DNS names and create source cluster YAML
+print_info "Step 4: Getting ElasticSearch Outbound pod DNS names..."
+ES_PODS=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
-if [ -z "$ESP_PODS" ]; then
-    print_error "No ESP Outbound pods found. Please check deployment."
+if [ -z "$ES_PODS" ]; then
+    print_error "No ElasticSearch Outbound pods found. Please check deployment."
     echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
 
-ESP_POD_DNS=""
+ES_POD_DNS=""
 while IFS= read -r pod; do
     if [ -n "$pod" ]; then
-        ESP_POD_DNS="${ESP_POD_DNS}            - ${pod}.${ESP_RELEASE}-aerospike-elastic-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
+        ES_POD_DNS="${ES_POD_DNS}            - ${pod}.${ES_RELEASE}-aerospike-elastic-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
     fi
-done <<< "$ESP_PODS"
+done <<< "$ES_PODS"
 
-print_info "ESP Outbound pods found:"
-echo -e "$ESP_POD_DNS"
+print_info "ElasticSearch Outbound pods found:"
+echo -e "$ES_POD_DNS"
 echo ""
 
-# Generate source cluster YAML with ESP pod DNS names
+# Generate source cluster YAML with ElasticSearch pod DNS names
 print_info "Step 5: Creating source Aerospike cluster configuration..."
 SRC_CLUSTER_FILE="$SCRIPT_DIR/aerocluster-src-generated.yaml"
 cat > "$SRC_CLUSTER_FILE" <<EOF
@@ -255,12 +255,12 @@ spec:
           data-size: 3000000000
     xdr:
       dcs:
-        - name: esp
+        - name: elastic
           connector: true
           namespaces:
             - name: test
           node-address-ports:
-$(echo -e "$ESP_POD_DNS")
+$(echo -e "$ES_POD_DNS")
 EOF
 
 print_info "✅ Source cluster configuration created: $SRC_CLUSTER_FILE"
@@ -394,7 +394,7 @@ else
 fi
 
 # Wait for data to flow through pipeline
-# ESP Outbound -> XDR Proxy -> Destination DB pipeline needs more time
+# ElasticSearch Outbound -> XDR Proxy -> Destination DB pipeline needs more time
 print_info "Waiting for data replication (20 seconds)..."
 sleep 10
 
@@ -410,7 +410,7 @@ if echo "$RESULT" | grep -q "AEROSPIKE_ERR_RECORD_NOT_FOUND"; then
     echo ""
     print_warning "This may indicate:"
     print_warning "  - XDR replication is still in progress (try waiting longer)"
-    print_warning "  - ESP Outbound connector is not forwarding data correctly"
+    print_warning "  - ElasticSearch Outbound connector is not forwarding data correctly"
     print_warning "  - XDR Proxy is not forwarding requests correctly"
     print_warning "  - Network connectivity issues"
     echo ""
@@ -438,16 +438,16 @@ echo ""
 print_info "Step 9: Checking component metrics..."
 echo ""
 
-# Check ESP Outbound metrics across all pods
-print_info "ESP Outbound Pod Metrics:"
-ESP_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
+# Check ElasticSearch Outbound metrics across all pods
+print_info "ElasticSearch Outbound Pod Metrics:"
+ES_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
   --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
   --no-headers | wc -l | tr -d ' ')
 
-for i in $(seq 0 $((ESP_POD_COUNT - 1))); do
-    POD_NAME="${ESP_RELEASE}-aerospike-elastic-outbound-${i}"
+for i in $(seq 0 $((ES_POD_COUNT - 1))); do
+    POD_NAME="${ES_RELEASE}-aerospike-elastic-outbound-${i}"
     if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
-        echo "ESP Outbound Pod $i (${POD_NAME}):"
+        echo "ElasticSearch Outbound Pod $i (${POD_NAME}):"
         METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \
           grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
         if [ -n "$METRICS" ] && [ "$METRICS" != "No metrics found" ]; then
@@ -493,7 +493,7 @@ print_info "📁 Files used:"
 print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
 print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SCRIPT_DIR/elastic-outbound-integration-values.yaml (ElasticSearch config)"
-print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ESP pod DNS)"
+print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ElasticSearch pod DNS)"
 echo ""
 echo "INTEGRATION_TEST_PASSED"
 
