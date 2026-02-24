@@ -31,7 +31,7 @@ else
 fi
 
 echo "Installing Kind"
-CONTEXT="kind-esp-test-cluster"  # Explicit context for parallel execution safety
+CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
 kind create cluster --config "$WORKSPACE/aerospike-esp-outbound/kind/config/kind-cluster.yaml"
 # kind create cluster automatically sets the context, but we'll use wrapper functions for safety
 

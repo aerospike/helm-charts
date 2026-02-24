@@ -15,7 +15,7 @@ ESP_RELEASE="test-esp-outbound"
 PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-esp-src"
 DST_CLUSTER="aerocluster-esp-dst"
-CONTEXT="kind-esp-test-cluster"  # Explicit context for parallel execution safety
+CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'

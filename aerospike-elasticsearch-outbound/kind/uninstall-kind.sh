@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 WORKSPACE="$(git rev-parse --show-toplevel)"
-CONTEXT="kind-esp-test-cluster"  # Explicit context for parallel execution safety
+CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
 
 echo "Cleaning up ElasticSearch Outbound integration test environment..."
 
