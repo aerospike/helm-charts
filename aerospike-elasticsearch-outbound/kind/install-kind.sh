@@ -17,22 +17,22 @@ FEATURES_CONF=""
 if [ -f "$LOCAL_FEATURES_CONF" ]; then
   echo "Found local features.conf at: $LOCAL_FEATURES_CONF"
   FEATURES_CONF="$LOCAL_FEATURES_CONF"
-elif [ -f "$WORKSPACE/aerospike-esp-outbound/kind/config/features.conf" ]; then
-  echo "Using features.conf from workspace: $WORKSPACE/aerospike-esp-outbound/kind/config/features.conf"
-  FEATURES_CONF="$WORKSPACE/aerospike-esp-outbound/kind/config/features.conf"
+elif [ -f "$WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf" ]; then
+  echo "Using features.conf from workspace: $WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf"
+  FEATURES_CONF="$WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf"
 else
   echo "features.conf Not found"
   echo "Please create features.conf file with your Aerospike license"
   echo "You can copy it from another chart or create it manually"
   echo "Expected locations:"
   echo "  - $LOCAL_FEATURES_CONF (Jenkins local)"
-  echo "  - $WORKSPACE/aerospike-esp-outbound/kind/config/features.conf (workspace)"
+  echo "  - $WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf (workspace)"
   exit 1
 fi
 
 echo "Installing Kind"
 CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
-kind create cluster --config "$WORKSPACE/aerospike-esp-outbound/kind/config/kind-cluster.yaml"
+kind create cluster --config "$WORKSPACE/aerospike-elastic-outbound/kind/config/kind-cluster.yaml"
 # kind create cluster automatically sets the context, but we'll use wrapper functions for safety
 
 # Helper functions that automatically use the correct context
@@ -88,7 +88,7 @@ done
 echo "Grant permissions to the target namespace"
 kubectl create namespace aerospike-test || true
 kubectl --namespace aerospike-test create serviceaccount aerospike-operator-controller-manager || true
-kubectl create clusterrolebinding aerospike-cluster-esp-test \
+kubectl create clusterrolebinding aerospike-cluster-elastic-test \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike-test:aerospike-operator-controller-manager || true
 
 echo "Set Secrets for Aerospike Cluster"
