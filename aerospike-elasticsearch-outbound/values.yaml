@@ -4,7 +4,7 @@
 replicaCount: 1
 
 image:
-  repository: aerospike/aerospike-elastic-outbound
+  repository: aerospike/aerospike-elasticsearch-outbound
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
