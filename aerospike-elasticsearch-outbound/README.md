@@ -1,6 +1,6 @@
-# Aerospike ESP Outbound Connector
+# Aerospike ElasticSearch Outbound Connector
 
-This Helm chart allows you to configure and run our official [Aerospike ESP Outbound Connector](https://hub.docker.com/repository/docker/aerospike/aerospike-elastic-outbound) 
+This Helm chart allows you to configure and run our official [Aerospike ElasticSearch Outbound Connector](https://hub.docker.com/repository/docker/aerospike/aerospike-elastic-outbound) 
 docker image on a Kubernetes cluster.
 
 This helm chart sets up a `StatefulSet` for each connector deployment. We use a `StatefulSet` instead of a `Deployment`, to have stable DNS names for the  
@@ -15,7 +15,7 @@ deployed connector pods.
   - Cloud options: GKE, EKS, AKS, or any Kubernetes cluster
 - **Helm**: v3.x installed ([Install Helm](https://helm.sh/docs/intro/install/))
 - **kubectl**: Configured to connect to your cluster
-- **ESP Endpoint**: An ESP endpoint reachable from the pods in the Kubernetes cluster
+- **ESP Endpoint**: An ElasticSearch endpoint reachable from the pods in the Kubernetes cluster
 - **Aerospike Cluster**: An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
   Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
@@ -85,7 +85,7 @@ Add the `aerospike` helm repository if not already done
 helm repo add aerospike https://aerospike.github.io/helm-charts
 ```
 
-Install the Aerospike ESP Outbound connector helm chart
+Install the Aerospike ElasticSearch Outbound connector helm chart
 
 ```shell
 helm install aerospike-elastic-outbound aerospike/aerospike-elastic-outbound
@@ -97,8 +97,8 @@ helm install aerospike-elastic-outbound aerospike/aerospike-elastic-outbound
 
 | Parameter          | Description                                                                                                                                                                          | Default                        |
 |--------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
-| `replicaCount`     | Configures the number Aerospike ESP connector pods to run.                                                                                                                           | '1'                            |
-| `image`            | Configures Aerospike ESP connector image repository, tag and pull policy.                                                                                                            | see [values.yaml](values.yaml) |
+| `replicaCount`     | Configures the number Aerospike ElasticSearch connector pods to run.                                                                                                                           | '1'                            |
+| `image`            | Configures Aerospike ElasticSearch connector image repository, tag and pull policy.                                                                                                            | see [values.yaml](values.yaml) |
 | `connectorConfig`  | Connector configuration deployed to `/etc/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.yml`.                                                                                        | see [values.yaml](values.yaml) |
 | `connectorSecrets` | List of secrets mounted to `/etc/aerospike-elasticsearch-outbound/secrets` for each connector pod.                                                                                             | `[]`                           |
 | `autoscaling`      | Enable the horizontal pod auto-scaler.                                                                                                                                               | see [values.yaml](values.yaml) |
@@ -134,41 +134,33 @@ connectorConfig:
     worker-threads: 100
     max-concurrent-requests: 100000
 
-  routing:
-    mode: static-multi-destination
-    destinations:
-      - dc1
-
   record-ordering:
     enable: false
     lut-cache-ttl-seconds: 30
 
-  destinations:
-    dc1:
-      urls:
-        - https://connector.aerospike.com:8443
-      tls:
-        trust-store:
-          store-file: ca.aerospike.com.truststore.jks
-          store-password-file: storepass
-      health-check:
-        call-timeout: 5100
-      connect-timeout: 5000
-      connection-ttl: 300000
-      max-connections-per-endpoint: 20
-      call-timeout: 5100
-      protocol: HTTP_2
-      http2-max-concurrent-streams: 100
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
 
   logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
     enable-console-logging: true
 ```
 
 Here `replicaCount` is the count of connectors pods that are deployed. 
 The connector configuration is provided as yaml under the key `connectorConfig`.
-See [Aerospike ESP Outbound configuration](https://docs.aerospike.com/connect/esp/from-asdb/configuring) for details.
+See [Aerospike ElasticSearch Outbound configuration](https://docs.aerospike.com/connect/) for details.
 
-Update the `destinations.dc1.urls` configuration to point to your ESP endpoint.
+Update the `destinations.dc1.urls` configuration to point to your ElasticSearch endpoint.
 
 We recommend naming the file with the name of the connector cluster. For example if you want to name your connector cluster as
 `as-elastic-outbound`, create a file `as-elastic-outbound-values.yaml`.
@@ -404,7 +396,7 @@ For production deployment:
 
 ## Additional Resources
 
-- [Aerospike ESP Connector Documentation](https://docs.aerospike.com/connect/esp/from-asdb/configuring)
+- [Aerospike ElasticSearch Connector Documentation](https://docs.aerospike.com/connect/esp/from-asdb/configuring)
 - [Helm Documentation](https://helm.sh/docs/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Integration Test Guide](tests/integration-test/INTEGRATION-TEST.md) - For end-to-end testing with Aerospike clusters

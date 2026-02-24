@@ -44,6 +44,7 @@ connectorConfig:
 
   # The logging properties.
   logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
     enable-console-logging: true
 
 # List of secrets containing TLS certificates (required for HTTPS connections)

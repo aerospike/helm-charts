@@ -26,33 +26,24 @@ connectorConfig:
     worker-threads: 100
     max-concurrent-requests: 100000
 
-  routing:
-    mode: static-multi-destination
-    destinations:
-      - dc1
-
   record-ordering:
     enable: false
     lut-cache-ttl-seconds: 30
 
-  destinations:
-    dc1:
-      urls:
-        - https://connector.aerospike.com:8443
-      tls:
-        trust-store:
-          store-file: secrets/tls-certs/svc.cluster.local.truststore.jks
-          store-password-file: secrets/tls-certs/storepass
-      health-check:
-        call-timeout: 5100
-      connect-timeout: 5000
-      connection-ttl: 300000
-      max-connections-per-endpoint: 20
-      call-timeout: 5100
-      protocol: HTTP_2
-      http2-max-concurrent-streams: 100
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
 
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
   logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
     enable-console-logging: true
 
 # List of secrets mounted to /etc/aerospike-elasticsearch-outbound/secrets for each connector pod.

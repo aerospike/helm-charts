@@ -29,6 +29,7 @@ connectorConfig:
             port: 9200
 
   logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
     enable-console-logging: true
 
 # Only include TLS secrets if using HTTPS
