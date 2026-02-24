@@ -297,7 +297,7 @@ print_info "Step 7: Installing Aerospike tools in DB pods..."
 echo ""
 
 # Detect architecture
-ARCH=$(kubectl exec -n "${NAMESPACE}" "${DST_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
+ARCH=$(kubectl exec -n "${NAMESPACE}" "${SRC_CLUSTER}-0-0" -- uname -m 2>/dev/null || echo "aarch64")
 if [[ "$ARCH" == *"x86"* ]] || [[ "$ARCH" == *"amd64"* ]]; then
     # Use x86_64.tgz (not amd64.tgz) as per Aerospike download page
     TOOLS_PKG="aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_x86_64.tgz"
