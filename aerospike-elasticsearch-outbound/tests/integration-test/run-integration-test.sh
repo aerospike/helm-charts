@@ -479,7 +479,7 @@ echo ""
 print_info "Step 10: Final status check..."
 echo ""
 kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
-  | grep -E "(NAME|aerocluster|esp-outbound|xdr-proxy)" || true
+  | grep -E "(NAME|aerocluster|outbound|xdr-proxy)" || true
 echo ""
 
 print_info "✅ Integration test complete!"

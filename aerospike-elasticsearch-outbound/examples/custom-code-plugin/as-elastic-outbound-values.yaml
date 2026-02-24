@@ -51,9 +51,9 @@ connectorSecrets:
   - tls-certs
 
 # List of initContainers to be added for each connector pod.
-# Can be used to copy custom code plugins jars to /opt/aerospike-esp-outbound-init
+# Can be used to copy custom code plugins jars to /opt/aerospike-elastic-outbound-init
 initContainers:
-  - name: aerospike-esp-outbound-init
+  - name: aerospike-elastic-outbound-init
     image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
     imagePullPolicy: IfNotPresent
     command: ["/bin/sh", "-c"]
@@ -61,7 +61,7 @@ initContainers:
     args:
       - |
         set -e
-        cp -r /etc/aerospike-connector-custom-transformers/aerospike-esp-outbound-custom-transformers.jar /opt/aerospike-esp-outbound-init
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-elastic-outbound-custom-transformers.jar /opt/aerospike-elastic-outbound-init
     volumeMounts:
-      - name: aerospike-esp-outbound-init
-        mountPath: /opt/aerospike-esp-outbound-init
+      - name: aerospike-elastic-outbound-init
+        mountPath: /opt/aerospike-elastic-outbound-init
