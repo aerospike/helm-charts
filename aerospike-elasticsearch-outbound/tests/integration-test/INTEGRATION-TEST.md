@@ -112,7 +112,7 @@ Deploy ESP Outbound pointing to XDR Proxy:
 # Deploy ESP Outbound with configuration pointing to XDR Proxy
 helm install test-esp-outbound . \
   --namespace aerospike-test \
-  --values tests/integration-test/esp-outbound-integration-values.yaml \
+  --values tests/integration-test/elastic-outbound-integration-values.yaml \
   --wait --timeout 2m
 
 # Verify ESP pods are running

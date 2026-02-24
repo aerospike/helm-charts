@@ -72,8 +72,8 @@ if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
     exit 1
 fi
 
-if [ ! -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" ]; then
-    print_error "esp-outbound-integration-values.yaml not found in $SCRIPT_DIR"
+if [ ! -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" ]; then
+    print_error "elastic-outbound-integration-values.yaml not found in $SCRIPT_DIR"
     echo "INTEGRATION_TEST_FAILED"
     exit 1
 fi
@@ -82,7 +82,7 @@ print_info "✅ Using existing configuration files from $SCRIPT_DIR"
 echo ""
 
 # Check if TLS secrets are needed for ESP Outbound
-ESP_VALUES_FILE="$SCRIPT_DIR/esp-outbound-integration-values.yaml"
+ESP_VALUES_FILE="$SCRIPT_DIR/elastic-outbound-integration-values.yaml"
 if [ -f "$ESP_VALUES_FILE" ]; then
     # Check if values file references tls-certs-esp secret (not commented out)
     if grep -q "connectorSecrets:" "$ESP_VALUES_FILE" && ! grep -q "^#.*connectorSecrets:" "$ESP_VALUES_FILE"; then
@@ -185,7 +185,7 @@ echo ""
 # Step 3: Deploy ESP Outbound
 print_info "Step 3: Deploying ESP Outbound connector..."
 helm install "${ESP_RELEASE}" "$SCRIPT_DIR/../.." \
-  -n "${NAMESPACE}" -f "$SCRIPT_DIR/esp-outbound-integration-values.yaml" --wait --timeout=2m
+  -n "${NAMESPACE}" -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" --wait --timeout=2m
 print_info "✅ ESP Outbound deployed"
 echo ""
 
@@ -492,7 +492,7 @@ echo ""
 print_info "📁 Files used:"
 print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
 print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
-print_info "   - $SCRIPT_DIR/esp-outbound-integration-values.yaml (ESP config)"
+print_info "   - $SCRIPT_DIR/elastic-outbound-integration-values.yaml (ElasticSearch config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ESP pod DNS)"
 echo ""
 echo "INTEGRATION_TEST_PASSED"
