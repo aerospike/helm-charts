@@ -1,7 +1,7 @@
 apiVersion: asdb.aerospike.com/v1
 kind: AerospikeCluster
 metadata:
-  name: aerocluster-esp-dst
+  name: aerocluster-elastic-dst
   namespace: aerospike-test
 spec:
   size: 1

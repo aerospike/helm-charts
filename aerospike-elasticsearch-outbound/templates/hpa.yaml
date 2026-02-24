@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "aerospike-esp-outbound.fullname" . }}
+  name: {{ include "aerospike-elastic-outbound.fullname" . }}
   labels:
-    {{- include "aerospike-esp-outbound.labels" . | nindent 4 }}
+    {{- include "aerospike-elastic-outbound.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet
-    name: {{ include "aerospike-esp-outbound.fullname" . }}
+    name: {{ include "aerospike-elastic-outbound.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

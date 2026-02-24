@@ -48,7 +48,7 @@ The example configuration includes:
 - Trust store and key store configuration
 - Health checks and connection pooling
 - Console logging enabled
-- TLS secrets mounted to `/etc/aerospike-elastic-outbound/secrets/tls-certs`
+- TLS secrets mounted to `/etc/aerospike-elasticsearch-outbound/secrets/tls-certs`
 
 ## Update ElasticSearch endpoint
 

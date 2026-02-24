@@ -11,10 +11,10 @@
 set -e
 
 NAMESPACE="aerospike-test"
-ESP_RELEASE="test-esp-outbound"
+ESP_RELEASE="test-elastic-outbound"
 PROXY_RELEASE="xdr-proxy"
-SRC_CLUSTER="aerocluster-esp-src"
-DST_CLUSTER="aerocluster-esp-dst"
+SRC_CLUSTER="aerocluster-elastic-src"
+DST_CLUSTER="aerocluster-elastic-dst"
 CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
@@ -192,7 +192,7 @@ echo ""
 # Step 4: Get ESP Outbound pod DNS names and create source cluster YAML
 print_info "Step 4: Getting ESP Outbound pod DNS names..."
 ESP_PODS=$(kubectl get pods -n "${NAMESPACE}" \
-  --selector=app.kubernetes.io/name=aerospike-esp-outbound \
+  --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$ESP_PODS" ]; then
@@ -204,7 +204,7 @@ fi
 ESP_POD_DNS=""
 while IFS= read -r pod; do
     if [ -n "$pod" ]; then
-        ESP_POD_DNS="${ESP_POD_DNS}            - ${pod}.${ESP_RELEASE}-aerospike-esp-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
+        ESP_POD_DNS="${ESP_POD_DNS}            - ${pod}.${ESP_RELEASE}-aerospike-elastic-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
     fi
 done <<< "$ESP_PODS"
 
@@ -441,11 +441,11 @@ echo ""
 # Check ESP Outbound metrics across all pods
 print_info "ESP Outbound Pod Metrics:"
 ESP_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
-  --selector=app.kubernetes.io/name=aerospike-esp-outbound \
+  --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
   --no-headers | wc -l | tr -d ' ')
 
 for i in $(seq 0 $((ESP_POD_COUNT - 1))); do
-    POD_NAME="${ESP_RELEASE}-aerospike-esp-outbound-${i}"
+    POD_NAME="${ESP_RELEASE}-aerospike-elastic-outbound-${i}"
     if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
         echo "ESP Outbound Pod $i (${POD_NAME}):"
         METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \

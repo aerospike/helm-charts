@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "aerospike-esp-outbound.fullname" . }}
+  name: {{ include "aerospike-elastic-outbound.fullname" . }}
   labels:
-    {{- include "aerospike-esp-outbound.labels" . | nindent 4 }}
+    {{- include "aerospike-elastic-outbound.labels" . | nindent 4 }}
 data:
-  aerospike-esp-outbound.yml: |-
-    {{- include "aerospike-esp-outbound.connectorConfig" . | nindent 4 }}
+  aerospike-elastic-outbound.yml: |-
+    {{- include "aerospike-elastic-outbound.connectorConfig" . | nindent 4 }}

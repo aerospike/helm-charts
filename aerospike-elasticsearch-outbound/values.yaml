@@ -1,10 +1,10 @@
-# Default values for aerospike-esp-outbound.
+# Default values for aerospike-elastic-outbound.
 # This is a YAML-formatted file.
 
 replicaCount: 1
 
 image:
-  repository: aerospike/aerospike-esp-outbound
+  repository: aerospike/aerospike-elastic-outbound
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -14,7 +14,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 # Default Connector configuration.
-# Visit: https://docs.aerospike.com/connect/esp/from-asdb/configuring
+# Visit: https://docs.aerospike.com/connect
 connectorConfig:
   service:
     address: 0.0.0.0
@@ -55,14 +55,14 @@ connectorConfig:
   logging:
     enable-console-logging: true
 
-# List of secrets mounted to /etc/aerospike-esp-outbound/secrets for each connector pod.
+# List of secrets mounted to /etc/aerospike-elasticsearch-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials
 connectorSecrets: []
 
 # List of initContainers to be added for each connector pod.
-# Can be used to copy custom code plugins jars to /opt/aerospike-esp-outbound-init
+# Can be used to copy custom code plugins jars to /opt/aerospike-elasticsearch-outbound-init
 initContainers: []
-  # - name: aerospike-esp-outbound-init
+  # - name: aerospike-elastic-outbound-init
   #   image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
   #   imagePullPolicy: IfNotPresent
   #   command: ["/bin/sh", "-c"]
@@ -70,10 +70,10 @@ initContainers: []
   #   args:
   #     - |
   #       set -e
-  #       cp -r /etc/aerospike-connector-custom-transformers/aerospike-esp-outbound-custom-transformers.jar /opt/aerospike-esp-outbound-init
+  #       cp -r /etc/aerospike-connector-custom-transformers/aerospike-elasticsearch-outbound-custom-transformers.jar /opt/aerospike-elasticsearch-outbound-init
   #   volumeMounts:
-  #     - name: aerospike-esp-outbound-init
-  #       mountPath: /opt/aerospike-esp-outbound-init
+  #     - name: aerospike-elastic-outbound-init
+  #       mountPath: /opt/aerospike-elasticsearch-outbound-init
 
 serviceAccount:
   # Specifies whether a service account should be created

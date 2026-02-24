@@ -52,7 +52,7 @@ If you have existing deployments, clean them up first:
 
 ```bash
 # Uninstall Helm releases
-helm uninstall test-esp-outbound xdr-proxy -n aerospike-test 2>&1 | grep -v "not found" || true
+helm uninstall test-elastic-outbound xdr-proxy -n aerospike-test 2>&1 | grep -v "not found" || true
 
 # Delete Aerospike clusters
 kubectl delete aerospikecluster aerocluster-src aerocluster-dst -n aerospike-test 2>&1 | grep -v "not found" || true
@@ -110,16 +110,16 @@ Deploy ESP Outbound pointing to XDR Proxy:
 
 ```bash
 # Deploy ESP Outbound with configuration pointing to XDR Proxy
-helm install test-esp-outbound . \
+helm install test-elastic-outbound . \
   --namespace aerospike-test \
   --values tests/integration-test/elastic-outbound-integration-values.yaml \
   --wait --timeout 2m
 
 # Verify ESP pods are running
-kubectl get pods -n aerospike-test -l app.kubernetes.io/name=aerospike-esp-outbound
+kubectl get pods -n aerospike-test -l app.kubernetes.io/name=aerospike-elastic-outbound
 
 # Check ESP logs for any errors
-kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-esp-outbound --tail=10
+kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-elastic-outbound --tail=10
 ```
 
 ### Step 6: Deploy Source Aerospike Cluster
@@ -194,7 +194,7 @@ kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3003 -
 
 ```bash
 # ESP Outbound metrics
-kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-esp-outbound --tail=5 | grep -E "(requests-total|requests-success)"
+kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-elastic-outbound --tail=5 | grep -E "(requests-total|requests-success)"
 
 # XDR Proxy metrics
 kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-xdr-proxy --tail=5 | grep -E "(requests-total|requests-success)"
@@ -214,7 +214,7 @@ kubectl get pods -n aerospike-test -o wide
 
 2. Verify ESP pods are accessible:
    ```bash
-   kubectl exec -n aerospike-test $SRC_POD -- nc -zv test-esp-outbound-aerospike-esp-outbound-0.test-esp-outbound-aerospike-esp-outbound 8901
+   kubectl exec -n aerospike-test $SRC_POD -- nc -zv test-elastic-outbound-aerospike-elastic-outbound-0.test-elastic-outbound-aerospike-elastic-outbound 8901
    ```
 
 ### XDR Proxy not receiving data
@@ -222,7 +222,7 @@ kubectl get pods -n aerospike-test -o wide
 1. Check ESP Outbound logs for connection errors
 2. Verify XDR Proxy service is accessible:
    ```bash
-   kubectl exec -n aerospike-test test-esp-outbound-aerospike-esp-outbound-0 -- nc -zv xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local 8901
+   kubectl exec -n aerospike-test test-elastic-outbound-aerospike-elastic-outbound-0 -- nc -zv xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local 8901
    ```
 
 ### Data not reaching destination
@@ -246,5 +246,5 @@ kubectl delete -f tests/integration-test/aerocluster-dst.yaml
 helm uninstall xdr-proxy --namespace aerospike-test
 
 # ESP Outbound can remain or be uninstalled
-# helm uninstall test-esp-outbound --namespace aerospike-test
+# helm uninstall test-elastic-outbound --namespace aerospike-test
 ```

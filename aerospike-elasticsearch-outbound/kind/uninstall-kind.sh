@@ -23,11 +23,11 @@ if ! kubectl cluster-info &>/dev/null; then
 fi
 
 # Uninstall Helm releases
-helm uninstall test-esp-outbound --namespace aerospike-test 2>/dev/null || true
+helm uninstall test-elastic-outbound --namespace aerospike-test 2>/dev/null || true
 helm uninstall xdr-proxy --namespace aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
-kubectl delete aerospikecluster aerocluster-esp-src aerocluster-esp-dst -n aerospike-test 2>/dev/null || true
+kubectl delete aerospikecluster aerocluster-elastic-src aerocluster-elastic-dst -n aerospike-test 2>/dev/null || true
 
 # Wait for clusters to be deleted
 sleep 5
@@ -37,7 +37,7 @@ kubectl --namespace aerospike-test delete secret aerospike-secret 2>/dev/null ||
 kubectl --namespace aerospike-test delete secret tls-certs-esp 2>/dev/null || true
 
 # Delete RBAC resources
-kubectl delete clusterrolebinding aerospike-cluster-esp-test 2>/dev/null || true
+kubectl delete clusterrolebinding aerospike-cluster-elastic-test 2>/dev/null || true
 kubectl --namespace aerospike-test delete serviceaccount aerospike-operator-controller-manager 2>/dev/null || true
 
 # Delete namespace
