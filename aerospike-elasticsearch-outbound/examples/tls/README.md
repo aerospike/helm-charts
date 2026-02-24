@@ -29,7 +29,7 @@ kubectl create namespace aerospike
 
 2. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-elastic-outbound -f as-elastic-outbound-tls-values.yaml ../../aerospike-elastic-outbound
+helm install --namespace aerospike as-elastic-outbound -f as-elastic-outbound-tls-values.yaml ../../aerospike-elasticsearch-outbound
 ```
 
 3. Verify the deployment:

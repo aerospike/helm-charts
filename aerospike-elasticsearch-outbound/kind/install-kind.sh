@@ -17,22 +17,22 @@ FEATURES_CONF=""
 if [ -f "$LOCAL_FEATURES_CONF" ]; then
   echo "Found local features.conf at: $LOCAL_FEATURES_CONF"
   FEATURES_CONF="$LOCAL_FEATURES_CONF"
-elif [ -f "$WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf" ]; then
-  echo "Using features.conf from workspace: $WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf"
-  FEATURES_CONF="$WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf"
+elif [ -f "$WORKSPACE/aerospike-elasticsearch-outbound/kind/config/features.conf" ]; then
+  echo "Using features.conf from workspace: $WORKSPACE/aerospike-elasticsearch-outbound/kind/config/features.conf"
+  FEATURES_CONF="$WORKSPACE/aerospike-elasticsearch-outbound/kind/config/features.conf"
 else
   echo "features.conf Not found"
   echo "Please create features.conf file with your Aerospike license"
   echo "You can copy it from another chart or create it manually"
   echo "Expected locations:"
   echo "  - $LOCAL_FEATURES_CONF (Jenkins local)"
-  echo "  - $WORKSPACE/aerospike-elastic-outbound/kind/config/features.conf (workspace)"
+  echo "  - $WORKSPACE/aerospike-elasticsearch-outbound/kind/config/features.conf (workspace)"
   exit 1
 fi
 
 echo "Installing Kind"
 CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
-kind create cluster --config "$WORKSPACE/aerospike-elastic-outbound/kind/config/kind-cluster.yaml"
+kind create cluster --config "$WORKSPACE/aerospike-elasticsearch-outbound/kind/config/kind-cluster.yaml"
 # kind create cluster automatically sets the context, but we'll use wrapper functions for safety
 
 # Helper functions that automatically use the correct context
@@ -101,6 +101,6 @@ echo "✅ Kind cluster setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Run integration test: cd ../tests/integration-test && ./run-integration-test.sh"
-echo "2. Or deploy ElasticSearch Outbound manually: helm install test-elastic-outbound ../aerospike-elastic-outbound --namespace aerospike-test"
+echo "2. Or deploy ElasticSearch Outbound manually: helm install test-elastic-outbound ../aerospike-elasticsearch-outbound --namespace aerospike-test"
 echo ""
 echo "To clean up: ./uninstall-kind.sh"
