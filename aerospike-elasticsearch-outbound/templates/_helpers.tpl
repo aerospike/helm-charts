@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "aerospike-esp-outbound.name" -}}
+{{- define "aerospike-elastic-outbound.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "aerospike-esp-outbound.fullname" -}}
+{{- define "aerospike-elastic-outbound.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "aerospike-esp-outbound.chart" -}}
+{{- define "aerospike-elastic-outbound.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "aerospike-esp-outbound.labels" -}}
-helm.sh/chart: {{ include "aerospike-esp-outbound.chart" . }}
-{{ include "aerospike-esp-outbound.selectorLabels" . }}
+{{- define "aerospike-elastic-outbound.labels" -}}
+helm.sh/chart: {{ include "aerospike-elastic-outbound.chart" . }}
+{{ include "aerospike-elastic-outbound.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "aerospike-esp-outbound.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "aerospike-esp-outbound.name" . }}
+{{- define "aerospike-elastic-outbound.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "aerospike-elastic-outbound.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "aerospike-esp-outbound.serviceAccountName" -}}
+{{- define "aerospike-elastic-outbound.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "aerospike-esp-outbound.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "aerospike-elastic-outbound.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -64,7 +64,7 @@ Create the name of the service account to use
 {{/*
 Connector service/listening port, prefers TLS port if set.
 */}}
-{{- define "aerospike-esp-outbound.servicePort" -}}
+{{- define "aerospike-elastic-outbound.servicePort" -}}
 {{- if ((((.Values.connectorConfig).service).tls).port) }}
 {{- (((.Values.connectorConfig).service).tls).port }}
 {{- else }}
@@ -75,7 +75,7 @@ Connector service/listening port, prefers TLS port if set.
 {{/*
 Connector configuration with required and static values fixed.
 */}}
-{{- define "aerospike-esp-outbound.connectorConfig" -}}
+{{- define "aerospike-elastic-outbound.connectorConfig" -}}
 {{- $merged := dict "connectorConfig" (dict "service" (dict "cluster-name" .Release.Name)) }}
 {{- toYaml (merge $merged .Values).connectorConfig }}
 {{- end }}
