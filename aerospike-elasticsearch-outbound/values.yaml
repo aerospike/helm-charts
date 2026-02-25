@@ -15,33 +15,7 @@ fullnameOverride: ""
 
 # Default Connector configuration.
 # Visit: https://docs.aerospike.com/connect
-connectorConfig:
-  service:
-    address: 0.0.0.0
-    port: 8901
-    manage:
-      address: 0.0.0.0
-      port: 8902
-
-  record-ordering:
-    enable: false
-    lut-cache-ttl-seconds: 30
-
-  # Aerospike record routing to an Elasticsearch index.
-  routing:
-    mode: static
-    destination: aerospike
-
-  es-client:
-    cluster-config:
-      type: on-prem
-      nodes:
-        - host:
-            hostname: localhost
-            port: 9200
-  logging:
-    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
-    enable-console-logging: true
+connectorConfig: {}
 
 # List of secrets mounted to /etc/aerospike-elasticsearch-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials
