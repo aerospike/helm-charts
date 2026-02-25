@@ -1,0 +1,37 @@
+replicaCount: 3
+
+connectorConfig:
+  service:
+    # Clear-text (non-TLS) setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # For TLS configuration, see: https://docs.aerospike.com/connect/esp/from-asdb/configuring/service#configuring-tls
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+    io-threads: 100
+    worker-threads: 100
+    max-concurrent-requests: 100000
+
+  record-ordering:
+    enable: false
+    lut-cache-ttl-seconds: 30
+
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
+
+  # The logging properties
+  logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
+    enable-console-logging: true
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
