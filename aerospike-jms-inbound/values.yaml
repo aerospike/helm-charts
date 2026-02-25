@@ -15,30 +15,7 @@ fullnameOverride: ""
 
 # Default Connector configuration.
 # Visit: https://docs.aerospike.com/connect/jms/to-asdb/configuring
-connectorConfig:
-  # Optional HTTP Server configuration to expose Manage API and Prometheus metrics
-  service:
-    manage:
-      port: 8081
-
-  # JMS sources to consume messages from.
-  queues:
-    aerospike:
-      aerospike-operation:
-        type: write
-      parsing:
-        format: json
-# Uncomment and configure a mapping section if you are not implementing custom message-transformer.
-#      mapping:
-#        bins:
-#          type: multi-bins
-#          all-value-fields: true
-#        key-field:
-#          source: value-field
-#          field-name: key
-#        namespace:
-#          mode: static
-#          value: test
+connectorConfig: {}
 
   # The connection properties to the JMS message broker (RabbitMQ).
   jms:

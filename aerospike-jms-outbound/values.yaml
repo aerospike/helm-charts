@@ -15,29 +15,7 @@ fullnameOverride: ""
 
 # Default Connector configuration given below.
 # Visit: https://docs.aerospike.com/connect/jms/from-asdb/configuring/service
-connectorConfig:
-  service:
-    port: 8080
-    manage:
-      port: 8081
-
-  # JMS connection configuration for RabbitMQ
-  jms:
-    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
-    config: {}
-
-  # Format of the JMS destination message.
-  format:
-    mode: json
-
-  # Aerospike record routing to a JMS destination.
-  routing:
-    mode: set
-    type: queue
-
-  # The logging properties.
-  logging:
-    enable-console-logging: true
+connectorConfig: {}
 
 # List of secrets mounted to /etc/aerospike-jms-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials
