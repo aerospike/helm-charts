@@ -68,6 +68,7 @@ CONNECTORS=(
     "aerospike-kafka-outbound"
     "aerospike-pulsar-outbound"
     "aerospike-xdr-proxy"
+    "aerospike-elasticsearch-outbound"
 )
 
 # Results tracking (using indexed arrays for bash 3.2 compatibility)
