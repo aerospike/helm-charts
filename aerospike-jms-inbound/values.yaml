@@ -17,21 +17,6 @@ fullnameOverride: ""
 # Visit: https://docs.aerospike.com/connect/jms/to-asdb/configuring
 connectorConfig: {}
 
-  # The connection properties to the JMS message broker (RabbitMQ).
-  jms:
-    factory: com.rabbitmq.jms.admin.RMQConnectionFactory
-    config: {}
-
-  # The Aerospike cluster connection properties.
-  aerospike:
-    seeds:
-      - aerocluster-jms-inbound-dst.aerospike-test.svc.cluster.local:
-          port: 3050
-
-  # The logging properties.
-  logging:
-    enable-console-logging: true
-
 # List of secrets mounted to /etc/aerospike-jms-inbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials
 connectorSecrets: []
