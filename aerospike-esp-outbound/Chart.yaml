@@ -14,7 +14,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: "2.4.15"
+version: "2.4.16"
 
 # The default version of Aerospike ESP Outbound Connector
-appVersion: "2.4.15"
+appVersion: "2.4.16"
