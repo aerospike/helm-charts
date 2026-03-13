@@ -95,14 +95,15 @@ entries:
   aerospike-esp-outbound:
   - apiVersion: v2
     appVersion: 2.4.16
-    created: "2026-03-13T14:04:50.251277+05:30"
+    created: "2026-03-12T18:33:25.791796+05:30"
     description: A Helm chart for Aerospike Connect for ESP - Outbound
-    digest: 73dbc389cd361b0f0195275be6fe6c327043f654f6921b333379919bdea51117
+    digest: 473e01ed4ec26b2b86e3043bc48efd8db9479a6956e185207bf6f651851421c4
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
     - ESP
     - Connector
+    - Event Streaming
     - Outbound
     - Source
     maintainers:
@@ -185,15 +186,16 @@ entries:
   aerospike-jms-inbound:
   - apiVersion: v2
     appVersion: 3.0.17
-    created: "2026-03-13T14:04:50.25681+05:30"
+    created: "2026-03-12T18:33:25.795559+05:30"
     description: A Helm chart for Aerospike Connect for JMS - Inbound
-    digest: 39dbab7591e785ffe4abb4583a65d938f95cf52222a88dabd14808b70001fad7
+    digest: f9626620df24d4ce7b3f6ee3942f2a03cf320e12cf2ceacf9f8722afdc825fe4
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
     - JMS
     - Connector
     - Inbound
+    - Sink
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -262,15 +264,16 @@ entries:
   aerospike-jms-outbound:
   - apiVersion: v2
     appVersion: 4.2.15
-    created: "2026-03-13T14:04:50.261722+05:30"
+    created: "2026-03-12T18:33:25.798451+05:30"
     description: A Helm chart for Aerospike Connect for JMS - Outbound
-    digest: a300c5c0bbadd270fdb2a5e272ab5ede76fae7da6740afb2af58a04bfc2b777f
+    digest: 740703f2d6abac1329b7ed33dcacc8bad324f15920c9cb748678087b4b26d62a
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
     - JMS
     - Connector
     - Outbound
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -290,6 +293,7 @@ entries:
     - JMS
     - Connector
     - Outbound
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -309,6 +313,7 @@ entries:
     - JMS
     - Connector
     - Outbound
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -339,14 +344,15 @@ entries:
   aerospike-kafka-outbound:
   - apiVersion: v2
     appVersion: 5.3.15
-    created: "2026-03-13T14:04:50.267191+05:30"
+    created: "2026-03-12T18:33:25.801118+05:30"
     description: A Helm chart for Aerospike Connect for Kafka - Outbound
-    digest: 02fbeeb206cac202b60f5caf33ec124feb762d3c3067a4c682d5db8f504d06b9
+    digest: 63781961f7b8fe935f4180354ad7f140450b0ff37482526869be21db9fc49594
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
     - Kafka
     - Connector
+    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -366,6 +372,7 @@ entries:
     - Aerospike
     - Kafka
     - Connector
+    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -466,15 +473,16 @@ entries:
   aerospike-pulsar-outbound:
   - apiVersion: v2
     appVersion: 3.3.17
-    created: "2026-03-13T14:04:50.274866+05:30"
+    created: "2026-03-12T18:33:25.80552+05:30"
     description: A Helm chart for Aerospike Connect for Pulsar - Outbound
-    digest: 7fd7489d16b2af012197d8c8b5ad11bf198a86ba68ffbc145114a45115e27649
+    digest: 950bbbe954028dbc5b1e841fe0377a58699c696f547cf0a1f3b961f9f91009bb
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
     - Pulsar
     - Connector
     - Outbound
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -646,9 +654,9 @@ entries:
   aerospike-xdr-proxy:
   - apiVersion: v2
     appVersion: 3.2.16
-    created: "2026-03-13T14:04:50.283122+05:30"
+    created: "2026-03-12T18:33:25.811478+05:30"
     description: A Helm chart for Aerospike XDR Proxy Connector
-    digest: fc41562e16f8e8745a6621e8f5b5f5feaa005ed1db933f521db12054b73d90ba
+    digest: 28d339fc28942712b9f3dd820317a041db4db761f960c4e031269683a4fd66c4
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
@@ -701,4 +709,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-xdr-proxy-3.2.14.tgz
     version: 3.2.14
-generated: "2026-03-13T14:04:50.237128+05:30"
+generated: "2026-03-12T18:33:25.785739+05:30"
