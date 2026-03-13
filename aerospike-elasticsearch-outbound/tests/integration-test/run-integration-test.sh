@@ -178,7 +178,7 @@ echo ""
 # Step 3: Deploy ElasticSearch Outbound
 print_info "Step 3: Deploying ElasticSearch Outbound connector..."
 
-print_info helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." -n "${NAMESPACE}" -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" --wait --timeout=2m
+print_info "helm install ${ES_RELEASE} $SCRIPT_DIR/../.. -n ${NAMESPACE} -f $SCRIPT_DIR/elastic-outbound-integration-values.yaml --wait --timeout=2m"
 
 print_info "✅ ElasticSearch Outbound deployed ... sleeping for 300 seconds"
 
