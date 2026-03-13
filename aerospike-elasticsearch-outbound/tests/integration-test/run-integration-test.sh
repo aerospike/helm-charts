@@ -12,7 +12,6 @@ set -e
 
 NAMESPACE="aerospike-test"
 ES_RELEASE="test-es-outb"
-# PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-elasticsearch-src"
 DST_CLUSTER="elasticsearch-service-dst"
 CONTEXT="kind-elasticsearch-test-cluster"  # Explicit context for parallel execution safety
@@ -66,12 +65,6 @@ if [ ! -f "$SCRIPT_DIR/aerocluster-dst.yaml" ]; then
     exit 1
 fi
 
-# if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
-#     print_error "xdr-proxy-values.yaml not found in $SCRIPT_DIR"
-#     echo "INTEGRATION_TEST_FAILED"
-#     exit 1
-# fi
-
 if [ ! -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" ]; then
     print_error "elastic-outbound-integration-values.yaml not found in $SCRIPT_DIR"
     echo "INTEGRATION_TEST_FAILED"
@@ -116,7 +109,7 @@ fi
 
 # Check for existing deployments and clean up if needed
 print_info "Checking for existing deployments..."
-EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${ES_RELEASE}|${PROXY_RELEASE})" || true)
+EXISTING_HELM=$(helm list -n "${NAMESPACE}" --short 2>/dev/null | grep -E "(${ES_RELEASE})" || true)
 EXISTING_CLUSTERS=$(kubectl get aerospikecluster -n "${NAMESPACE}" -o name 2>/dev/null | grep -E "(${SRC_CLUSTER}|${DST_CLUSTER})" || true)
 
 if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
@@ -128,12 +121,7 @@ if [ -n "$EXISTING_HELM" ] || [ -n "$EXISTING_CLUSTERS" ]; then
         print_info "Uninstalling existing ${ES_RELEASE}..."
         helm uninstall "${ES_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
     fi
-    
-    if helm list -n "${NAMESPACE}" --short | grep -q "^${PROXY_RELEASE}$"; then
-        print_info "Uninstalling existing ${PROXY_RELEASE}..."
-        helm uninstall "${PROXY_RELEASE}" -n "${NAMESPACE}" 2>/dev/null || true
-    fi
-    
+        
     # Delete Aerospike clusters
     if kubectl get aerospikecluster "${SRC_CLUSTER}" -n "${NAMESPACE}" &>/dev/null; then
         print_info "Deleting existing ${SRC_CLUSTER}..."
@@ -419,27 +407,9 @@ for i in $(seq 0 $((ES_POD_COUNT - 1))); do
 done
 echo ""
 
-# Check XDR Proxy metrics
-# print_info "XDR Proxy Metrics:, skipping, as this is not required for ElasticSearch Outbound"
-# PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
-# if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
-#     PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=20 2>/dev/null | \
-#       grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
-#     if [ -n "$PROXY_METRICS" ] && [ "$PROXY_METRICS" != "No metrics found" ]; then
-#         echo "$PROXY_METRICS"
-#     else
-#         echo "  No requests yet"
-#     fi
-# else
-#     print_warning "XDR Proxy pod not found"
-# fi
-# echo ""
-
 # Step 10: Final Status Check
 print_info "Step 10: Final status check..."
 echo ""
-# kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
-#   | grep -E "(NAME|aerocluster|outbound|xdr-proxy)" || true
 kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
   | grep -E "(NAME|aerocluster|outbound)" || true
 echo ""
@@ -453,7 +423,6 @@ print_info "   - All pods should show STATUS=Running and READY=true"
 echo ""
 print_info "📁 Files used:"
 print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
-# print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SCRIPT_DIR/elastic-outbound-integration-values.yaml (ElasticSearch config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ElasticSearch pod DNS)"
 echo ""
