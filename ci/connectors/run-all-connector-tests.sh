@@ -62,12 +62,12 @@ fi
 
 # Connectors to test
 CONNECTORS=(
-    # "aerospike-esp-outbound"
+    "aerospike-esp-outbound"
     # "aerospike-jms-inbound"
     # "aerospike-jms-outbound"
     # "aerospike-kafka-outbound"
     # "aerospike-pulsar-outbound"
-    # "aerospike-xdr-proxy"
+    "aerospike-xdr-proxy"
     "aerospike-elasticsearch-outbound"
 )
 
