@@ -22,7 +22,7 @@ cp /path/to/your/features.conf kind/config/features.conf
 ### 2. Install Complete Environment
 
 The `install-kind.sh` script sets up:
-- Kind cluster (`elastic-test-cluster`)
+- Kind cluster (`elasticsearch-test-cluster`)
 - Operator Lifecycle Manager (OLM)
 - Aerospike Kubernetes Operator (AKO)
 - Namespace (`aerospike-test`) with proper permissions

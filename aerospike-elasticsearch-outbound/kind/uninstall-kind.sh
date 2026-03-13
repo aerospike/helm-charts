@@ -51,7 +51,7 @@ kubectl delete clusterserviceversion "$(kubectl get clusterserviceversion -o=jso
 kubectl delete crd aerospikeclusters.asdb.aerospike.com 2>/dev/null || true
 
 # Delete Kind cluster
-kind delete cluster --name elastic-test-cluster 2>/dev/null || true
+kind delete cluster --name elasticsearch-test-cluster 2>/dev/null || true
 
 # Clean up Docker network (only if no other Kind clusters are using it)
 if [ "$(kind get clusters 2>/dev/null | wc -l)" -eq 0 ]; then
