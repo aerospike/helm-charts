@@ -1,5 +1,5 @@
 apiVersion: v2
-name: aerospike-elastic-outbound
+name: aerospike-elasticsearch-outbound
 description: A Helm chart for Aerospike Connect for ElasticSearch - Outbound
 type: application
 icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
@@ -14,7 +14,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: "2.2.14"
+version: "2.2.15"
 
 # The default version of Aerospike ESP Outbound Connector
-appVersion: "2.2.14"
+appVersion: "2.2.15"
