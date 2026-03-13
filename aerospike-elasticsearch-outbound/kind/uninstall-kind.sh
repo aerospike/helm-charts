@@ -24,7 +24,7 @@ fi
 
 # Uninstall Helm releases
 helm uninstall test-es-outb --namespace aerospike-test 2>/dev/null || true
-helm uninstall xdr-proxy --namespace aerospike-test 2>/dev/null || true
+#helm uninstall xdr-proxy --namespace aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
 kubectl delete aerospikecluster aerocluster-elasticsearch-src aerocluster-elasticsearch-dst -n aerospike-test 2>/dev/null || true
