@@ -46,7 +46,7 @@ Or deploy components manually:
 
 ```bash
 # Deploy ElasticSearch Outbound
-helm install test-elastic-outbound ../aerospike-elasticsearch-outbound \
+helm install test-es-outb ../aerospike-elasticsearch-outbound \
   --namespace aerospike-test \
   --values ../tests/integration-test/elastic-outbound-integration-values.yaml
 

@@ -52,7 +52,7 @@ If you have existing deployments, clean them up first:
 
 ```bash
 # Uninstall Helm releases
-helm uninstall test-elastic-outbound xdr-proxy -n aerospike-test 2>&1 | grep -v "not found" || true
+helm uninstall test-es-outb xdr-proxy -n aerospike-test 2>&1 | grep -v "not found" || true
 
 # Delete Aerospike clusters
 kubectl delete aerospikecluster aerocluster-src aerocluster-dst -n aerospike-test 2>&1 | grep -v "not found" || true
@@ -110,7 +110,7 @@ Deploy ESP Outbound pointing to XDR Proxy:
 
 ```bash
 # Deploy ESP Outbound with configuration pointing to XDR Proxy
-helm install test-elastic-outbound . \
+helm install test-es-outb . \
   --namespace aerospike-test \
   --values tests/integration-test/elastic-outbound-integration-values.yaml \
   --wait --timeout 2m
@@ -246,5 +246,5 @@ kubectl delete -f tests/integration-test/aerocluster-dst.yaml
 helm uninstall xdr-proxy --namespace aerospike-test
 
 # ESP Outbound can remain or be uninstalled
-# helm uninstall test-elastic-outbound --namespace aerospike-test
+# helm uninstall test-es-outb --namespace aerospike-test
 ```

@@ -66,12 +66,12 @@ For more details on kind setup, see [kind/README.md](kind/README.md).
 kubectl create namespace aerospike-test
 
 # Deploy with default values
-helm install test-elastic-outbound . \
+helm install test-es-outb . \
   --namespace aerospike-test \
   --wait --timeout 5m
 
 # Deploy with custom values
-helm install test-elastic-outbound . \
+helm install test-es-outb . \
   --namespace aerospike-test \
   --values examples/clear-text/as-elasticsearch-outbound-values.yaml \
   --wait --timeout 5m
@@ -315,7 +315,7 @@ kubectl run test-pod --image=busybox --rm -it --restart=Never \
 
 ```bash
 # Run the built-in Helm tests
-helm test test-elastic-outbound --namespace aerospike-test
+helm test test-es-outb --namespace aerospike-test
 
 # Check test results
 kubectl get pods -n aerospike-test -l helm.sh/hook=test
@@ -366,7 +366,7 @@ If you have scaled up add the new PODs to the XDR DC section else on scale down 
 ./tests/deploy-test.sh --uninstall
 
 # Or using Helm directly
-helm uninstall test-elastic-outbound --namespace aerospike-test
+helm uninstall test-es-outb --namespace aerospike-test
 
 # Delete namespace (optional)
 kubectl delete namespace aerospike-test
