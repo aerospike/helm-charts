@@ -214,7 +214,7 @@ kubectl get pods -n aerospike-test -o wide
 
 2. Verify ESP pods are accessible:
    ```bash
-   kubectl exec -n aerospike-test $SRC_POD -- nc -zv test-elastic-outbound-aerospike-elasticsearch-outbound-0.test-elastic-outbound-aerospike-elasticsearch-outbound 8901
+   kubectl exec -n aerospike-test $SRC_POD -- nc -zv test-es-outb-aerospike-elasticsearch-outbound-0.test-es-outb-aerospike-elasticsearch-outbound 8901
    ```
 
 ### XDR Proxy not receiving data
@@ -222,7 +222,7 @@ kubectl get pods -n aerospike-test -o wide
 1. Check ESP Outbound logs for connection errors
 2. Verify XDR Proxy service is accessible:
    ```bash
-   kubectl exec -n aerospike-test test-elastic-outbound-aerospike-elasticsearch-outbound-0 -- nc -zv xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local 8901
+   kubectl exec -n aerospike-test test-es-outb-aerospike-elasticsearch-outbound-0 -- nc -zv xdr-proxy-aerospike-xdr-proxy.aerospike-test.svc.cluster.local 8901
    ```
 
 ### Data not reaching destination

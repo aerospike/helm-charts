@@ -298,17 +298,17 @@ kubectl describe pod -n aerospike-test -l app.kubernetes.io/name=aerospike-elast
 kubectl get pods -n aerospike-test \
   --selector=app.kubernetes.io/name=aerospike-elasticsearch-outbound \
   --no-headers -o custom-columns=":metadata.name" \
-  | sed -e "s/$/.test-elastic-outbound-aerospike-elasticsearch-outbound 8901/g"
+  | sed -e "s/$/.test-es-outb-aerospike-elasticsearch-outbound 8901/g"
 
 # Test service DNS resolution
 kubectl run test-pod --image=busybox --rm -it --restart=Never \
   --namespace aerospike-test \
-  -- nslookup test-elastic-outbound-aerospike-elasticsearch-outbound
+  -- nslookup test-es-outb-aerospike-elasticsearch-outbound
 
 # Test port connectivity
 kubectl run test-pod --image=busybox --rm -it --restart=Never \
   --namespace aerospike-test \
-  -- nc -z test-elastic-outbound-aerospike-elasticsearch-outbound 8901
+  -- nc -z test-es-outb-aerospike-elasticsearch-outbound 8901
 ```
 
 ## Run Helm Tests
@@ -432,7 +432,7 @@ the connector configuration.
    - Check configuration syntax in values file
    - Verify configuration in pod:
      ```bash
-     kubectl exec -n aerospike-test test-elastic-outbound-aerospike-elasticsearch-outbound-0 \
+     kubectl exec -n aerospike-test test-es-outb-aerospike-elasticsearch-outbound-0 \
        -- cat /etc/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.yml
      ```
 

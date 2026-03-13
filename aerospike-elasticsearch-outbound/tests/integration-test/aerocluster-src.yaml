@@ -43,4 +43,4 @@ spec:
             - name: test
           node-address-ports:
             # ESP Outbound connector pod DNS names
-            - test-elastic-outbound-aerospike-elasticsearch-outbound-0.test-elastic-outbound-aerospike-elasticsearch-outbound.aerospike-test.svc.cluster.local:8901
+            - test-es-outb-aerospike-elasticsearch-outbound-0.test-es-outb-aerospike-elasticsearch-outbound.aerospike-test.svc.cluster.local:8901
