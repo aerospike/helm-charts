@@ -29,12 +29,12 @@ kubectl create namespace aerospike
 
 2. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-elastic-outbound -f as-elastic-outbound-tls-values.yaml ../../aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-tls-values.yaml ../../aerospike-elasticsearch-outbound
 ```
 
 3. Verify the deployment:
 ```shell
-kubectl get pods --namespace aerospike --selector=app=as-elastic-outbound-aerospike-elastic-outbound
+kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound
 ```
 
 ## Configuration
@@ -52,7 +52,7 @@ The example configuration includes:
 
 ## Update ElasticSearch endpoint
 
-Edit the `as-elastic-outbound-tls-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
+Edit the `as-elasticsearch-outbound-tls-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
 
 ```yaml
 <TODO>: Add es-client
@@ -62,6 +62,6 @@ Edit the `as-elastic-outbound-tls-values.yaml` file and update the `<TODO>` to p
 
 To remove the deployment:
 ```shell
-helm uninstall --namespace aerospike as-elastic-outbound
+helm uninstall --namespace aerospike as-elasticsearch-outbound
 kubectl delete secret tls-certs --namespace aerospike
 ``` 

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Deployment script for aerospike-elastic-outbound Helm chart to a test cluster
+# Deployment script for aerospike-elasticsearch-outbound Helm chart to a test cluster
 set -e
 
-CHART_NAME="aerospike-elastic-outbound"
-RELEASE_NAME="test-elastic-outbound"
+CHART_NAME="aerospike-elasticsearch-outbound"
+RELEASE_NAME="test-elasticsearch-outbound"
 NAMESPACE="aerospike-test"
 VALUES_FILE=""
 
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --namespace NAME       Kubernetes namespace (default: aerospike-test)"
-            echo "  --release-name NAME    Helm release name (default: test-elastic-outbound)"
+            echo "  --release-name NAME    Helm release name (default: test-elasticsearch-outbound)"
             echo "  --values FILE          Path to values file (optional)"
             echo "  --uninstall            Uninstall the release"
             echo "  --help                 Show this help message"

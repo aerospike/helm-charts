@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Test script for aerospike-elastic-outbound Helm chart
+# Test script for aerospike-elasticsearch-outbound Helm chart
 set -e
 
 CHART_NAME="."
-RELEASE_NAME="test-elastic-outbound"
+RELEASE_NAME="test-elasticsearch-outbound"
 NAMelasticACE="aerospike-test"
-CLEAR_TEXT_VALUES="examples/clear-text/as-elastic-outbound-values.yaml"
-TLS_VALUES="examples/tls/as-elastic-outbound-tls-values.yaml"
+CLEAR_TEXT_VALUES="examples/clear-text/as-elasticsearch-outbound-values.yaml"
+TLS_VALUES="examples/tls/as-elasticsearch-outbound-tls-values.yaml"
 
 echo "🧪 Testing Aerospike ElasticSearch Outbound Helm Chart"
 echo "=============================================="
@@ -59,7 +59,7 @@ if command -v kubectl &> /dev/null; then
     
     # Wait for pods to be ready
     echo "⏳ Waiting for pods to be ready..."
-    kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=aerospike-elastic-outbound --namespace $NAMESPACE --timeout=60s
+    kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=aerospike-elasticsearch-outbound --namespace $NAMESPACE --timeout=60s
     
     # Check resources
     echo "📊 Checking deployed resources..."
@@ -70,7 +70,7 @@ if command -v kubectl &> /dev/null; then
     
     # Test connectivity
     echo "🔗 Testing connectivity..."
-    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- nslookup $RELEASE_NAME-aerospike-elastic-outbound || true
+    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- nslookup $RELEASE_NAME-aerospike-elasticsearch-outbound || true
     
     # Run helm test
     echo "🧪 Running Helm tests..."

@@ -31,7 +31,7 @@ else
 fi
 
 echo "Installing Kind"
-CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
+CONTEXT="kind-elasticsearch-test-cluster"  # Explicit context for parallel execution safety
 kind create cluster --config "$WORKSPACE/aerospike-elasticsearch-outbound/kind/config/kind-cluster.yaml"
 # kind create cluster automatically sets the context, but we'll use wrapper functions for safety
 
@@ -88,7 +88,7 @@ done
 echo "Grant permissions to the target namespace"
 kubectl create namespace aerospike-test || true
 kubectl --namespace aerospike-test create serviceaccount aerospike-operator-controller-manager || true
-kubectl create clusterrolebinding aerospike-cluster-elastic-test \
+kubectl create clusterrolebinding aerospike-cluster-elasticsearch-test \
 --clusterrole=aerospike-cluster --serviceaccount=aerospike-test:aerospike-operator-controller-manager || true
 
 echo "Set Secrets for Aerospike Cluster"
@@ -101,6 +101,6 @@ echo "✅ Kind cluster setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Run integration test: cd ../tests/integration-test && ./run-integration-test.sh"
-echo "2. Or deploy ElasticSearch Outbound manually: helm install test-elastic-outbound ../aerospike-elasticsearch-outbound --namespace aerospike-test"
+echo "2. Or deploy ElasticSearch Outbound manually: helm install test-elasticsearch-outbound ../aerospike-elasticsearch-outbound --namespace aerospike-test"
 echo ""
 echo "To clean up: ./uninstall-kind.sh"

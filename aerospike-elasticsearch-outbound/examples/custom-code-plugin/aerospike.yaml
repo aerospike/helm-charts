@@ -60,6 +60,6 @@ spec:
           namespaces:
             - name: test
           node-address-ports:
-            - as-elastic-outbound-aerospike-elastic-outbound-0.as-elastic-outbound-aerospike-elastic-outbound.aerospike.svc.cluster.local:8901
-            - as-elastic-outbound-aerospike-elastic-outbound-1.as-elastic-outbound-aerospike-elastic-outbound.aerospike.svc.cluster.local:8901
-            - as-elastic-outbound-aerospike-elastic-outbound-2.as-elastic-outbound-aerospike-elastic-outbound.aerospike.svc.cluster.local:8901
+            - as-elasticsearch-outbound-aerospike-elasticsearch-outbound-0.as-elasticsearch-outbound-aerospike-elasticsearch-outbound.aerospike.svc.cluster.local:8901
+            - as-elasticsearch-outbound-aerospike-elasticsearch-outbound-1.as-elasticsearch-outbound-aerospike-elasticsearch-outbound.aerospike.svc.cluster.local:8901
+            - as-elasticsearch-outbound-aerospike-elasticsearch-outbound-2.as-elasticsearch-outbound-aerospike-elasticsearch-outbound.aerospike.svc.cluster.local:8901

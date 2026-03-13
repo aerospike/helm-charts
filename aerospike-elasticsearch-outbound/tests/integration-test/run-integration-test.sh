@@ -11,11 +11,11 @@
 set -e
 
 NAMESPACE="aerospike-test"
-ES_RELEASE="test-elastic-outbound"
+ES_RELEASE="test-elasticsearch-outbound"
 PROXY_RELEASE="xdr-proxy"
-SRC_CLUSTER="aerocluster-elastic-src"
+SRC_CLUSTER="aerocluster-elasticsearch-src"
 DST_CLUSTER="elasticsearch-service-dst"
-CONTEXT="kind-elastic-test-cluster"  # Explicit context for parallel execution safety
+CONTEXT="kind-elasticsearch-test-cluster"  # Explicit context for parallel execution safety
 
 # Colors
 GREEN='\033[0;32m'
@@ -187,7 +187,7 @@ sleep 600
 # Step 4: Get ElasticSearch Outbound pod DNS names and create source cluster YAML
 print_info "Step 4: Getting ElasticSearch Outbound pod DNS names..."
 ES_PODS=$(kubectl get pods -n "${NAMESPACE}" \
-  --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
+  --selector=app.kubernetes.io/name=aerospike-elasticsearch-outbound \
   --no-headers -o custom-columns=":metadata.name" | head -3)
 
 if [ -z "$ES_PODS" ]; then
@@ -199,7 +199,7 @@ fi
 ES_POD_DNS=""
 while IFS= read -r pod; do
     if [ -n "$pod" ]; then
-        ES_POD_DNS="${ES_POD_DNS}            - ${pod}.${ES_RELEASE}-aerospike-elastic-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
+        ES_POD_DNS="${ES_POD_DNS}            - ${pod}.${ES_RELEASE}-aerospike-elasticsearch-outbound.${NAMESPACE}.svc.cluster.local:8901\n"
     fi
 done <<< "$ES_PODS"
 
@@ -400,11 +400,11 @@ echo ""
 # Check ElasticSearch Outbound metrics across all pods
 print_info "ElasticSearch Outbound Pod Metrics:"
 ES_POD_COUNT=$(kubectl get pods -n "${NAMESPACE}" \
-  --selector=app.kubernetes.io/name=aerospike-elastic-outbound \
+  --selector=app.kubernetes.io/name=aerospike-elasticsearch-outbound \
   --no-headers | wc -l | tr -d ' ')
 
 for i in $(seq 0 $((ES_POD_COUNT - 1))); do
-    POD_NAME="${ES_RELEASE}-aerospike-elastic-outbound-${i}"
+    POD_NAME="${ES_RELEASE}-aerospike-elasticsearch-outbound-${i}"
     if kubectl get pod "${POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
         echo "ElasticSearch Outbound Pod $i (${POD_NAME}):"
         METRICS=$(kubectl logs -n "${NAMESPACE}" "${POD_NAME}" --tail=20 2>/dev/null | \

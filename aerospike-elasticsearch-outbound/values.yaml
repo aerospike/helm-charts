@@ -1,4 +1,4 @@
-# Default values for aerospike-elastic-outbound.
+# Default values for aerospike-elasticsearch-outbound.
 # This is a YAML-formatted file.
 
 replicaCount: 1
@@ -24,7 +24,7 @@ connectorSecrets: []
 # List of initContainers to be added for each connector pod.
 # Can be used to copy custom code plugins jars to /opt/aerospike-elasticsearch-outbound-init
 initContainers: []
-  # - name: aerospike-elastic-outbound-init
+  # - name: aerospike-elasticsearch-outbound-init
   #   image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
   #   imagePullPolicy: IfNotPresent
   #   command: ["/bin/sh", "-c"]
@@ -34,7 +34,7 @@ initContainers: []
   #       set -e
   #       cp -r /etc/aerospike-connector-custom-transformers/aerospike-elasticsearch-outbound-custom-transformers.jar /opt/aerospike-elasticsearch-outbound-init
   #   volumeMounts:
-  #     - name: aerospike-elastic-outbound-init
+  #     - name: aerospike-elasticsearch-outbound-init
   #       mountPath: /opt/aerospike-elasticsearch-outbound-init
 
 serviceAccount:

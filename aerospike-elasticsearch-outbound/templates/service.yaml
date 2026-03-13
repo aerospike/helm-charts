@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aerospike-elastic-outbound.fullname" . }}
+  name: {{ include "aerospike-elasticsearch-outbound.fullname" . }}
   labels:
-    app: {{ include "aerospike-elastic-outbound.fullname" . }}
-    {{- include "aerospike-elastic-outbound.labels" . | nindent 4 }}
+    app: {{ include "aerospike-elasticsearch-outbound.fullname" . }}
+    {{- include "aerospike-elasticsearch-outbound.labels" . | nindent 4 }}
 spec:
   ports:
   - name: service
-    port: {{ include "aerospike-elastic-outbound.servicePort" . }}
+    port: {{ include "aerospike-elasticsearch-outbound.servicePort" . }}
   - name: manage
     port: {{ (((.Values.connectorConfig).service).manage).port | default 8902 }}
   clusterIP: None
   selector:
-    app: {{ include "aerospike-elastic-outbound.fullname" . }}
+    app: {{ include "aerospike-elasticsearch-outbound.fullname" . }}
