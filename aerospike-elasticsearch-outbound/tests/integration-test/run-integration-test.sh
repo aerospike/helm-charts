@@ -182,7 +182,7 @@ helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." \
 print_info "✅ ElasticSearch Outbound deployed"
 echo ""
 
-sleep 300
+sleep 600
 
 # Step 4: Get ElasticSearch Outbound pod DNS names and create source cluster YAML
 print_info "Step 4: Getting ElasticSearch Outbound pod DNS names..."
