@@ -130,18 +130,11 @@ connectorConfig:
     manage:
       address: 0.0.0.0
       port: 8902
-    io-threads: 100
-    worker-threads: 100
-    max-concurrent-requests: 100000
 
   routing:
     mode: static-multi-destination
     destinations:
       - dc1
-
-  record-ordering:
-    enable: false
-    lut-cache-ttl-seconds: 30
 
   destinations:
     dc1:
