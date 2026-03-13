@@ -66,12 +66,12 @@ For more details on kind setup, see [kind/README.md](kind/README.md).
 kubectl create namespace aerospike-test
 
 # Deploy with default values
-helm install test-elasticsearch-outbound . \
+helm install test-elastic-outbound . \
   --namespace aerospike-test \
   --wait --timeout 5m
 
 # Deploy with custom values
-helm install test-elasticsearch-outbound . \
+helm install test-elastic-outbound . \
   --namespace aerospike-test \
   --values examples/clear-text/as-elasticsearch-outbound-values.yaml \
   --wait --timeout 5m
@@ -298,24 +298,24 @@ kubectl describe pod -n aerospike-test -l app.kubernetes.io/name=aerospike-elast
 kubectl get pods -n aerospike-test \
   --selector=app.kubernetes.io/name=aerospike-elasticsearch-outbound \
   --no-headers -o custom-columns=":metadata.name" \
-  | sed -e "s/$/.test-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901/g"
+  | sed -e "s/$/.test-elastic-outbound-aerospike-elasticsearch-outbound 8901/g"
 
 # Test service DNS resolution
 kubectl run test-pod --image=busybox --rm -it --restart=Never \
   --namespace aerospike-test \
-  -- nslookup test-elasticsearch-outbound-aerospike-elasticsearch-outbound
+  -- nslookup test-elastic-outbound-aerospike-elasticsearch-outbound
 
 # Test port connectivity
 kubectl run test-pod --image=busybox --rm -it --restart=Never \
   --namespace aerospike-test \
-  -- nc -z test-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
+  -- nc -z test-elastic-outbound-aerospike-elasticsearch-outbound 8901
 ```
 
 ## Run Helm Tests
 
 ```bash
 # Run the built-in Helm tests
-helm test test-elasticsearch-outbound --namespace aerospike-test
+helm test test-elastic-outbound --namespace aerospike-test
 
 # Check test results
 kubectl get pods -n aerospike-test -l helm.sh/hook=test
@@ -366,7 +366,7 @@ If you have scaled up add the new PODs to the XDR DC section else on scale down 
 ./tests/deploy-test.sh --uninstall
 
 # Or using Helm directly
-helm uninstall test-elasticsearch-outbound --namespace aerospike-test
+helm uninstall test-elastic-outbound --namespace aerospike-test
 
 # Delete namespace (optional)
 kubectl delete namespace aerospike-test
@@ -432,7 +432,7 @@ the connector configuration.
    - Check configuration syntax in values file
    - Verify configuration in pod:
      ```bash
-     kubectl exec -n aerospike-test test-elasticsearch-outbound-aerospike-elasticsearch-outbound-0 \
+     kubectl exec -n aerospike-test test-elastic-outbound-aerospike-elasticsearch-outbound-0 \
        -- cat /etc/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.yml
      ```
 

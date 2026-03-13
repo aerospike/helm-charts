@@ -11,7 +11,7 @@
 set -e
 
 NAMESPACE="aerospike-test"
-ES_RELEASE="test-elasticsearch-outbound"
+ES_RELEASE="test-elastic-outbound"
 PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-elasticsearch-src"
 DST_CLUSTER="elasticsearch-service-dst"

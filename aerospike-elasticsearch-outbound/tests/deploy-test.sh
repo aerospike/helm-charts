@@ -4,7 +4,7 @@
 set -e
 
 CHART_NAME="aerospike-elasticsearch-outbound"
-RELEASE_NAME="test-elasticsearch-outbound"
+RELEASE_NAME="test-elastic-outbound"
 NAMESPACE="aerospike-test"
 VALUES_FILE=""
 
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --namespace NAME       Kubernetes namespace (default: aerospike-test)"
-            echo "  --release-name NAME    Helm release name (default: test-elasticsearch-outbound)"
+            echo "  --release-name NAME    Helm release name (default: test-elastic-outbound)"
             echo "  --values FILE          Path to values file (optional)"
             echo "  --uninstall            Uninstall the release"
             echo "  --help                 Show this help message"

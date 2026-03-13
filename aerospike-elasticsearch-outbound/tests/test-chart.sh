@@ -4,7 +4,7 @@
 set -e
 
 CHART_NAME="."
-RELEASE_NAME="test-elasticsearch-outbound"
+RELEASE_NAME="test-elastic-outbound"
 NAMelasticACE="aerospike-test"
 CLEAR_TEXT_VALUES="examples/clear-text/as-elasticsearch-outbound-values.yaml"
 TLS_VALUES="examples/tls/as-elasticsearch-outbound-tls-values.yaml"

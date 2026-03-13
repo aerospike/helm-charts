@@ -23,7 +23,7 @@ if ! kubectl cluster-info &>/dev/null; then
 fi
 
 # Uninstall Helm releases
-helm uninstall test-elasticsearch-outbound --namespace aerospike-test 2>/dev/null || true
+helm uninstall test-elastic-outbound --namespace aerospike-test 2>/dev/null || true
 helm uninstall xdr-proxy --namespace aerospike-test 2>/dev/null || true
 
 # Delete Aerospike clusters
