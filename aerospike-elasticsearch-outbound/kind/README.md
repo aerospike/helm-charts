@@ -50,10 +50,10 @@ helm install test-es-outb ../aerospike-elasticsearch-outbound \
   --namespace aerospike-test \
   --values ../tests/integration-test/elastic-outbound-integration-values.yaml
 
-# Deploy XDR Proxy
-helm install xdr-proxy ../../aerospike-xdr-proxy \
-  --namespace aerospike-test \
-  --values ../tests/integration-test/xdr-proxy-values.yaml
+# # Deploy XDR Proxy
+# helm install xdr-proxy ../../aerospike-xdr-proxy \
+#   --namespace aerospike-test \
+#   --values ../tests/integration-test/xdr-proxy-values.yaml
 
 # Deploy Aerospike clusters
 kubectl apply -f ../tests/integration-test/aerocluster-dst.yaml

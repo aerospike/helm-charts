@@ -12,7 +12,7 @@ set -e
 
 NAMESPACE="aerospike-test"
 ES_RELEASE="test-es-outb"
-PROXY_RELEASE="xdr-proxy"
+# PROXY_RELEASE="xdr-proxy"
 SRC_CLUSTER="aerocluster-elasticsearch-src"
 DST_CLUSTER="elasticsearch-service-dst"
 CONTEXT="kind-elasticsearch-test-cluster"  # Explicit context for parallel execution safety
@@ -66,11 +66,11 @@ if [ ! -f "$SCRIPT_DIR/aerocluster-dst.yaml" ]; then
     exit 1
 fi
 
-if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
-    print_error "xdr-proxy-values.yaml not found in $SCRIPT_DIR"
-    echo "INTEGRATION_TEST_FAILED"
-    exit 1
-fi
+# if [ ! -f "$SCRIPT_DIR/xdr-proxy-values.yaml" ]; then
+#     print_error "xdr-proxy-values.yaml not found in $SCRIPT_DIR"
+#     echo "INTEGRATION_TEST_FAILED"
+#     exit 1
+# fi
 
 if [ ! -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" ]; then
     print_error "elastic-outbound-integration-values.yaml not found in $SCRIPT_DIR"
@@ -420,8 +420,8 @@ done
 echo ""
 
 # Check XDR Proxy metrics
-print_info "XDR Proxy Metrics:, skipping, as this is not required for ElasticSearch Outbound"
-PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
+# print_info "XDR Proxy Metrics:, skipping, as this is not required for ElasticSearch Outbound"
+# PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
 # if kubectl get pod "${PROXY_POD_NAME}" -n "${NAMESPACE}" &>/dev/null; then
 #     PROXY_METRICS=$(kubectl logs -n "${NAMESPACE}" "${PROXY_POD_NAME}" --tail=20 2>/dev/null | \
 #       grep -E "(requests-total|requests-success)" | tail -5 || echo "No metrics found")
@@ -433,13 +433,15 @@ PROXY_POD_NAME="${PROXY_RELEASE}-aerospike-xdr-proxy-0"
 # else
 #     print_warning "XDR Proxy pod not found"
 # fi
-echo ""
+# echo ""
 
 # Step 10: Final Status Check
 print_info "Step 10: Final status check..."
 echo ""
+# kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
+#   | grep -E "(NAME|aerocluster|outbound|xdr-proxy)" || true
 kubectl get pods -n "${NAMESPACE}" -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,READY:.status.containerStatuses[0].ready" \
-  | grep -E "(NAME|aerocluster|outbound|xdr-proxy)" || true
+  | grep -E "(NAME|aerocluster|outbound)" || true
 echo ""
 
 print_info "✅ Integration test complete!"
@@ -451,7 +453,7 @@ print_info "   - All pods should show STATUS=Running and READY=true"
 echo ""
 print_info "📁 Files used:"
 print_info "   - $SCRIPT_DIR/aerocluster-dst.yaml (Destination cluster)"
-print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
+# print_info "   - $SCRIPT_DIR/xdr-proxy-values.yaml (XDR Proxy config)"
 print_info "   - $SCRIPT_DIR/elastic-outbound-integration-values.yaml (ElasticSearch config)"
 print_info "   - $SRC_CLUSTER_FILE (Source cluster - dynamically generated with ElasticSearch pod DNS)"
 echo ""
