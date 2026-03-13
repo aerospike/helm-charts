@@ -177,12 +177,19 @@ echo ""
 
 # Step 3: Deploy ElasticSearch Outbound
 print_info "Step 3: Deploying ElasticSearch Outbound connector..."
+
+print_info helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." -n "${NAMESPACE}" -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" --wait --timeout=2m
+
+print_info "✅ ElasticSearch Outbound deployed ... sleeping for 300 seconds"
+
+sleep 300
+
 helm install "${ES_RELEASE}" "$SCRIPT_DIR/../.." \
   -n "${NAMESPACE}" -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" --wait --timeout=2m
 print_info "✅ ElasticSearch Outbound deployed"
 echo ""
 
-sleep 600
+sleep 300
 
 # Step 4: Get ElasticSearch Outbound pod DNS names and create source cluster YAML
 print_info "Step 4: Getting ElasticSearch Outbound pod DNS names..."
