@@ -25,7 +25,7 @@ deployed connector pods.
 ### Option 1: Using the Deployment Script
 
 ```bash
-# Deploy with default values
+# Deploy with default values (if values.yaml is populated)
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
@@ -34,7 +34,7 @@ deployed connector pods.
 
 # Deploy with TLS configuration
 ./tests/deploy-test.sh --uninstall
-./tests/deploy-test.sh --values examples/tls/as-elasticsearch-outbound-tls-values.yaml
+./tests/deploy-test.sh --values examples/tls/as-elastic-outbound-tls-values.yaml
 
 # Deploy to custom namespace
 ./tests/deploy-test.sh --uninstall
@@ -190,7 +190,7 @@ kubectl -n aerospike-test create secret generic tls-certs --from-file=examples/t
 
 ```shell
 # helm install --namespace <target namespace> <helm release name/cluster name> -f <path to custom values yaml> aerospike/aerospike-elasticsearch-outbound
-helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elastic-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
 ```
 
 Here `as-elasticsearch-outbound` is the release name for the connector cluster and also its cluster name.

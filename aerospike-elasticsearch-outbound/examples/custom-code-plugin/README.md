@@ -22,13 +22,13 @@ kubectl create namespace aerospike
 ```
 
 ### Deploy the connectors.
-Update the [as-elasticsearch-outbound-values.yaml](as-elasticsearch-outbound-values.yaml) file to change ElasticSearch connector configuration to point to backend Elastic Search endpoint. 
+Update the [as-elastic-outbound-values.yaml](as-elastic-outbound-values.yaml) file to change ElasticSearch connector configuration to point to backend Elastic Search endpoint. 
 Also, add the initContainer section to the file to use your custom code plugin image.
 
-Deploy the connectors using configuration from [as-elasticsearch-outbound-values.yaml](as-elasticsearch-outbound-values.yaml)
+Deploy the connectors using configuration from [as-elastic-outbound-values.yaml](as-elastic-outbound-values.yaml)
 
 ```shell
-helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elastic-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
 ### Deploy the Aerospike cluster

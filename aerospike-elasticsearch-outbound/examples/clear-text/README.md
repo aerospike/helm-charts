@@ -41,7 +41,7 @@ The example configuration includes:
 
 ## Update ElasticSearch endpoint
 
-Edit the `as-elasticsearch-outbound-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
+Edit the `as-elastic-outbound-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
 
 ```yaml
 <TODO> Add example with es-client

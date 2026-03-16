@@ -25,7 +25,7 @@ deployed proxy pods.
 ### Option 1: Using the Deployment Script
 
 ```bash
-# Deploy with default values
+# Deploy with default values (if values.yaml is populated)
 ./tests/deploy-test.sh
 
 # Deploy with custom values file

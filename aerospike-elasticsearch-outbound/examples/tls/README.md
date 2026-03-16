@@ -34,7 +34,7 @@ kubectl -n aerospike create secret generic tls-certs --from-file=tls-certs
 
 1. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-tls-values.yaml ../../../aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elastic-outbound-tls-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
 2. Verify the deployment:
@@ -57,7 +57,7 @@ The example configuration includes:
 
 ## Update ElasticSearch endpoint
 
-Edit the `as-elasticsearch-outbound-tls-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
+Edit the `as-elastic-outbound-tls-values.yaml` file and update the `<TODO>` to point to your ElasticSearch endpoint:
 
 ```yaml
 <TODO>: Add es-client
