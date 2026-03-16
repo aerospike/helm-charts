@@ -155,7 +155,7 @@ entries:
     type: application
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-esp-outbound-2.4.14.tgz
-    version: 2.4.14  
+    version: 2.4.14
   aerospike-graph:
   - apiVersion: v2
     appVersion: 2.2.0
@@ -184,7 +184,7 @@ entries:
     type: application
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-graph-2.0.0.tgz
-    version: 2.0.0  
+    version: 2.0.0
   aerospike-jms-inbound:
   - apiVersion: v2
     appVersion: 3.0.17
@@ -278,7 +278,7 @@ entries:
     - Connector
     - JMS
     - Outbound
-    - Source    
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -298,7 +298,7 @@ entries:
     - Connector
     - JMS
     - Outbound
-    - Source    
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -318,7 +318,7 @@ entries:
     - Connector
     - JMS
     - Outbound
-    - Source    
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -338,7 +338,7 @@ entries:
     - Connector
     - JMS
     - Outbound
-    - Source    
+    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -447,7 +447,7 @@ entries:
     type: application
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-kafka-outbound-1.0.0.tgz
-    version: 1.0.0  
+    version: 1.0.0
   aerospike-proxy:
   - apiVersion: v2
     appVersion: 1.1.2
@@ -478,7 +478,7 @@ entries:
     type: application
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-proxy-0.1.0.tgz
-    version: 0.1.0  
+    version: 0.1.0
   aerospike-pulsar-outbound:
   - apiVersion: v2
     appVersion: 3.3.17
