@@ -25,7 +25,7 @@ Update the [as-pulsar-outbound-values.yaml](as-pulsar-outbound-values.yaml) file
 
 Deploy the connectors using configuration from [as-pulsar-outbound-values.yaml](as-pulsar-outbound-values.yaml)
 ```shell
-helm install --namespace aerospike as-pulsar-outbound -f as-pulsar-outbound-values.yaml aerospike/aerospike-pulsar-outbound
+helm install --namespace aerospike as-pulsar-outbound -f as-pulsar-outbound-values.yaml ../../../aerospike-pulsar-outbound
 ```
 
 ## Deploy the Aerospike cluster

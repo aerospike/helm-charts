@@ -25,7 +25,7 @@ Update the [as-jms-outbound-values.yaml](as-jms-outbound-values.yaml) file to ch
 
 Deploy the connectors using configuration from [as-jms-outbound-values.yaml](as-jms-outbound-values.yaml)
 ```shell
-helm install --namespace aerospike as-jms-outbound -f as-jms-outbound-values.yaml aerospike/aerospike-jms-outbound
+helm install --namespace aerospike as-jms-outbound -f as-jms-outbound-values.yaml ../../../aerospike-jms-outbound
 ```
 
 ## Deploy the Aerospike cluster

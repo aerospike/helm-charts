@@ -34,7 +34,7 @@ Update the [as-kafka-outbound-tls-values.yaml](as-kafka-outbound-tls-values.yaml
 
 Deploy the connectors using configuration from [as-kafka-outbound-tls-values.yaml](as-kafka-outbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-kafka-outbound-tls -f as-kafka-outbound-tls-values.yaml aerospike/aerospike-kafka-outbound
+helm install --namespace aerospike as-kafka-outbound-tls -f as-kafka-outbound-tls-values.yaml ../../../aerospike-kafka-outbound
 ```
 
 ## Deploy the Aerospike cluster

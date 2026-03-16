@@ -33,7 +33,7 @@ Update the [as-pulsar-outbound-tls-values.yaml](as-pulsar-outbound-tls-values.ya
 
 Deploy the connectors using configuration from [as-pulsar-outbound-tls-values.yaml](as-pulsar-outbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-pulsar-outbound-tls -f as-pulsar-outbound-tls-values.yaml aerospike/aerospike-pulsar-outbound
+helm install --namespace aerospike as-pulsar-outbound-tls -f as-pulsar-outbound-tls-values.yaml ../../../aerospike-pulsar-outbound
 ```
 
 ## Deploy the Aerospike cluster

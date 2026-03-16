@@ -47,7 +47,7 @@ Update the [as-jms-inbound-tls-values.yaml](as-jms-inbound-tls-values.yaml) file
 
 Deploy the connectors using configuration from [as-jms-inbound-tls-values.yaml](as-jms-inbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-jms-inbound-tls -f as-jms-inbound-tls-values.yaml aerospike/aerospike-jms-inbound
+helm install --namespace aerospike as-jms-inbound-tls -f as-jms-inbound-tls-values.yaml ../../../aerospike-jms-inbound
 ```
 
 ## Write data to Aerospike

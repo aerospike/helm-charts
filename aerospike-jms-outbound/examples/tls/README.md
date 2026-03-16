@@ -33,7 +33,7 @@ Update the [as-jms-outbound-tls-values.yaml](as-jms-outbound-tls-values.yaml) fi
 
 Deploy the connectors using configuration from [as-jms-outbound-tls-values.yaml](as-jms-outbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-jms-outbound-tls -f as-jms-outbound-tls-values.yaml aerospike/aerospike-jms-outbound
+helm install --namespace aerospike as-jms-outbound-tls -f as-jms-outbound-tls-values.yaml ../../../aerospike-jms-outbound
 ```
 
 ## Deploy the Aerospike cluster

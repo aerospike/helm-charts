@@ -43,7 +43,7 @@ update `connectorConfig.aerospike` section to point to your destination Aerospik
 Deploy the connectors using configuration from [as-jms-inbound-values.yaml](as-jms-inbound-values.yaml)
 
 ```shell
-helm install --namespace aerospike as-jms-inbound -f as-jms-inbound-values.yaml aerospike/aerospike-jms-inbound
+helm install --namespace aerospike as-jms-inbound -f as-jms-inbound-values.yaml ../../../aerospike-jms-inbound
 ```
 
 ## Write data to Aerospike
