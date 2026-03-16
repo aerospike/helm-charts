@@ -1,6 +1,6 @@
-# Aerospike ESP Outbound custom code plugin example
+# Aerospike ElasticSearch Outbound custom code plugin example
 
-This example deploys Aerospike ESP Outbound connectors with custom code plugin and an Aerospike cluster without TLS configured. 
+This example deploys Aerospike ElasticSearch Outbound connectors with custom code plugin and an Aerospike cluster without TLS configured. 
 
 ## Prerequisites
  - Kubernetes cluster
@@ -11,12 +11,9 @@ This example deploys Aerospike ESP Outbound connectors with custom code plugin a
  - Aerospike ElasticSearch Outbound Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
  - A container image containing custom code plugin jars. See [Custom Code Plugin](https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin) for more details.
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/clear-text folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
@@ -34,7 +31,7 @@ Deploy the connectors using configuration from [as-elasticsearch-outbound-values
 helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
-## Deploy the Aerospike cluster
+### Deploy the Aerospike cluster
 If you do not have a preexisting Aerospike server, install [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator/install-operator).
 The steps below will deploy an Aerospike cluster using Aerospike Kubernetes Operator and this [sample](aerospike.yaml) custom resource.
 

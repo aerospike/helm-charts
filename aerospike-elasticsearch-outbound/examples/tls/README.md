@@ -10,14 +10,17 @@ This example demonstrates how to deploy the Aerospike ElasticSearch Outbound Con
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
 - TLS certificates for mutual TLS authentication
 
-## Deploy namespace
+## NOTE: these steps need to be run from examples/clear-text folder
 
-1. Create the namespace if it doesn't exist:
+## Deploy connectors
+
+### Create a new Kubernetes namespace
+Create the namespace if it doesn't exist:
 ```shell
 kubectl create namespace aerospike
 ```
 
-## Create TLS Secret
+### Create TLS Secret
 
 Before deploying, create a secret containing your TLS certificates. 
 There are sample TLS certificates, keys and keystores in the [tls-certs](tls-certs) folder that the following command uses.
@@ -27,7 +30,7 @@ Use a folder with your TLS files.
 kubectl -n aerospike create secret generic tls-certs --from-file=tls-certs
 ```
 
-## Deploy the connector
+### Deploy the connector
 
 1. Deploy the connector:
 ```shell

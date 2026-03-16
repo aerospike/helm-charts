@@ -29,12 +29,15 @@ deployed connector pods.
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
+./tests/deploy-test.sh --uninstall
 ./tests/deploy-test.sh --values examples/clear-text/as-elastic-outbound-values.yaml
 
 # Deploy with TLS configuration
+./tests/deploy-test.sh --uninstall
 ./tests/deploy-test.sh --values examples/tls/as-elasticsearch-outbound-tls-values.yaml
 
 # Deploy to custom namespace
+./tests/deploy-test.sh --uninstall
 ./tests/deploy-test.sh --namespace my-namespace --release-name my-release
 
 # Uninstall

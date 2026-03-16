@@ -10,12 +10,9 @@ This example deploys Aerospike JMS Inbound connector and an Aerospike cluster wi
    The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
  - Aerospike JMS Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/tls folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 

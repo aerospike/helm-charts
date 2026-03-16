@@ -11,12 +11,9 @@ This example deploys Aerospike Kafka Outbound connectors and an Aerospike cluste
    Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
  - Aerospike Kafka Connector Helm chart [installed](../../README.md#install-the-helm-chart)
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/clear-text folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
