@@ -5,6 +5,12 @@ connectorConfig:
     # TLS setup for secure communication between Aerospike server (XDR) and the connector.
     # For service configuration details, see: https://aerospike.com/docs/connectors/streaming/elasticsearch/configure/service/#configuring-tls
     address: 0.0.0.0
+    tls:
+      port: 8443
+      key-store:
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        store-password-file: secrets/tls-certs/storepass
+
     port: 8901
     manage:
       address: 0.0.0.0

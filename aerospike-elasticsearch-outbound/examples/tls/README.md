@@ -10,6 +10,13 @@ This example demonstrates how to deploy the Aerospike ElasticSearch Outbound Con
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
 - TLS certificates for mutual TLS authentication
 
+## Deploy namespace
+
+1. Create the namespace if it doesn't exist:
+```shell
+kubectl create namespace aerospike
+```
+
 ## Create TLS Secret
 
 Before deploying, create a secret containing your TLS certificates. 
@@ -22,19 +29,14 @@ kubectl -n aerospike create secret generic tls-certs --from-file=tls-certs
 
 ## Deploy the connector
 
-1. Create the namespace if it doesn't exist:
+1. Deploy the connector:
 ```shell
-kubectl create namespace aerospike
+helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-tls-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
-2. Deploy the connector:
+2. Verify the deployment:
 ```shell
-helm install --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-tls-values.yaml ../../aerospike-elasticsearch-outbound
-```
-
-3. Verify the deployment:
-```shell
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound
 ```
 
 ## Configuration
@@ -62,6 +64,6 @@ Edit the `as-elasticsearch-outbound-tls-values.yaml` file and update the `<TODO>
 
 To remove the deployment:
 ```shell
-helm uninstall --namespace aerospike as-elasticsearch-outbound
+helm uninstall --namespace aerospike as-es-outbound
 kubectl delete secret tls-certs --namespace aerospike
 ``` 

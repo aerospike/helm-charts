@@ -18,12 +18,12 @@ kubectl create namespace aerospike
 
 2. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-values.yaml ../../aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elastic-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
 3. Verify the deployment:
 ```shell
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound
 ```
 
 ## Configuration
@@ -51,5 +51,5 @@ Edit the `as-elasticsearch-outbound-values.yaml` file and update the `<TODO>` to
 
 To remove the deployment:
 ```shell
-helm uninstall --namespace aerospike as-elasticsearch-outbound
+helm uninstall --namespace aerospike as-es-outbound
 ``` 

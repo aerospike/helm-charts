@@ -58,13 +58,6 @@ print_info "🚀 Setting up Integration Test Environment"
 print_info "=========================================="
 echo ""
 
-# Verify existing files exist
-if [ ! -f "$SCRIPT_DIR/aerocluster-dst.yaml" ]; then
-    print_error "aerocluster-dst.yaml not found in $SCRIPT_DIR"
-    echo "INTEGRATION_TEST_FAILED"
-    exit 1
-fi
-
 if [ ! -f "$SCRIPT_DIR/elastic-outbound-integration-values.yaml" ]; then
     print_error "elastic-outbound-integration-values.yaml not found in $SCRIPT_DIR"
     echo "INTEGRATION_TEST_FAILED"

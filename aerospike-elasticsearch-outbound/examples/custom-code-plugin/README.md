@@ -25,13 +25,13 @@ kubectl create namespace aerospike
 ```
 
 ### Deploy the connectors.
-Update the [as-elasticsearch-outbound-values.yaml](as-elasticsearch-outbound-values.yaml) file to change ElasticSearch connector configuration to point to backend ESP endpoint. 
+Update the [as-elasticsearch-outbound-values.yaml](as-elasticsearch-outbound-values.yaml) file to change ElasticSearch connector configuration to point to backend Elastic Search endpoint. 
 Also, add the initContainer section to the file to use your custom code plugin image.
 
 Deploy the connectors using configuration from [as-elasticsearch-outbound-values.yaml](as-elasticsearch-outbound-values.yaml)
 
 ```shell
-helm install --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
 ```
 
 ## Deploy the Aerospike cluster
@@ -62,7 +62,7 @@ kubectl -n aerospike delete -f aerospike.yaml
 
 ### Remove the connectors
 ```shell
-helm -n aerospike uninstall as-elasticsearch-outbound
+helm -n aerospike uninstall as-es-outbound
 ```
 
 ### Delete the secrets
