@@ -5,8 +5,8 @@ set -e
 
 CHART_NAME="."
 RELEASE_NAME="test-es-outb"
-NAMelasticACE="aerospike-test"
-CLEAR_TEXT_VALUES="examples/clear-text/as-elasticsearch-outbound-values.yaml"
+NAMESPACE="aerospike-test"
+CLEAR_TEXT_VALUES="examples/clear-text/as-elastic-outbound-values.yaml"
 TLS_VALUES="examples/tls/as-elasticsearch-outbound-tls-values.yaml"
 
 echo "🧪 Testing Aerospike ElasticSearch Outbound Helm Chart"
