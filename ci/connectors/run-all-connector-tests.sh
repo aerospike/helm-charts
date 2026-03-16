@@ -64,10 +64,10 @@ fi
 CONNECTORS=(
     # "aerospike-elasticsearch-outbound"
     # "aerospike-esp-outbound"
-    #"aerospike-jms-inbound"
-    "aerospike-jms-outbound"
+    # "aerospike-jms-inbound"
+    # "aerospike-jms-outbound"
     "aerospike-kafka-outbound"
-    # "aerospike-pulsar-outbound"
+    "aerospike-pulsar-outbound"
     # "aerospike-xdr-proxy"
 )
 
