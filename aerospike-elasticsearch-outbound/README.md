@@ -15,7 +15,7 @@ deployed connector pods.
   - Cloud options: GKE, EKS, AKS, or any Kubernetes cluster
 - **Helm**: v3.x installed ([Install Helm](https://helm.sh/docs/intro/install/))
 - **kubectl**: Configured to connect to your cluster
-- **ESP Endpoint**: An ElasticSearch endpoint reachable from the pods in the Kubernetes cluster
+- **ElasticSearch Endpoint**: An ElasticSearch endpoint reachable from the pods in the Kubernetes cluster
 - **Aerospike Cluster**: An Aerospike cluster that can connect to Pods in the Kubernetes cluster.
   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike
   Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
@@ -29,7 +29,7 @@ deployed connector pods.
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
-./tests/deploy-test.sh --values examples/clear-text/as-elasticsearch-outbound-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-elastic-outbound-values.yaml
 
 # Deploy with TLS configuration
 ./tests/deploy-test.sh --values examples/tls/as-elasticsearch-outbound-tls-values.yaml
@@ -54,7 +54,7 @@ cd kind
 cd ..
 
 # Deploy the chart
-./tests/deploy-test.sh --values examples/clear-text/as-elasticsearch-outbound-values.yaml
+./tests/deploy-test.sh --values examples/clear-text/as-elastic-outbound-values.yaml
 ```
 
 For more details on kind setup, see [kind/README.md](kind/README.md).
@@ -73,7 +73,7 @@ helm install test-es-outb . \
 # Deploy with custom values
 helm install test-es-outb . \
   --namespace aerospike-test \
-  --values examples/clear-text/as-elasticsearch-outbound-values.yaml \
+  --values examples/clear-text/as-elastic-outbound-values.yaml \
   --wait --timeout 5m
 ```
 
@@ -88,8 +88,10 @@ helm repo add aerospike https://aerospike.github.io/helm-charts
 Install the Aerospike ElasticSearch Outbound connector helm chart
 
 ```shell
-helm install aerospike-elasticsearch-outbound aerospike/aerospike-elasticsearch-outbound
+helm install as-es-outbound aerospike/aerospike-elasticsearch-outbound
 ```
+
+NOTE: helm names cannot exceed 63 characters, please adjust the pod names accordingly
 
 ## Supported configuration
 
@@ -121,7 +123,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "2.4.14"
+  tag: "2.2.15"
 
 connectorConfig:
   service:
@@ -185,7 +187,7 @@ kubectl -n aerospike-test create secret generic tls-certs --from-file=examples/t
 
 ```shell
 # helm install --namespace <target namespace> <helm release name/cluster name> -f <path to custom values yaml> aerospike/aerospike-elasticsearch-outbound
-helm install --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm install --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
 ```
 
 Here `as-elasticsearch-outbound` is the release name for the connector cluster and also its cluster name.
@@ -201,13 +203,13 @@ REVISION: 1
 NOTES:
 1. Get the list of connector pods  by running the command:
 
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name"
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name"
 
 2. Configure XDR to use each of these connector pods in the datacenter section
 
 Use the following command to get the pod DNS names and port to use.
 
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name" \
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name" \
     | sed -e "s/$/.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901/g"
 
 Visit https://docs.aerospike.com/connect/common/change-notification for details
@@ -217,15 +219,15 @@ Visit https://docs.aerospike.com/connect/common/change-notification for details
 To list the pods for the connector run the following command:
 ```shell
 # kubectl get pods --namespace aerospike --selector=app=<helm release name>-aerospike-elasticsearch-outbound
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound
 ```
 
 You should see output similar to the following:
 ```shell
 NAME                                           READY   STATUS    RESTARTS   AGE
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-0      1/1     Running   0          7m19s
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-1      1/1     Running   0          7m40s
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-2      1/1     Running   0          7m51s
+as-es-outbound-aerospike-elasticsearch-outbound-0      1/1     Running   0          7m19s
+as-es-outbound-aerospike-elasticsearch-outbound-1      1/1     Running   0          7m40s
+as-es-outbound-aerospike-elasticsearch-outbound-2      1/1     Running   0          7m51s
 ```
 
 ## Configure XDR to ship to connector pods
@@ -236,15 +238,15 @@ To get the pod DNS names and ports to be added to XDR DC section, run the follow
 ```shell
 # kubectl get pods --namespace <target namespace> --selector=app=<helm release name>-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name" \
 #    | sed -e "s/$/.<helm release name>-aerospike-elasticsearch-outbound <service port or service TLS port as desired>/g"
-kubectl get pods --namespace aerospike --selector=app=as-elasticsearch-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name" \
+kubectl get pods --namespace aerospike --selector=app=as-es-outbound-aerospike-elasticsearch-outbound --no-headers -o custom-columns=":metadata.name" \
     | sed -e "s/$/.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901/g"
 ```
 
 You should see output similar to the following
 ```shell
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-0.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-1.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
-as-elasticsearch-outbound-aerospike-elasticsearch-outbound-2.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
+as-es-outbound-aerospike-elasticsearch-outbound-0.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
+as-es-outbound-aerospike-elasticsearch-outbound-1.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
+as-es-outbound-aerospike-elasticsearch-outbound-2.as-elasticsearch-outbound-aerospike-elasticsearch-outbound 8901
 ```
 
  
@@ -256,7 +258,7 @@ see [clear text](examples/clear-text) and [tls](examples/tls) for reference.
 ```shell
 # kubectl -n aerospike logs -f statefulset/<helm release name>-aerospike-elasticsearch-outbound
 # Skip the -f flag to get a one time dump of the log
-kubectl -n aerospike logs -f statefulset/as-elasticsearch-outbound-aerospike-elasticsearch-outbound
+kubectl -n aerospike logs -f statefulset/as-es-outbound-aerospike-elasticsearch-outbound
 ```
 
 ## Get logs for a single connector pod
@@ -264,7 +266,7 @@ kubectl -n aerospike logs -f statefulset/as-elasticsearch-outbound-aerospike-ela
 ```shell
 # kubectl -n aerospike logs -f <helm release name>-aerospike-elasticsearch-outbound-0
 # Skip the -f flag to get a one time dump of the log
-kubectl -n aerospike logs -f as-elasticsearch-outbound-aerospike-elasticsearch-outbound-0
+kubectl -n aerospike logs -f as-es-outbound-aerospike-elasticsearch-outbound-0
 ```
 
 ## Verify Deployment
@@ -329,7 +331,7 @@ Upgrade the connector deployment using the following command.
 
 ```shell
 #helm upgrade --namespace <target namespace> <helm release name> -f <path to custom values yaml file> aerospike/aerospike-elasticsearch-outbound
-helm upgrade --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm upgrade --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
 ```
 
 On successful execution of the command the connector pods will undergo a rolling restart and come up with the new configuration.
@@ -401,7 +403,7 @@ For production deployment:
 Check for any error events on the StatefulSet created for the connectors.
 ```shell
 # kubectl  -n aerospike describe statefulset <helm release name>-aerospike-elasticsearch-outbound
-kubectl  -n aerospike describe statefulset as-elasticsearch-outbound-aerospike-elasticsearch-outbound
+kubectl  -n aerospike describe statefulset as-es-outbound-aerospike-elasticsearch-outbound
 ```
 
 ### Connector pods stuck in `init` or `pending` state
@@ -409,7 +411,7 @@ kubectl  -n aerospike describe statefulset as-elasticsearch-outbound-aerospike-e
 Check for any error events on the pod created for the connectors.
 ```shell
 # kubectl  -n aerospike describe pod <helm release name>-aerospike-elasticsearch-outbound-0
-kubectl  -n aerospike describe pod as-elasticsearch-outbound-aerospike-elasticsearch-outbound-0
+kubectl  -n aerospike describe pod as-es-outbound-aerospike-elasticsearch-outbound-0
 ```
 
 The most likely reason is secret listed in `connectorSecrets` has not been created in the connector namespace.
