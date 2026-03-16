@@ -560,22 +560,6 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-pulsar-outbound-1.0.0.tgz
     version: 1.0.0
-    appVersion: 0.4.0
-    created: "2026-03-16T12:08:44.618839+05:30"
-    description: A Helm chart for Aerospike Vector Search
-    digest: f66c0163471586d199efa4c88ce73a45978d17071ba8e59ba6ff8fabeebf4876
-    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
-    keywords:
-    - Aerospike
-    - Vector
-    maintainers:
-    - email: developers@aerospike.com
-      name: Aerospike
-    name: aerospike-vector-search
-    type: application
-    urls:
-    - https://aerospike.github.io/helm-charts/aerospike-vector-search-0.1.0.tgz
-    version: 0.1.0
   aerospike-vector-search:
   - apiVersion: v2
     appVersion: 0.9.0
