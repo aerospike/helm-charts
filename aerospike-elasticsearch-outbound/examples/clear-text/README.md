@@ -9,7 +9,9 @@ This example demonstrates how to deploy the Aerospike ElasticSearch Outbound Con
 - An ESP endpoint reachable from the pods in the Kubernetes cluster
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
 
-## Deploy the connector
+## NOTE: these steps need to be run from examples/clear-text folder
+
+## Deploy connectors
 
 1. Create the namespace if it doesn't exist:
 ```shell
