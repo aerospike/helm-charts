@@ -1,0 +1,30 @@
+replicaCount: 1
+
+connectorConfig:
+  service:
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: elasticsearch-service-dst.aerospike-test.svc.cluster.local
+            port: 9200
+
+  logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
+    enable-console-logging: true
+
+# Only include TLS secrets if using HTTPS
+# connectorSecrets:
+#   - tls-certs-elastic

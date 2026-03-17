@@ -9,27 +9,25 @@ This example demonstrates how to deploy the Aerospike XDR Proxy Connector with c
 - A destination Aerospike cluster reachable from the pods in the Kubernetes cluster
 - A source Aerospike cluster that can connect to Pods in the Kubernetes cluster
 
-## Docker Image
+## NOTE: these steps need to be run from examples/clear-text folder
 
-Pull the XDR Proxy image:
+## Deploy connectors
 
-```shell
-docker pull aerospike/aerospike-xdr-proxy:3.2.13
-```
-
-## Deploy the proxy
-
+### Create a new Kubernetes namespace
 1. Create the namespace if it doesn't exist:
 ```shell
 kubectl create namespace aerospike-test
 ```
 
-2. Deploy the proxy:
+2. Update the [as-xdr-proxy-values.yaml](as-xdr-proxy-values.yaml) file:
+   - Change XDR Proxy configuration to point to your destination Aerospike cluster
+
+3. Deploy the connectors:
 ```shell
-helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-values.yaml ../../aerospike-xdr-proxy
+helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-values.yaml ../../../aerospike-xdr-proxy
 ```
 
-3. Verify the deployment:
+4. Verify the deployment:
 ```shell
 kubectl get pods --namespace aerospike-test --selector=app=xdr-proxy-aerospike-xdr-proxy
 ```

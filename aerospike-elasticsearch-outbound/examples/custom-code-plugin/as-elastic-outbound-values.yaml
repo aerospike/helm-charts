@@ -1,0 +1,56 @@
+replicaCount: 3
+
+connectorConfig:
+  service:
+    # TLS setup for communication between Aerospike server (XDR) and the
+    # connector.
+    # Use the TLS certificates and keys specific to your setup.
+    # See: https://docs.aerospike.com/connect/esp/from-asdb/configuring/service#configuring-tls
+    address: 0.0.0.0
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
+
+  namespaces:
+    test:
+      custom-transformer:
+        class: com.aerospike.connect.outbound.TestOutboundCustomTransformer
+
+  # The logging properties.
+  logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
+    enable-console-logging: true
+
+# List of secrets containing TLS certificates (required for HTTPS connections)
+connectorSecrets:
+  - tls-certs
+
+# List of initContainers to be added for each connector pod.
+# Can be used to copy custom code plugins jars to /opt/aerospike-elastic-outbound-init
+initContainers:
+  - name: aerospike-elasticsearch-outbound-init
+    image: "aerospike/aerospike-connect-custom-transformers:1.0.0" # Image containing custom code plugins jars
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "-c"]
+    # Update args to copy all the jars from init container to emptyDir volume path
+    args:
+      - |
+        set -e
+        cp -r /etc/aerospike-connector-custom-transformers/aerospike-elasticsearch-outbound-custom-transformers.jar /opt/aerospike-elasticsearch-outbound-init
+    volumeMounts:
+      - name: aerospike-elasticsearch-outbound-init
+        mountPath: /opt/aerospike-elasticsearch-outbound-init

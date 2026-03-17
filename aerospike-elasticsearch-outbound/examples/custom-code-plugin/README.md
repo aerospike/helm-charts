@@ -1,0 +1,69 @@
+# Aerospike ElasticSearch Outbound custom code plugin example
+
+This example deploys Aerospike ElasticSearch Outbound connectors with custom code plugin and an Aerospike cluster without TLS configured. 
+
+## Prerequisites
+ - Kubernetes cluster
+ - Helm v3
+ - An ElasticSearch Outbound endpoint reachable from the pods in the Kubernetes cluster
+ - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
+   The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
+ - Aerospike ElasticSearch Outbound Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
+ - A container image containing custom code plugin jars. See [Custom Code Plugin](https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin) for more details.
+
+## NOTE: these steps need to be run from examples/custom-code-plugin folder
+
+## Deploy connectors
+
+### Create a new Kubernetes namespace
+Create a Kubernetes namespace if not already done 
+```shell
+kubectl create namespace aerospike
+```
+
+### Deploy the connectors.
+Update the [as-elastic-outbound-values.yaml](as-elastic-outbound-values.yaml) file to change ElasticSearch connector configuration to point to backend Elastic Search endpoint. 
+Also, add the initContainer section to the file to use your custom code plugin image.
+
+Deploy the connectors using configuration from [as-elastic-outbound-values.yaml](as-elastic-outbound-values.yaml)
+
+```shell
+helm install --namespace aerospike as-es-outbound -f as-elastic-outbound-values.yaml ../../../aerospike-elasticsearch-outbound
+```
+
+### Deploy the Aerospike cluster
+If you do not have a preexisting Aerospike server, install [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator/install-operator).
+The steps below will deploy an Aerospike cluster using Aerospike Kubernetes Operator and this [sample](aerospike.yaml) custom resource.
+
+### Create secrets
+Create the secret for aerospike using your Aerospike licence file
+```shell
+kubectl -n aerospike create secret generic aerospike-secret --from-file=<path to features.conf>
+```
+
+### Launch the Aerospike cluster
+```shell
+kubectl -n aerospike create -f aerospike.yaml 
+```
+## Write data to Aerospike
+
+You can write data to Aerospike using aql, asbench tools or using your own code. The record updates should
+show up in your ElasticSearch endpoint.
+
+## Cleanup
+
+### Remove the Aerospike cluster
+```shell
+kubectl -n aerospike delete -f aerospike.yaml 
+```
+
+### Remove the connectors
+```shell
+helm -n aerospike uninstall as-es-outbound
+```
+
+### Delete the secrets
+```shell
+kubectl -n aerospike delete secrets aerospike-secret 
+```
+

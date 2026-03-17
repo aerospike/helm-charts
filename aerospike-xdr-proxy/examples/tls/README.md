@@ -3,41 +3,37 @@
 This example demonstrates how to deploy the Aerospike XDR Proxy Connector with TLS configuration.
 
 ## Prerequisites
-
 - Kubernetes cluster
 - Helm v3
 - A destination Aerospike cluster reachable from the pods in the Kubernetes cluster
 - A source Aerospike cluster that can connect to Pods in the Kubernetes cluster
 - TLS certificates for mutual TLS authentication
 
-## Docker Image
+## NOTE: these steps need to be run from examples/tls folder
 
-Pull the XDR Proxy image:
+## Deploy connectors
 
-```shell
-docker pull aerospike/aerospike-xdr-proxy:3.2.13
-```
-
-## Create TLS Secret
-
-Before deploying, create a secret containing your TLS certificates. 
-There are sample TLS certificates, keys and keystores in the [tls-certs](tls-certs) folder that the following command uses.
-Use a folder with your TLS files.
-
-```shell
-kubectl -n aerospike-test create secret generic tls-certs --from-file=tls-certs
-```
-
-## Deploy the proxy
-
-1. Create the namespace if it doesn't exist:
+### Create a new Kubernetes namespace
+Create the namespace if it doesn't exist:
 ```shell
 kubectl create namespace aerospike-test
 ```
 
-2. Deploy the proxy:
+### Create a secret for TLS artifacts
+Before deploying, create a secret containing your TLS certificates. 
+There are sample TLS certificates, keys and keystores in the [tls-certs](tls-certs) folder that the following command uses.
+Use a folder with your TLS files.
 ```shell
-helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-tls-values.yaml ../../aerospike-xdr-proxy
+kubectl -n aerospike-test create secret generic tls-certs --from-file=tls-certs
+```
+
+## Deploy connectors
+1. Update the [as-xdr-proxy-values.yaml](as-xdr-proxy-values.yaml) file:
+   - Change XDR Proxy configuration to point to your destination Aerospike cluster
+
+2. Deploy the connectors.
+```shell
+helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-tls-values.yaml ../../../aerospike-xdr-proxy
 ```
 
 3. Verify the deployment:
@@ -79,4 +75,3 @@ To remove the deployment:
 helm uninstall --namespace aerospike-test xdr-proxy
 kubectl delete secret tls-certs --namespace aerospike-test
 ```
-

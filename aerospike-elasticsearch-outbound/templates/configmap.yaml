@@ -1,0 +1,10 @@
+# Configuration for the connector.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aerospike-elasticsearch-outbound.fullname" . }}
+  labels:
+    {{- include "aerospike-elasticsearch-outbound.labels" . | nindent 4 }}
+data:
+  aerospike-elasticsearch-outbound.yml: |-
+    {{- include "aerospike-elasticsearch-outbound.connectorConfig" . | nindent 4 }}

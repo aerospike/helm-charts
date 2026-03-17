@@ -10,19 +10,12 @@ connectorConfig:
     manage:
       address: 0.0.0.0
       port: 8902
-    io-threads: 100
-    worker-threads: 100
-    max-concurrent-requests: 100000
 
   # See: https://docs.aerospike.com/connect/esp/from-asdb/configuring/routing
   routing:
     mode: static-multi-destination
     destinations:
       - dc1
-
-  record-ordering:
-    enable: false
-    lut-cache-ttl-seconds: 30
 
   # See: https://docs.aerospike.com/connect/esp/from-asdb/configuring/destinations
   destinations:

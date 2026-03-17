@@ -10,6 +10,7 @@ This directory contains CI/CD files specifically for running integration tests o
 ## Connectors Tested
 
 The following connectors are tested:
+- `aerospike-elasticsearch-outbound`
 - `aerospike-esp-outbound`
 - `aerospike-jms-inbound`
 - `aerospike-jms-outbound`

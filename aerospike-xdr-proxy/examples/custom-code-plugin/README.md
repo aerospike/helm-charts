@@ -10,21 +10,17 @@ This example demonstrates how to deploy the Aerospike XDR Proxy Connector with c
 - A source Aerospike cluster that can connect to Pods in the Kubernetes cluster
 - A container image containing custom code plugin jars. See [Custom Code Plugin](https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin) for more details.
 
-## Docker Image
+## NOTE: these steps need to be run from examples/tls folder
 
-Pull the XDR Proxy image:
+## Deploy connectors
 
-```shell
-docker pull aerospike/aerospike-xdr-proxy:3.2.13
-```
-
-Pull the custom transformers image (or use your own):
+### NOTE: Pull the custom transformers image (or use your own):
 
 ```shell
 docker pull aerospike/aerospike-connect-custom-transformers:1.0.0
 ```
 
-## Deploy the proxy
+## Deploy connectors
 
 1. Create the namespace if it doesn't exist:
 ```shell
@@ -35,9 +31,9 @@ kubectl create namespace aerospike-test
    - Change XDR Proxy configuration to point to your destination Aerospike cluster
    - Update the `initContainers` section to use your custom code plugin image
 
-3. Deploy the proxy:
+3. Deploy the connectors:
 ```shell
-helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-values.yaml ../../aerospike-xdr-proxy
+helm install --namespace aerospike-test xdr-proxy -f as-xdr-proxy-values.yaml ../../../aerospike-xdr-proxy
 ```
 
 Or use the deploy script from the chart root:

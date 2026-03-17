@@ -11,12 +11,9 @@ This example deploys Aerospike ESP Outbound connectors with custom code plugin a
  - Aerospike ESP Outbound Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
  - A container image containing custom code plugin jars. See [Custom Code Plugin](https://docs.aerospike.com/connect/streaming/outbound-message-transformer#develop-a-custom-code-plugin) for more details.
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/custom-code-plugin folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
@@ -31,7 +28,7 @@ Also, add the initContainer section to the file to use your custom code plugin i
 Deploy the connectors using configuration from [as-esp-outbound-values.yaml](as-esp-outbound-values.yaml)
 
 ```shell
-helm install --namespace aerospike as-esp-outbound -f as-esp-outbound-values.yaml aerospike/aerospike-esp-outbound
+helm install --namespace aerospike as-esp-outbound -f as-esp-outbound-values.yaml ../../../aerospike-esp-outbound
 ```
 
 ## Deploy the Aerospike cluster

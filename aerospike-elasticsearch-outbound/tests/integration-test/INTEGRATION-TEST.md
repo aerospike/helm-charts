@@ -1,0 +1,209 @@
+# Integration Test: Source DB -> ESP Outbound -> XDR Proxy -> Destination DB
+
+This guide walks you through setting up a complete integration test to verify the data flow:
+**Source Aerospike DB → ESP Outbound Connector → XDR Proxy → Destination Aerospike DB**
+
+## Quick Start
+
+**Automated Test (Recommended):**
+```bash
+# Run the complete integration test script (sets up environment, runs tests, and displays metrics)
+cd tests/integration-test
+./run-integration-test.sh
+```
+
+**Manual Deployment Order:**
+1. Destination Elastic Search Service
+2. Elastic Search Outbound Connector
+3. Source Aerospike Cluster (with XDR pointing to Elastic Search Outbound)
+
+**Manual Quick Test:**
+```bash
+# After all components are deployed and tools installed:
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key', 'Test', 100)"
+sleep 10
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3003 -c "SELECT * FROM test.demo WHERE PK='test-key'"
+```
+
+## Architecture
+
+```
+┌─────────────────┐         ┌─────────────────────────┐           ┌─────────────────┐
+│  Source DB      │  XDR    │  ElasticSearch Outbound │  HTTP/2   │ Elastic Search  │
+│  (aerocluster-  │ ──────> │  Connector              │ ──────>   │    service      │
+│   src)          │         │  (Port 8901)            │           │                 │
+└─────────────────┘         └─────────────────────────┘           └─────────────────┘
+```
+
+## Prerequisites
+
+1. **Kubernetes cluster** (kind cluster already set up)
+2. **Aerospike Kubernetes Operator** installed
+3. **Helm v3** installed
+4. **Aerospike features.conf** secret created in `aerospike-test` namespace
+5. **Namespace** `aerospike-test` created
+
+## Step-by-Step Setup
+
+### Step 1: Clean Up Existing Deployments (Optional)
+
+If you have existing deployments, clean them up first:
+
+```bash
+# Uninstall Helm releases
+helm uninstall test-es-outb -n aerospike-test 2>&1 | grep -v "not found" || true
+
+# Delete Aerospike clusters
+# kubectl delete aerospikecluster aerocluster-src aerocluster-dst -n aerospike-test 2>&1 | grep -v "not found" || true
+kubectl delete aerospikecluster aerocluster-src -n aerospike-test 2>&1 | grep -v "not found" || true
+
+# Wait for cleanup
+sleep 10
+```
+
+### Step 2: Verify Prerequisites
+
+```bash
+# Check Aerospike Kubernetes Operator
+kubectl get crd aerospikeclusters.asdb.aerospike.com > /dev/null 2>&1 && echo "✅ Operator installed" || echo "❌ Operator not found"
+
+# Check aerospike-secret (create if needed)
+kubectl get secret aerospike-secret -n aerospike-test > /dev/null 2>&1 && echo "✅ Secret exists" || echo "❌ Secret not found - create it with features.conf"
+
+# Ensure namespace exists
+kubectl get namespace aerospike-test > /dev/null 2>&1 || kubectl create namespace aerospike-test
+```
+
+### Step 3: Deploy Destination Aerospike Cluster
+
+```bash
+# # Deploy destination cluster
+# kubectl apply -f tests/integration-test/aerocluster-dst.yaml
+
+# # Wait for cluster to be ready
+# kubectl wait --for=condition=ready pod -l app=aerospike-cluster,statefulset.kubernetes.io/pod-name=aerocluster-dst-0-0 \
+#   --namespace aerospike-test --timeout=2m
+
+# # Verify cluster is running
+# kubectl get pods -n aerospike-test -l app=aerospike-cluster
+```
+
+### Step 4: Deploy ElasticSearch Outbound Connector
+
+Deploy Elasctic Search Outbound pointing to Elastic Service:
+
+```bash
+# Deploy Elastic Search Outbound with configuration pointing to XDR Proxy
+helm install test-es-outb . \
+  --namespace aerospike-test \
+  --values tests/integration-test/elastic-outbound-integration-values.yaml \
+  --wait --timeout 2m
+
+# Verify Elastic Search pods are running
+kubectl get pods -n aerospike-test -l app.kubernetes.io/name=aerospike-elasticsearch-outbound
+
+# Check Elastic Search logs for any errors
+kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-elasticsearch-outbound --tail=10
+```
+
+### Step 5: Deploy Source Aerospike Cluster
+
+The source cluster YAML already includes Elastic Search pod DNS names. Deploy it:
+
+```bash
+# Deploy source cluster (XDR configured to point to Elastic Search Outbound pods)
+kubectl apply -f tests/integration-test/aerocluster-src.yaml
+
+# Wait for cluster to be ready
+kubectl wait --for=condition=ready pod -l app=aerospike-cluster,statefulset.kubernetes.io/pod-name=aerocluster-src-0-0 \
+  --namespace aerospike-test --timeout=2m
+
+# Verify all components are running
+kubectl get pods -n aerospike-test
+
+# Check source cluster logs
+kubectl logs -n aerospike-test aerocluster-src-0-0 --tail=10
+```
+
+## Testing Data Flow
+
+### Prerequisites: Install Aerospike Tools in DB Pods
+
+Aerospike tools (aql) need to be installed in both source and destination DB pods for testing:
+
+```bash
+# Download and install tools in source DB pod
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- bash -c "
+  cd /tmp && \
+  curl -sL https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64.tgz -o tools.tgz && \
+  tar -xzf tools.tgz && \
+  dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64/aerospike-tools_11.2.2-ubuntu20.04_arm64.deb && \
+  apt-get update -qq && apt-get install -y -qq libreadline8 > /dev/null 2>&1
+"
+
+# Download and install tools in destination DB pod
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- bash -c "
+  cd /tmp && \
+  curl -sL https://download.aerospike.com/artifacts/aerospike-server-enterprise/8.0.0.8/aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64.tgz -o tools.tgz && \
+  tar -xzf tools.tgz && \
+  dpkg -i aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_aarch64/aerospike-tools_11.2.2-ubuntu20.04_arm64.deb && \
+  apt-get update -qq && apt-get install -y -qq libreadline8 > /dev/null 2>&1
+"
+```
+
+**Note:** For x86_64 architecture, use the appropriate package:
+- `aerospike-server-enterprise_8.0.0.8_tools-11.2.2_ubuntu20.04_amd64.tgz`
+
+### Step 1: Insert Data into Source Cluster
+
+```bash
+# Insert test record directly in source DB pod
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "INSERT INTO test.demo (PK, name, value) VALUES ('test-key-1', 'Test Record', 100)"
+
+# Verify record in source
+kubectl exec -n aerospike-test aerocluster-src-0-0 -- aql -h localhost -p 3000 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
+```
+
+### Step 2: Verify Data in Destination Cluster
+
+```bash
+# Wait a few seconds for data to flow through the pipeline
+sleep 10
+
+# Check if record replicated to destination
+kubectl exec -n aerospike-test aerocluster-dst-0-0 -- aql -h localhost -p 3003 -c "SELECT * FROM test.demo WHERE PK='test-key-1'"
+```
+
+### Step 3: Check Component Metrics
+
+```bash
+# Elastic Search Outbound metrics
+kubectl logs -n aerospike-test -l app.kubernetes.io/name=aerospike-elasticsearch-outbound --tail=5 | grep -E "(requests-total|requests-success)"
+
+# Check all component status
+kubectl get pods -n aerospike-test -o wide
+```
+
+## Troubleshooting
+
+### Elastic Search Outbound not receiving data
+
+1. Check XDR configuration in source cluster:
+   ```bash
+   kubectl exec -n aerospike-test $SRC_POD -- asinfo -v "get-dc-config"
+   ```
+
+2. Verify Elastic Search pods are accessible:
+   ```bash
+   kubectl exec -n aerospike-test $SRC_POD -- nc -zv test-es-outb-aerospike-elasticsearch-outbound-0.test-es-outb-aerospike-elasticsearch-outbound 8901
+   ```
+
+## Cleanup
+
+```bash
+# Delete source cluster
+kubectl delete -f tests/integration-test/aerocluster-src.yaml
+
+# Elastic Search Outbound can remain or be uninstalled
+helm uninstall test-es-outb --namespace aerospike-test
+```

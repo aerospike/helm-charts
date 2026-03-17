@@ -1,0 +1,45 @@
+replicaCount: 3
+
+connectorConfig:
+  service:
+    # TLS setup for secure communication between Aerospike server (XDR) and the connector.
+    # For service configuration details, see: https://aerospike.com/docs/connectors/streaming/elasticsearch/configure/service/#configuring-tls
+    address: 0.0.0.0
+    tls:
+      port: 8443
+      key-store:
+        store-file: secrets/tls-certs/svc.cluster.local.keystore.jks
+        store-password-file: secrets/tls-certs/storepass
+
+    port: 8901
+    manage:
+      address: 0.0.0.0
+      port: 8902
+
+  # Aerospike record routing to an Elasticsearch index.
+  routing:
+    mode: static
+    destination: aerospike
+
+  # The logging properties
+  logging:
+    file: /var/log/aerospike-elasticsearch-outbound/aerospike-elasticsearch-outbound.log
+    enable-console-logging: true
+
+  es-client:
+    cluster-config:
+      type: on-prem
+      nodes:
+        - host:
+            hostname: localhost
+            port: 9200
+
+# List of secrets containing TLS certificates
+# The secret 'tls-certs' will be mounted to /etc/aerospike-elasticsearch-outbound/secrets/tls-certs
+# Ensure the secret contains:
+#   - svc.cluster.local.truststore.jks (trust store)
+#   - svc.cluster.local.keystore.jks (key store)
+#   - storepass (password file)
+# See the README.md for instructions on creating the TLS secret
+connectorSecrets:
+  - tls-certs

@@ -15,28 +15,7 @@ fullnameOverride: ""
 
 # Default Connector configuration.
 # Visit: https://docs.aerospike.com/connect/esp/from-asdb/configuring
-connectorConfig:
-  service:
-    port: 8901
-    manage:
-      port: 8902
-
-# The default format for ESP outbound connector is XDR, for other formats see https://aerospike.com/docs/connectors/streaming/esp/configure/format/
-#  format:
-#    mode: json
-
-  routing:
-    mode: static-multi-destination
-    destinations:
-      - dc1
-
-  destinations:
-    dc1:
-      urls:
-        - https://connector.aerospike.com:8443
-
-  logging:
-    enable-console-logging: true
+connectorConfig: {}
 
 # List of secrets mounted to /etc/aerospike-esp-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials

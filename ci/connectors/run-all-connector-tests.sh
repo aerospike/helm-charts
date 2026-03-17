@@ -62,6 +62,7 @@ fi
 
 # Connectors to test
 CONNECTORS=(
+    "aerospike-elasticsearch-outbound"
     "aerospike-esp-outbound"
     "aerospike-jms-inbound"
     "aerospike-jms-outbound"

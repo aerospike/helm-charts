@@ -10,12 +10,9 @@ This example deploys Aerospike Pulsar Outbound connectors and an Aerospike clust
    The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
  - Aerospike Pulsar Connector [Helm chart](../../README.md#adding-the-helm-chart-repository)
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/clear-text folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
@@ -28,7 +25,7 @@ Update the [as-pulsar-outbound-values.yaml](as-pulsar-outbound-values.yaml) file
 
 Deploy the connectors using configuration from [as-pulsar-outbound-values.yaml](as-pulsar-outbound-values.yaml)
 ```shell
-helm install --namespace aerospike as-pulsar-outbound -f as-pulsar-outbound-values.yaml aerospike/aerospike-pulsar-outbound
+helm install --namespace aerospike as-pulsar-outbound -f as-pulsar-outbound-values.yaml ../../../aerospike-pulsar-outbound
 ```
 
 ## Deploy the Aerospike cluster
