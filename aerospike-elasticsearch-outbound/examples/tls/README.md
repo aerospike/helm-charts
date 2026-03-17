@@ -10,7 +10,7 @@ This example demonstrates how to deploy the Aerospike ElasticSearch Outbound Con
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
 - TLS certificates for mutual TLS authentication
 
-## NOTE: these steps need to be run from examples/clear-text folder
+## NOTE: these steps need to be run from examples/tls folder
 
 ## Deploy connectors
 

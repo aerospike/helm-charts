@@ -16,5 +16,5 @@ maintainers:
 # The helm chart version
 version: "2.2.15"
 
-# The default version of Aerospike ESP Outbound Connector
+# The default version of Aerospike ElasticSearch Outbound Connector
 appVersion: "2.2.15"

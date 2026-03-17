@@ -161,7 +161,7 @@ See [Aerospike ElasticSearch Outbound configuration](https://docs.aerospike.com/
 Update the `destinations.dc1.urls` configuration to point to your ElasticSearch endpoint.
 
 We recommend naming the file with the name of the connector cluster. For example if you want to name your connector cluster as
-`as-elasticsearch-outbound`, create a file `as-elasticsearch-outbound-values.yaml`.
+`as-es-outbound`, create a file `as-elastic-outbound-values.yaml`.
 Once you have created this custom values file, deploy the connectors, using the following command.
 
 ### Create a new namespace
@@ -334,7 +334,7 @@ Upgrade the connector deployment using the following command.
 
 ```shell
 #helm upgrade --namespace <target namespace> <helm release name> -f <path to custom values yaml file> aerospike/aerospike-elasticsearch-outbound
-helm upgrade --namespace aerospike as-es-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm upgrade --namespace aerospike as-es-outbound -f as-elastic-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
 ```
 
 On successful execution of the command the connector pods will undergo a rolling restart and come up with the new configuration.
@@ -352,7 +352,7 @@ Edit the `replicaCount` to the desired connector count and upgrade the connector
 
 ```shell
 #helm upgrade --namespace <target namespace> <helm release name> -f <path to custom values yaml file> aerospike/aerospike-elasticsearch-outbound
-helm upgrade --namespace aerospike as-elasticsearch-outbound -f as-elasticsearch-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
+helm upgrade --namespace aerospike as-elasticsearch-outbound -f as-elastic-outbound-values.yaml aerospike/aerospike-elasticsearch-outbound
 ```
 
 Verify that the connectors have been scaled.
