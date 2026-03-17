@@ -74,9 +74,9 @@ entries:
   aerospike-elasticsearch-outbound:
   - apiVersion: v2
     appVersion: 2.2.15
-    created: "2026-03-17T11:22:08.890195+05:30"
+    created: "2026-03-17T15:59:57.802826+05:30"
     description: A Helm chart for Aerospike Connect for ElasticSearch - Outbound
-    digest: bac5f59e20e8af0f853757cba2d39bb7e6655f6ccdf094fa52199bc4bbd0325e
+    digest: a12457f605dc7e28c6da98c48ab9aedd2c4f6160b874d37205382ee21cebfc85
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
@@ -686,4 +686,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-xdr-proxy-3.2.14.tgz
     version: 3.2.14
-generated: "2026-03-17T11:22:08.879272+05:30"
+generated: "2026-03-17T16:04:04.659163+05:30"
