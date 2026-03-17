@@ -16,30 +16,6 @@ fullnameOverride: ""
 # Default Connector configuration given below.
 # Visit: https://docs.aerospike.com/connect/pulsar/from-asdb/configuring/service
 connectorConfig: {}
-  # Uncomment the following lines, adjust them as necessary as per your environment, and remove the curly braces after 'connectorConfig:'.
-
-  # service:
-  #   port: 8080
-  #   manage:
-  #     port: 8081
-
-  # Pulsar connector client configuration.
-  # client-configuration:
-  #   serviceUrl: pulsar://localhost:6650
-
-  # Format of the Pulsar destination message.
-  # format:
-  #   mode: flat-json
-  #   metadata-key: metadata
-
-  # Aerospike record routing to a Pulsar destination.
-  # routing:
-  #   mode: static
-  #   destination: aerospike
-
-  # The logging properties.
-  # logging:
-  #   enable-console-logging: true
 
 # List of secrets mounted to /etc/aerospike-pulsar-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials

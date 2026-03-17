@@ -28,9 +28,9 @@ echo "📋 Test 1: Linting chart..."
 helm lint $CHART_NAME
 echo "✅ Chart linting passed"
 
-# Test 2: Template rendering
+# Test 2: Template rendering (requires connectorConfig - use clear-text values)
 echo "📋 Test 2: Testing template rendering..."
-helm template $RELEASE_NAME $CHART_NAME --debug > /dev/null
+helm template $RELEASE_NAME $CHART_NAME -f $CLEAR_TEXT_VALUES --debug > /dev/null
 echo "✅ Template rendering passed"
 
 # Test 3: Template rendering with clear-text values
@@ -43,9 +43,9 @@ echo "📋 Test 4: Testing template rendering with TLS values..."
 helm template $RELEASE_NAME $CHART_NAME -f $TLS_VALUES --debug > /dev/null
 echo "✅ TLS template rendering passed"
 
-# Test 5: Dry-run installation
+# Test 5: Dry-run installation (requires connectorConfig - use clear-text values)
 echo "📋 Test 5: Testing dry-run installation..."
-helm install --dry-run --debug $RELEASE_NAME $CHART_NAME --namespace $NAMESPACE
+helm install --dry-run --debug $RELEASE_NAME $CHART_NAME --namespace $NAMESPACE -f $CLEAR_TEXT_VALUES
 echo "✅ Dry-run installation passed"
 
 # Test 6: Actual installation (if kubectl is available)
@@ -71,7 +71,7 @@ if command -v kubectl &> /dev/null; then
 
     # Test connectivity
     echo "🔗 Testing connectivity..."
-    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- nslookup $RELEASE_NAME-aerospike-jms-inbound || true
+    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- sh -c "nslookup $RELEASE_NAME-aerospike-jms-inbound; sleep 5" || true
 
     # Run helm test
     echo "🧪 Running Helm tests..."
@@ -85,4 +85,3 @@ fi
 echo ""
 echo "🎉 All tests completed successfully!"
 echo "=============================================="
-

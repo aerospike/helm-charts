@@ -25,7 +25,7 @@ deployed proxy pods.
 ### Option 1: Using the Deployment Script
 
 ```bash
-# Deploy with default values
+# Deploy with default values (if values.yaml is populated)
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
@@ -129,7 +129,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "3.2.14"
+  tag: "3.2.16"
 
 proxyConfig:
   service:

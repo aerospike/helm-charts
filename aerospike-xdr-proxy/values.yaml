@@ -18,24 +18,16 @@ fullnameOverride: ""
 proxyConfig:
   service:
     port: 8901
-    socket-receive-buffer-bytes: 131072
-    protocol: HTTP_2
     manage:
-      address: 0.0.0.0
       port: 8902
 
   aerospike:
     seeds:
-      - localhost:
+      - aerocluster-xdr-dst-0-0.aerospike-test.svc.cluster.local:
           port: 3000
-    performance:
-      max-connections-per-node: 100
-      event-loop-size: 15
 
   logging:
     enable-console-logging: true
-    file: /var/log/aerospike-xdr-proxy/aerospike-xdr-proxy.log
-    ticker-interval: 1
 
 # List of secrets mounted to /etc/aerospike-xdr-proxy/secrets for each proxy pod.
 # Can be used for TLS certificates and credentials

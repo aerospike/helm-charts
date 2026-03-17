@@ -9,6 +9,8 @@ This example demonstrates how to deploy the Aerospike ESP Outbound Connector wit
 - An ESP endpoint reachable from the pods in the Kubernetes cluster
 - An Aerospike cluster that can connect to Pods in the Kubernetes cluster
 
+## NOTE: these steps need to be run from examples/clear-text folder
+
 ## Deploy the connector
 
 1. Create the namespace if it doesn't exist:
@@ -18,7 +20,7 @@ kubectl create namespace aerospike
 
 2. Deploy the connector:
 ```shell
-helm install --namespace aerospike as-esp-outbound -f as-esp-outbound-values.yaml ../../aerospike-esp-outbound
+helm install --namespace aerospike as-esp-outbound -f as-esp-outbound-values.yaml ../../../aerospike-esp-outbound
 ```
 
 3. Verify the deployment:

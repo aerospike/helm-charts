@@ -11,12 +11,9 @@ This example deploys Aerospike Kafka Outbound connectors and an Aerospike cluste
    Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
  - Aerospike Kafka Connector Helm chart [installed](../../README.md#install-the-helm-chart) 
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/tls folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
@@ -37,7 +34,7 @@ Update the [as-kafka-outbound-tls-values.yaml](as-kafka-outbound-tls-values.yaml
 
 Deploy the connectors using configuration from [as-kafka-outbound-tls-values.yaml](as-kafka-outbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-kafka-outbound-tls -f as-kafka-outbound-tls-values.yaml aerospike/aerospike-kafka-outbound
+helm install --namespace aerospike as-kafka-outbound-tls -f as-kafka-outbound-tls-values.yaml ../../../aerospike-kafka-outbound
 ```
 
 ## Deploy the Aerospike cluster

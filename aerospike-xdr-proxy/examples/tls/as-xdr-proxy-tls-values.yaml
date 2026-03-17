@@ -7,8 +7,6 @@ proxyConfig:
     # Note: When receiving XDR protocol directly from Aerospike servers, protocol should be null
     # Use protocol: HTTP_2 only when receiving HTTP/2 from connectors (e.g., ESP Outbound)
     port: 8901
-    socket-receive-buffer-bytes: 131072
-    protocol: null  # Accepts XDR protocol from Aerospike servers
     # TLS configuration for secure communication
     # For TLS configuration details, see: https://www.aerospike.com/docs/connectors/enterprise/xdr-proxy/configuration/index.html#tls-configuration
     tls:

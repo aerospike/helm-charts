@@ -25,7 +25,7 @@ deployed connector pods.
 ### Option 1: Using the Deployment Script
 
 ```bash
-# Deploy with default values
+# Deploy with default values (if values.yaml is populated)
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
@@ -121,7 +121,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "2.4.14"
+  tag: "2.4.16"
 
 connectorConfig:
   service:
@@ -130,18 +130,11 @@ connectorConfig:
     manage:
       address: 0.0.0.0
       port: 8902
-    io-threads: 100
-    worker-threads: 100
-    max-concurrent-requests: 100000
 
   routing:
     mode: static-multi-destination
     destinations:
       - dc1
-
-  record-ordering:
-    enable: false
-    lut-cache-ttl-seconds: 30
 
   destinations:
     dc1:

@@ -70,8 +70,7 @@ if command -v kubectl &> /dev/null; then
     
     # Test connectivity
     echo "🔗 Testing connectivity..."
-    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- nslookup $RELEASE_NAME-aerospike-esp-outbound || true
-    
+    kubectl run test-pod --image=busybox --rm -it --restart=Never --namespace $NAMESPACE -- sh -c "nslookup $RELEASE_NAME-aerospike-esp-outbound; sleep 5" || true
     # Run helm test
     echo "🧪 Running Helm tests..."
     helm test $RELEASE_NAME --namespace $NAMESPACE || true

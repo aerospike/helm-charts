@@ -25,7 +25,7 @@ deployed connector pods.
 ### Option 1: Using the Deployment Script
 
 ```bash
-# Deploy with default values
+# Deploy with default values (if values.yaml is populated)
 ./tests/deploy-test.sh
 
 # Deploy with custom values file
@@ -123,7 +123,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "4.2.13"
+  tag: "4.2.15"
 
 connectorConfig:
   service:

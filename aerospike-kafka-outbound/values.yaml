@@ -15,30 +15,7 @@ fullnameOverride: ""
 
 # Default Connector configuration.
 # Visit: https://docs.aerospike.com/connect/kafka/from-asdb/configuring
-connectorConfig:
-  service:
-    port: 8080
-    manage:
-      port: 8081
-
-  # Format of the Kafka destination message.
-  format:
-    mode: flat-json
-    metadata-key: metadata
-
-  # Aerospike record routing to a Kafka destination.
-  routing:
-    mode: static
-    destination: aerospike
-
-  # Kafka producer initialization properties.
-  producer-props:
-    bootstrap.servers:
-      - localhost:9092
-
-  # The logging properties.
-  logging:
-    enable-console-logging: true
+connectorConfig: {}
 
 # List of secrets mounted to /etc/aerospike-kafka-outbound/secrets for each connector pod.
 # Can be used for TLS certificates and credentials

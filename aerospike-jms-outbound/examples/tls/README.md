@@ -10,12 +10,9 @@ This example deploys Aerospike JMS Outbound connectors and an Aerospike cluster 
    The Aerospike cluster can be deployed in the same Kubernetes cluster using [Aerospike Kubernetes Operator](https://docs.aerospike.com/cloud/kubernetes/operator)
  - Aerospike JMS Connector [Helm chart](../../README.md#adding-the-helm-chart-repository) 
 
-## Clone this repository.
- - A clone of this git repository
+## NOTE: these steps need to be run from examples/tls folder
 
-## Deploy connectors.
-
-All subsequent commands are run from this directory.
+## Deploy connectors
 
 ### Create a new Kubernetes namespace
 Create a Kubernetes namespace if not already done 
@@ -36,7 +33,7 @@ Update the [as-jms-outbound-tls-values.yaml](as-jms-outbound-tls-values.yaml) fi
 
 Deploy the connectors using configuration from [as-jms-outbound-tls-values.yaml](as-jms-outbound-tls-values.yaml)
 ```shell
-helm install --namespace aerospike as-jms-outbound-tls -f as-jms-outbound-tls-values.yaml aerospike/aerospike-jms-outbound
+helm install --namespace aerospike as-jms-outbound-tls -f as-jms-outbound-tls-values.yaml ../../../aerospike-jms-outbound
 ```
 
 ## Deploy the Aerospike cluster
