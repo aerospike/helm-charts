@@ -92,9 +92,8 @@ entries:
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
-    - Connector
     - ESP
-    - Event Streaming
+    - Connector
     - Outbound
     - Source
     maintainers:
@@ -113,9 +112,8 @@ entries:
     icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
     keywords:
     - Aerospike
-    - Connector
     - ESP
-    - Event Streaming
+    - Connector
     - Outbound
     - Source
     maintainers:
@@ -178,7 +176,6 @@ entries:
     - JMS
     - Connector
     - Inbound
-    - Sink
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -198,7 +195,6 @@ entries:
     - JMS
     - Connector
     - Inbound
-    - Sink
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -218,7 +214,6 @@ entries:
     - JMS
     - Connector
     - Inbound
-    - Sink
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -279,7 +274,6 @@ entries:
     - JMS
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -299,7 +293,6 @@ entries:
     - JMS
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -319,7 +312,6 @@ entries:
     - JMS
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -379,7 +371,6 @@ entries:
     - Aerospike
     - Kafka
     - Connector
-    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -418,7 +409,6 @@ entries:
     - Aerospike
     - Kafka
     - Connector
-    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -438,7 +428,6 @@ entries:
     - Aerospike
     - Kafka
     - Connector
-    - Outbound
     - Source
     maintainers:
     - email: developers@aerospike.com
@@ -500,7 +489,6 @@ entries:
     - Pulsar
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -520,7 +508,6 @@ entries:
     - Pulsar
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
@@ -540,7 +527,6 @@ entries:
     - Pulsar
     - Connector
     - Outbound
-    - Source
     maintainers:
     - email: developers@aerospike.com
       name: Aerospike
