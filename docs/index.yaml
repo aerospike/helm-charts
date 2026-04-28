@@ -43,6 +43,27 @@ entries:
     version: 2.2.15
   aerospike-esp-outbound:
   - apiVersion: v2
+    appVersion: 3.0.0
+    created: "2026-04-28T12:41:20.856904+05:30"
+    description: A Helm chart for Aerospike Connect for ESP - Outbound
+    digest: 0815a4615df06b137dfe108d828ccdc03b47dd644bf93781ea2307dd4819ad14
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Connector
+    - ESP
+    - Event Streaming
+    - Outbound
+    - Source
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-esp-outbound
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-esp-outbound-3.0.0.tgz
+    version: 3.0.0
+  - apiVersion: v2
     appVersion: 2.4.17
     created: "2026-04-20T14:47:58.656222+05:30"
     description: A Helm chart for Aerospike Connect for ESP - Outbound
@@ -537,6 +558,25 @@ entries:
     version: 1.0.0
   aerospike-xdr-proxy:
   - apiVersion: v2
+    appVersion: 4.0.0
+    created: "2026-04-28T12:41:20.876574+05:30"
+    description: A Helm chart for Aerospike XDR Proxy Connector
+    digest: 3649ad0c78b06ff9955370e41b7a2ef10b8a45a1c0187c8da6ade2acc19de5a8
+    icon: https://avatars0.githubusercontent.com/u/2214313?s=200&v=4
+    keywords:
+    - Aerospike
+    - Connector
+    - Proxy
+    - XDR
+    maintainers:
+    - email: developers@aerospike.com
+      name: Aerospike
+    name: aerospike-xdr-proxy
+    type: application
+    urls:
+    - https://aerospike.github.io/helm-charts/aerospike-xdr-proxy-4.0.0.tgz
+    version: 4.0.0
+  - apiVersion: v2
     appVersion: 3.2.17
     created: "2026-04-20T14:47:58.679673+05:30"
     description: A Helm chart for Aerospike XDR Proxy Connector
@@ -612,4 +652,4 @@ entries:
     urls:
     - https://aerospike.github.io/helm-charts/aerospike-xdr-proxy-3.2.14.tgz
     version: 3.2.14
-generated: "2026-04-20T14:47:58.648312+05:30"
+generated: "2026-04-28T12:41:20.849652+05:30"
