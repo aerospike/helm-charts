@@ -129,7 +129,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "4.0.0"
+  tag: "4.0.1"
 
 proxyConfig:
   service:
