@@ -122,7 +122,7 @@ A sample values yaml file is shown below:
 replicaCount: 3
 
 image:
-  tag: "5.3.17"
+  tag: "6.0.1"
 
 connectorConfig:
   service:
