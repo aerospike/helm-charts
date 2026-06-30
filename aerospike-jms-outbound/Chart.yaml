@@ -14,7 +14,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: "4.2.17"
+version: "4.2.19"
 
 # The default version of Aerospike JMS Outbound Connector
-appVersion: "4.2.17"
+appVersion: "4.2.19"

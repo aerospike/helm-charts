@@ -14,7 +14,7 @@ maintainers:
     email: developers@aerospike.com
 
 # The helm chart version
-version: "2.2.17"
+version: "3.0.1"
 
 # The default version of Aerospike ElasticSearch Outbound Connector
-appVersion: "2.2.17"
+appVersion: "3.0.1"
