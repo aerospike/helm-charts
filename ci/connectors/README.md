@@ -27,6 +27,63 @@ cd /path/to/helm-charts
 ./ci/connectors/run-all-connector-tests.sh
 ```
 
+
+### Running in GitHub Actions
+
+Workflow: **Connector Integration Tests** (`.github/workflows/connector-integration-tests.yaml`)
+
+Uses the existing repository secret `FEATURES_CONF` containing the Aerospike `features.conf` contents.
+
+**Automatic run after packaging**
+
+When **Package Connector Helm Charts** completes successfully, it calls **Connector Integration Tests** as a reusable workflow for the packaged connectors (same commit/ref as the packaging run).
+
+**Manual run**
+
+1. Open **Actions → Connector Integration Tests → Run workflow**
+2. Select the branch to test (e.g. your PR branch)
+3. Select connectors using the checkboxes (all selected by default)
+
+Manual runs require permission to trigger workflows on this repository (configure under **Settings → Actions → General**).
+
+**Pull request runs**
+
+When a pull request changes connector chart files, the workflow runs integration tests only for the affected connector chart directories. Workflow or CI documentation-only changes do not schedule integration tests on the pull request.
+
+Fork pull requests are skipped automatically because repository secrets are unavailable.
+
+Test logs are uploaded as workflow artifacts for 14 days.
+
+### Packaging connector charts
+
+Workflow: **Package Connector Helm Charts** (`.github/workflows/package-connector-charts.yaml`)
+
+**Version inputs**
+
+| Input | Purpose |
+|---|---|
+| `version_bump` | Default for all selected charts: `patch`, `minor`, `major`, `none`, or explicit `X.Y.Z` |
+| `chart_version_overrides` | Optional JSON map overriding `version_bump` per chart directory |
+
+Example overrides (each value can be a bump mode or explicit semver):
+
+```json
+{
+  "aerospike-kafka-outbound": "6.1.0",
+  "aerospike-jms-outbound": "minor",
+  "aerospike-esp-outbound": "none"
+}
+```
+
+Charts not listed in overrides use `version_bump`. With `version_bump=none`, only charts listed in overrides are updated.
+
+```bash
+gh workflow run package-connector-charts.yaml \
+  --ref <branch> \
+  -f version_bump=patch \
+  -f 'chart_version_overrides={"aerospike-kafka-outbound":"6.1.0","aerospike-jms-outbound":"4.3.0"}'
+```
+
 ### Running in Jenkins
 
 1. Create a Pipeline job in Jenkins

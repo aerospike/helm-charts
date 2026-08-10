@@ -1,0 +1,427 @@
+name: Package Connector Helm Charts
+
+# Packages selected connector Helm charts into docs/, refreshes docs/index.yaml,
+# and opens a pull request to main.
+#
+# Intended release flow:
+#   1. Create a feature branch with chart updates from the connector release project
+#   2. Run integration tests from that branch
+#   3. Run this workflow from the same branch to package charts and open/update the PR
+#   4. Integration tests run automatically after packaging succeeds
+#   5. Review and merge to main only after tests and packaging look correct
+#
+# Optional: configure the "connector-helm-release" environment with required reviewers
+# for an additional approval gate before packaging commits are pushed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      aerospike_elasticsearch_outbound:
+        description: aerospike-elasticsearch-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_esp_outbound:
+        description: aerospike-esp-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_jms_inbound:
+        description: aerospike-jms-inbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_jms_outbound:
+        description: aerospike-jms-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_kafka_outbound:
+        description: aerospike-kafka-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_pulsar_outbound:
+        description: aerospike-pulsar-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_xdr_proxy:
+        description: aerospike-xdr-proxy
+        type: boolean
+        required: true
+        default: true
+      version_bump:
+        description: Default version bump (patch, minor, major, none) or explicit semver for all selected charts
+        type: string
+        required: false
+        default: patch
+      chart_version_overrides:
+        description: Optional JSON map of chart directory to bump mode or semver (overrides version_bump per chart)
+        type: string
+        required: false
+        default: ""
+      branch_mode:
+        description: Branch handling mode for the release PR branch
+        type: choice
+        required: true
+        default: update_existing
+        options:
+          - create_new
+          - update_existing
+      branch_name:
+        description: Release PR branch (leave empty to use the branch this workflow runs from)
+        required: false
+        default: ""
+      jira_ticket:
+        description: JIRA ticket for the PR title (e.g. CONNECTOR-1558)
+        required: false
+        default: ""
+      pr_title:
+        description: Optional custom PR title (overrides default when set)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: package-connector-charts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package-connector-charts:
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.selected-charts.outputs.charts }}
+      release_branch: ${{ steps.release-branch.outputs.name }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout triggering branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Resolve release branch
+        id: release-branch
+        env:
+          INPUT_BRANCH_NAME: ${{ github.event.inputs.branch_name }}
+          BRANCH_MODE: ${{ github.event.inputs.branch_mode }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${INPUT_BRANCH_NAME}" ]; then
+            target_branch="${INPUT_BRANCH_NAME}"
+          else
+            target_branch="${GITHUB_REF_NAME}"
+          fi
+
+          echo "Triggering branch: ${GITHUB_REF_NAME}"
+          echo "Release PR branch: ${target_branch}"
+
+          if git ls-remote --heads origin "${target_branch}" | grep -q .; then
+            if [ "${BRANCH_MODE}" = "create_new" ] && [ "${target_branch}" != "${GITHUB_REF_NAME}" ]; then
+              echo "::error::Branch '${target_branch}' already exists. Choose a different branch name or use update_existing mode."
+              exit 1
+            fi
+            echo "Release branch exists and will be updated."
+          elif [ "${BRANCH_MODE}" = "create_new" ]; then
+            echo "Release branch will be created."
+          else
+            echo "Release branch does not exist yet; it will be created on first push."
+          fi
+
+          echo "name=${target_branch}" >> "${GITHUB_OUTPUT}"
+
+      - name: Resolve selected charts
+        id: selected-charts
+        env:
+          AEROSPIKE_ELASTICSEARCH_OUTBOUND: ${{ github.event.inputs.aerospike_elasticsearch_outbound }}
+          AEROSPIKE_ESP_OUTBOUND: ${{ github.event.inputs.aerospike_esp_outbound }}
+          AEROSPIKE_JMS_INBOUND: ${{ github.event.inputs.aerospike_jms_inbound }}
+          AEROSPIKE_JMS_OUTBOUND: ${{ github.event.inputs.aerospike_jms_outbound }}
+          AEROSPIKE_KAFKA_OUTBOUND: ${{ github.event.inputs.aerospike_kafka_outbound }}
+          AEROSPIKE_PULSAR_OUTBOUND: ${{ github.event.inputs.aerospike_pulsar_outbound }}
+          AEROSPIKE_XDR_PROXY: ${{ github.event.inputs.aerospike_xdr_proxy }}
+        run: |
+          set -euo pipefail
+
+          charts=()
+          if [ "${AEROSPIKE_ELASTICSEARCH_OUTBOUND}" = "true" ]; then charts+=("aerospike-elasticsearch-outbound"); fi
+          if [ "${AEROSPIKE_ESP_OUTBOUND}" = "true" ]; then charts+=("aerospike-esp-outbound"); fi
+          if [ "${AEROSPIKE_JMS_INBOUND}" = "true" ]; then charts+=("aerospike-jms-inbound"); fi
+          if [ "${AEROSPIKE_JMS_OUTBOUND}" = "true" ]; then charts+=("aerospike-jms-outbound"); fi
+          if [ "${AEROSPIKE_KAFKA_OUTBOUND}" = "true" ]; then charts+=("aerospike-kafka-outbound"); fi
+          if [ "${AEROSPIKE_PULSAR_OUTBOUND}" = "true" ]; then charts+=("aerospike-pulsar-outbound"); fi
+          if [ "${AEROSPIKE_XDR_PROXY}" = "true" ]; then charts+=("aerospike-xdr-proxy"); fi
+
+          if [ "${#charts[@]}" -eq 0 ]; then
+            echo "::error::Select at least one connector chart to package."
+            exit 1
+          fi
+
+          {
+            echo "charts<<EOF"
+            printf '%s\n' "${charts[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "Selected charts:"
+          printf '  - %s\n' "${charts[@]}"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.16.4
+
+      - name: Bump chart versions and update README tags
+        if: >-
+          ${{
+            (github.event.inputs.version_bump != 'none' && github.event.inputs.version_bump != 'skip' && github.event.inputs.version_bump != '')
+            || (github.event.inputs.chart_version_overrides != '')
+          }}
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+          VERSION_BUMP: ${{ github.event.inputs.version_bump || 'patch' }}
+          CHART_VERSION_OVERRIDES: ${{ github.event.inputs.chart_version_overrides }}
+        run: |
+          set -euo pipefail
+
+          bump_version() {
+            local version="${1//\"/}"
+            local bump_type="${2,,}"
+
+            if [[ "${bump_type}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "${bump_type}"
+              return
+            fi
+
+            local major minor patch
+            IFS='.' read -r major minor patch <<< "${version}"
+
+            case "${bump_type}" in
+              patch)
+                echo "${major}.${minor}.$((patch + 1))"
+                ;;
+              minor)
+                echo "${major}.$((minor + 1)).0"
+                ;;
+              major)
+                echo "$((major + 1)).0.0"
+                ;;
+              *)
+                echo "::error::Unknown bump type '${2}'. Use patch, minor, major, none, skip, or an explicit version (e.g. 4.0.0)." >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          should_skip_bump() {
+            local bump_type="${1,,}"
+            [ -z "${bump_type}" ] || [ "${bump_type}" = "none" ] || [ "${bump_type}" = "skip" ]
+          }
+
+          resolve_bump_type() {
+            local chart="$1"
+            local override=""
+
+            if [ -n "${CHART_VERSION_OVERRIDES}" ]; then
+              override="$(echo "${CHART_VERSION_OVERRIDES}" | jq -r --arg chart "${chart}" '.[$chart] // empty')"
+            fi
+
+            if [ -n "${override}" ] && [ "${override}" != "null" ]; then
+              echo "${override}"
+            else
+              echo "${VERSION_BUMP}"
+            fi
+          }
+
+          if [ -n "${CHART_VERSION_OVERRIDES}" ]; then
+            if ! echo "${CHART_VERSION_OVERRIDES}" | jq -e 'type == "object"' >/dev/null; then
+              echo "::error::chart_version_overrides must be a JSON object, e.g. {\"aerospike-kafka-outbound\":\"6.0.3\"}"
+              exit 1
+            fi
+
+            while IFS= read -r chart_key; do
+              [ -n "${chart_key}" ] || continue
+              if ! grep -qx "${chart_key}" <<< "${CHARTS}"; then
+                echo "::error::chart_version_overrides contains unselected or unknown chart '${chart_key}'"
+                exit 1
+              fi
+            done <<< "$(echo "${CHART_VERSION_OVERRIDES}" | jq -r 'keys[]')"
+          fi
+
+          version_changes=()
+
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+
+            chart_yaml="${chart}/Chart.yaml"
+            if [ ! -f "${chart_yaml}" ]; then
+              echo "::error::Missing ${chart_yaml}"
+              exit 1
+            fi
+
+            old_version="$(grep '^version:' "${chart_yaml}" | head -n1 | awk '{print $2}' | tr -d '"')"
+            chart_bump="$(resolve_bump_type "${chart}")"
+
+            if should_skip_bump "${chart_bump}"; then
+              echo "${chart}: keeping ${old_version}"
+              continue
+            fi
+
+            new_version="$(bump_version "${old_version}" "${chart_bump}")"
+
+            sed -i "s/^version: .*/version: \"${new_version}\"/" "${chart_yaml}"
+            sed -i "s/^appVersion: .*/appVersion: \"${new_version}\"/" "${chart_yaml}"
+
+            readme="${chart}/README.md"
+            if [ -f "${readme}" ]; then
+              sed -i "s/tag: \"${old_version}\"/tag: \"${new_version}\"/" "${readme}"
+            fi
+
+            version_changes+=("| ${chart} | ${old_version} → ${new_version} (${chart_bump}) |")
+            echo "${chart}: ${old_version} -> ${new_version} (${chart_bump})"
+          done <<< "${CHARTS}"
+
+          {
+            echo "summary<<EOF"
+            printf '%s\n' "${version_changes[@]}"
+            echo "EOF"
+          } >> "${GITHUB_ENV}"
+
+      - name: Package selected connector charts
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+        run: |
+          set -euo pipefail
+
+          chart_args=()
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+            chart_args+=("${chart}")
+          done <<< "${CHARTS}"
+
+          helm package "${chart_args[@]}" --destination docs/
+
+      - name: Regenerate Helm repository index
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+        run: |
+          set -euo pipefail
+
+          # Index only newly packaged charts so historical `created` timestamps
+          # in docs/index.yaml are preserved (helm repo index on docs/ re-reads
+          # every .tgz and resets created from file mtimes).
+          staging="$(mktemp -d)"
+          trap 'rm -rf "${staging}"' EXIT
+
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+            version="$(grep '^version:' "${chart}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+            tgz="docs/${chart}-${version}.tgz"
+            if [ ! -f "${tgz}" ]; then
+              echo "::error::Missing packaged chart ${tgz}"
+              exit 1
+            fi
+            cp "${tgz}" "${staging}/"
+          done <<< "${CHARTS}"
+
+          helm repo index "${staging}" --merge docs/index.yaml --url https://aerospike.github.io/helm-charts
+          mv "${staging}/index.yaml" docs/index.yaml
+
+      - name: Build pull request metadata
+        id: pr-metadata
+        env:
+          VERSION_BUMP: ${{ github.event.inputs.version_bump || 'patch' }}
+          CHART_VERSION_OVERRIDES: ${{ github.event.inputs.chart_version_overrides }}
+          JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
+          PR_TITLE_INPUT: ${{ github.event.inputs.pr_title }}
+          VERSION_SUMMARY: ${{ env.summary }}
+          RELEASE_BRANCH: ${{ steps.release-branch.outputs.name }}
+        run: |
+          set -euo pipefail
+
+          should_bump=false
+          if [ -n "${CHART_VERSION_OVERRIDES}" ]; then
+            should_bump=true
+          elif [ -n "${VERSION_BUMP}" ] && [ "${VERSION_BUMP}" != "none" ] && [ "${VERSION_BUMP}" != "skip" ]; then
+            should_bump=true
+          fi
+
+          if [ -n "${PR_TITLE_INPUT}" ]; then
+            title="${PR_TITLE_INPUT}"
+          elif [ -n "${JIRA_TICKET}" ]; then
+            title="[${JIRA_TICKET}] - Bump connector Helm chart versions"
+          else
+            title="Bump connector Helm chart versions"
+          fi
+
+          {
+            echo "title<<EOF"
+            echo "${title}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+          {
+            echo "body<<EOF"
+            echo "## Summary"
+            echo "- Package selected connector Helm charts into \`docs/\`"
+            if [ "${should_bump}" = "true" ]; then
+              if [ -n "${CHART_VERSION_OVERRIDES}" ]; then
+                echo "- Update chart versions using per-chart overrides and default \`${VERSION_BUMP}\`"
+              else
+                echo "- Update chart versions in \`Chart.yaml\`, \`appVersion\`, and README image tags (\`${VERSION_BUMP}\`)"
+              fi
+            fi
+            echo "- Regenerate \`docs/index.yaml\` with digests for the newly packaged charts"
+            echo ""
+            echo "**Source branch:** \`${GITHUB_REF_NAME}\`"
+            echo "**Release PR branch:** \`${RELEASE_BRANCH}\`"
+            echo ""
+            if [ "${should_bump}" = "true" ] && [ -n "${VERSION_SUMMARY:-}" ]; then
+              echo "## Version updates"
+              echo "| Chart | Version |"
+              echo "|---|---|"
+              echo "${VERSION_SUMMARY}"
+              echo ""
+            fi
+            echo "## Test plan"
+            echo "- [ ] Verify \`helm repo index\` entries match packaged chart versions"
+            echo "- [ ] Confirm chart versions in Chart.yaml match appVersion for selected connectors"
+            echo "- [ ] Integration tests passed on the source branch before merge"
+            echo ""
+            echo "Triggered by @${{ github.actor }} from workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Create or update pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ steps.release-branch.outputs.name }}
+          delete-branch: false
+          commit-message: ${{ steps.pr-metadata.outputs.title }}
+          title: ${{ steps.pr-metadata.outputs.title }}
+          body: ${{ steps.pr-metadata.outputs.body }}
+
+  integration-tests:
+    needs: package-connector-charts
+    if: success()
+    uses: ./.github/workflows/connector-integration-tests.yaml
+    secrets: inherit
+    with:
+      aerospike_elasticsearch_outbound: ${{ github.event.inputs.aerospike_elasticsearch_outbound == 'true' }}
+      aerospike_esp_outbound: ${{ github.event.inputs.aerospike_esp_outbound == 'true' }}
+      aerospike_jms_inbound: ${{ github.event.inputs.aerospike_jms_inbound == 'true' }}
+      aerospike_jms_outbound: ${{ github.event.inputs.aerospike_jms_outbound == 'true' }}
+      aerospike_kafka_outbound: ${{ github.event.inputs.aerospike_kafka_outbound == 'true' }}
+      aerospike_pulsar_outbound: ${{ github.event.inputs.aerospike_pulsar_outbound == 'true' }}
+      aerospike_xdr_proxy: ${{ github.event.inputs.aerospike_xdr_proxy == 'true' }}
