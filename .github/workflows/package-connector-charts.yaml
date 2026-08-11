@@ -62,7 +62,7 @@ on:
         description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
         required: true
       pr_title:
-        description: PR title after the JIRA prefix (default - Bump connector Helm chart versions)
+        description: PR title suffix after the JIRA prefix (default - [Streaming] release title with current Mon'YY in IST)
         required: false
         default: ""
 
@@ -285,6 +285,7 @@ jobs:
       - name: Package selected connector charts
         env:
           CHARTS: ${{ steps.selected-charts.outputs.charts }}
+          TZ: Asia/Kolkata
         run: |
           set -euo pipefail
 
@@ -299,12 +300,13 @@ jobs:
       - name: Regenerate Helm repository index
         env:
           CHARTS: ${{ steps.selected-charts.outputs.charts }}
+          TZ: Asia/Kolkata
         run: |
           set -euo pipefail
 
           # Index only newly packaged charts so historical `created` timestamps
-          # in docs/index.yaml are preserved (helm repo index on docs/ re-reads
-          # every .tgz and resets created from file mtimes).
+          # in docs/index.yaml are preserved. TZ=Asia/Kolkata keeps new entries
+          # in +05:30 like prior releases (GHA default UTC otherwise).
           staging="$(mktemp -d)"
           trap 'rm -rf "${staging}"' EXIT
 
@@ -344,7 +346,8 @@ jobs:
           if [ -n "${PR_TITLE_INPUT}" ]; then
             title="[${FEATURE_BRANCH}] ${PR_TITLE_INPUT}"
           else
-            title="[${FEATURE_BRANCH}] Bump connector Helm chart versions"
+            release_month_year="$(TZ=Asia/Kolkata date +"%b'%y")"
+            title="[${FEATURE_BRANCH}] [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - ${release_month_year}"
           fi
 
           {
@@ -395,6 +398,7 @@ jobs:
           commit-message: ${{ steps.pr-metadata.outputs.title }}
           title: ${{ steps.pr-metadata.outputs.title }}
           body: ${{ steps.pr-metadata.outputs.body }}
+          reviewers: mphanias,abhilashmandaliya,vivekashub
 
   integration-tests:
     needs: package-connector-charts
