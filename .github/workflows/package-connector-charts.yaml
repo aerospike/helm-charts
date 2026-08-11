@@ -13,6 +13,23 @@ name: Package Connector Helm Charts
 on:
   workflow_dispatch:
     inputs:
+      branch_name:
+        description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
+        required: true
+      pr_title:
+        description: PR title suffix after the JIRA prefix (default - [Streaming] release title with current Mon'YY in IST)
+        required: false
+        default: ""
+      version_bump:
+        description: Default version bump (patch, minor, major, none) or explicit semver for all selected charts
+        type: string
+        required: false
+        default: patch
+      chart_version_overrides:
+        description: Optional JSON map of chart directory to bump mode or semver (overrides version_bump per chart)
+        type: string
+        required: false
+        default: ""
       aerospike_elasticsearch_outbound:
         description: aerospike-elasticsearch-outbound
         type: boolean
@@ -48,23 +65,6 @@ on:
         type: boolean
         required: true
         default: true
-      version_bump:
-        description: Default version bump (patch, minor, major, none) or explicit semver for all selected charts
-        type: string
-        required: false
-        default: patch
-      chart_version_overrides:
-        description: Optional JSON map of chart directory to bump mode or semver (overrides version_bump per chart)
-        type: string
-        required: false
-        default: ""
-      branch_name:
-        description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
-        required: true
-      pr_title:
-        description: PR title suffix after the JIRA prefix (default - [Streaming] release title with current Mon'YY in IST)
-        required: false
-        default: ""
 
 permissions:
   contents: write

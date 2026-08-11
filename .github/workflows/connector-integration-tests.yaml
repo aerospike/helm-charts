@@ -6,13 +6,9 @@ name: Connector Integration Tests
 # Triggers:
 # - workflow_call: invoked by package-connector-charts after packaging (primary release path)
 # - workflow_dispatch: manual run from any branch
-# - pull_request: only when connector-integration-tests.yaml itself changes (human CI PRs)
+# - pull_request: CI or connector test changes (not chart packaging paths under Chart.yaml/docs/)
 #
-# Chart release PRs do not use pull_request; they run tests via workflow_call from
-# Package Connector Helm Charts to avoid duplicate runs and GitHub's approval gate
-# for pull_request workflows that use secrets on GITHUB_TOKEN-created commits.
-#
-# Requires repository secret FEATURES_CONF containing the Aerospike features.conf contents.
+# Chart release PRs run tests via workflow_call from Package Connector Helm Charts instead.
 
 on:
   workflow_call:
@@ -82,7 +78,17 @@ on:
         default: true
   pull_request:
     paths:
+      - "ci/connectors/**"
+      - "aerospike-elasticsearch-outbound/tests/**"
+      - "aerospike-esp-outbound/tests/**"
+      - "aerospike-jms-inbound/tests/**"
+      - "aerospike-jms-outbound/tests/**"
+      - "aerospike-kafka-outbound/tests/**"
+      - "aerospike-pulsar-outbound/tests/**"
+      - "aerospike-xdr-proxy/tests/**"
       - ".github/workflows/connector-integration-tests.yaml"
+
+# Requires repository secret FEATURES_CONF containing the Aerospike features.conf contents.
 
 permissions:
   contents: read
@@ -153,11 +159,20 @@ jobs:
             fi
 
             changed_files="$(git diff --name-only "origin/${BASE_REF}"...HEAD)"
-            for connector in "${all_connectors[@]}"; do
-              if echo "${changed_files}" | grep -q "^${connector}/"; then
-                selected+=("${connector}")
-              fi
-            done
+
+            if echo "${changed_files}" | grep -q '^ci/connectors/'; then
+              selected=("${all_connectors[@]}")
+            else
+              for connector in "${all_connectors[@]}"; do
+                if echo "${changed_files}" | grep -q "^${connector}/tests/"; then
+                  selected+=("${connector}")
+                fi
+              done
+            fi
+
+            if [ "${#selected[@]}" -eq 0 ] && echo "${changed_files}" | grep -q '^\.github/workflows/connector-integration-tests\.yaml$'; then
+              selected=("${all_connectors[@]}")
+            fi
           fi
 
           if [ "${#selected[@]}" -eq 0 ]; then

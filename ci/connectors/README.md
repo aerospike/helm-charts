@@ -68,7 +68,7 @@ Manual runs require permission to trigger workflows on this repository (configur
 
 **Pull request runs**
 
-Pull requests only trigger this workflow when `.github/workflows/connector-integration-tests.yaml` itself changes (human-authored CI PRs). Chart release PRs run integration tests via **Package Connector Helm Charts** instead, which avoids GitHub's approval gate for `pull_request` workflows using secrets on bot-created commits.
+Pull requests trigger this workflow when connector **test or CI** files change (`ci/connectors/**`, `aerospike-*/tests/**`, or `.github/workflows/connector-integration-tests.yaml`). Changes to chart packaging files alone (`Chart.yaml`, `README.md`, `docs/`) do not trigger it; those release PRs run tests via **Package Connector Helm Charts** instead.
 
 Fork pull requests are skipped automatically because repository secrets are unavailable.
 
