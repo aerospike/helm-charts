@@ -106,6 +106,8 @@ Charts not listed in overrides use `version_bump`. With `version_bump=none`, onl
 
 If the feature branch already exists it is reused; otherwise it is created from `main` on the first push. New `docs/index.yaml` entries use `Asia/Kolkata` timestamps to match prior releases.
 
+After packaging, the workflow verifies each `.tgz` with `helm show chart`, prints `sha256sum`, and confirms the digest matches `docs/index.yaml` (also included in the release PR body).
+
 ```bash
 gh workflow run package-connector-charts.yaml \
   --ref main \

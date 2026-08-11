@@ -324,6 +324,70 @@ jobs:
           helm repo index "${staging}" --merge docs/index.yaml --url https://aerospike.github.io/helm-charts
           mv "${staging}/index.yaml" docs/index.yaml
 
+      - name: Verify packaged chart artifacts
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+        run: |
+          set -euo pipefail
+
+          verification_lines=()
+
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+
+            version="$(grep '^version:' "${chart}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+            app_version="$(grep '^appVersion:' "${chart}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+            tgz="docs/${chart}-${version}.tgz"
+
+            if [ ! -f "${tgz}" ]; then
+              echo "::error::Missing packaged chart ${tgz}"
+              exit 1
+            fi
+
+            echo "::group::${chart} ${version}"
+            echo "Chart.yaml: version=${version} appVersion=${app_version}"
+            echo "Artifact: ${tgz}"
+
+            file_digest="$(sha256sum "${tgz}" | awk '{print $1}')"
+            echo "sha256: ${file_digest}"
+
+            index_digest="$(ruby -ryaml -e "
+              index = YAML.load_file('docs/index.yaml')
+              entry = index.dig('entries', '${chart}')&.find { |e| e['version'].to_s == '${version}' }
+              abort('missing index entry') unless entry
+              puts entry['digest']
+            ")"
+
+            if [ "${file_digest}" != "${index_digest}" ]; then
+              echo "::error::Digest mismatch for ${tgz}: file=${file_digest} index=${index_digest}"
+              exit 1
+            fi
+
+            echo "index digest: ${index_digest} (matches)"
+
+            packaged_version="$(helm show chart "${tgz}" | awk '/^version:/ {print $2}' | tr -d '"')"
+            packaged_app_version="$(helm show chart "${tgz}" | awk '/^appVersion:/ {print $2}' | tr -d '"')"
+
+            if [ "${packaged_version}" != "${version}" ] || [ "${packaged_app_version}" != "${app_version}" ]; then
+              echo "::error::Packaged chart metadata mismatch for ${tgz}"
+              echo "expected version=${version} appVersion=${app_version}"
+              echo "got version=${packaged_version} appVersion=${packaged_app_version}"
+              exit 1
+            fi
+
+            echo "--- helm show chart ---"
+            helm show chart "${tgz}"
+            echo "::endgroup::"
+
+            verification_lines+=("| ${chart} | ${version} | \`${file_digest}\` | verified |")
+          done <<< "${CHARTS}"
+
+          {
+            echo "package_verification<<EOF"
+            printf '%s\n' "${verification_lines[@]}"
+            echo "EOF"
+          } >> "${GITHUB_ENV}"
+
       - name: Build pull request metadata
         id: pr-metadata
         env:
@@ -331,6 +395,7 @@ jobs:
           CHART_VERSION_OVERRIDES: ${{ github.event.inputs.chart_version_overrides }}
           PR_TITLE_INPUT: ${{ github.event.inputs.pr_title }}
           VERSION_SUMMARY: ${{ env.summary }}
+          PACKAGE_VERIFICATION: ${{ env.package_verification }}
           FEATURE_BRANCH: ${{ steps.feature-branch.outputs.name }}
           CHECKOUT_REF: ${{ steps.feature-branch.outputs.checkout_ref }}
         run: |
@@ -377,6 +442,13 @@ jobs:
               echo "| Chart | Version |"
               echo "|---|---|"
               echo "${VERSION_SUMMARY}"
+              echo ""
+            fi
+            if [ -n "${PACKAGE_VERIFICATION:-}" ]; then
+              echo "## Packaged artifacts"
+              echo "| Chart | Version | SHA256 | Status |"
+              echo "|---|---|---|---|"
+              echo "${PACKAGE_VERIFICATION}"
               echo ""
             fi
             echo "## Test plan"
