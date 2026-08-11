@@ -4,7 +4,7 @@ name: Package Connector Helm Charts
 # and opens a pull request to main.
 #
 # Intended release flow (single workflow dispatch, typically from main):
-#   1. Set branch_name (or jira_ticket used as the feature branch name) and select charts
+#   1. Set branch_name (JIRA id, e.g. CONNECTOR-1645) and select charts
 #   2. Workflow checks out the feature branch if it exists, otherwise main to seed a new one
 #   3. Bump versions, package charts, refresh docs/index.yaml, push to the feature branch, open PR to main
 #   4. Integration tests run automatically on the feature branch after packaging succeeds
@@ -59,15 +59,10 @@ on:
         required: false
         default: ""
       branch_name:
-        description: Feature branch and PR head (defaults to jira_ticket)
-        required: false
-        default: ""
-      jira_ticket:
-        description: JIRA ticket used as feature branch name when branch_name is empty; also prefixes the PR title (e.g. CONNECTOR-1645)
-        required: false
-        default: ""
+        description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
+        required: true
       pr_title:
-        description: Optional custom PR title (overrides default when set)
+        description: PR title after the JIRA prefix (default - Bump connector Helm chart versions)
         required: false
         default: ""
 
@@ -95,21 +90,19 @@ jobs:
         id: feature-branch
         env:
           INPUT_BRANCH_NAME: ${{ github.event.inputs.branch_name }}
-          JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
         run: |
           set -euo pipefail
           remote="https://github.com/${GITHUB_REPOSITORY}.git"
 
-          if [ -n "${INPUT_BRANCH_NAME}" ]; then
-            feature_branch="${INPUT_BRANCH_NAME}"
-          elif [ -n "${JIRA_TICKET}" ]; then
-            feature_branch="${JIRA_TICKET}"
-          else
-            feature_branch="${GITHUB_REF_NAME}"
+          if [ -z "${INPUT_BRANCH_NAME}" ]; then
+            echo "::error::branch_name is required (e.g. CONNECTOR-1645)."
+            exit 1
           fi
 
+          feature_branch="${INPUT_BRANCH_NAME}"
+
           if [ "${feature_branch}" = "main" ]; then
-            echo "::error::Set branch_name or jira_ticket so the workflow can use a feature branch (not main)."
+            echo "::error::branch_name must be a JIRA feature branch, not main."
             exit 1
           fi
 
@@ -334,7 +327,6 @@ jobs:
         env:
           VERSION_BUMP: ${{ github.event.inputs.version_bump || 'patch' }}
           CHART_VERSION_OVERRIDES: ${{ github.event.inputs.chart_version_overrides }}
-          JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
           PR_TITLE_INPUT: ${{ github.event.inputs.pr_title }}
           VERSION_SUMMARY: ${{ env.summary }}
           FEATURE_BRANCH: ${{ steps.feature-branch.outputs.name }}
@@ -350,11 +342,9 @@ jobs:
           fi
 
           if [ -n "${PR_TITLE_INPUT}" ]; then
-            title="${PR_TITLE_INPUT}"
-          elif [ -n "${JIRA_TICKET}" ]; then
-            title="[${JIRA_TICKET}] - Bump connector Helm chart versions"
+            title="[${FEATURE_BRANCH}] ${PR_TITLE_INPUT}"
           else
-            title="Bump connector Helm chart versions"
+            title="[${FEATURE_BRANCH}] Bump connector Helm chart versions"
           fi
 
           {

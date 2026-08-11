@@ -41,18 +41,18 @@ When **Package Connector Helm Charts** completes successfully, it calls **Connec
 **End-to-end release from main**
 
 1. Open **Actions → Package Connector Helm Charts → Run workflow** on `main`
-2. Set `jira_ticket` (e.g. `CONNECTOR-1645`) — used as the feature branch name when `branch_name` is empty
+2. Set `branch_name` to the JIRA id (e.g. `CONNECTOR-1645`)
 3. Select connectors and set `version_bump` (default `patch`)
 4. The workflow reuses the feature branch if it already exists, otherwise creates it from `main`, applies Helm updates on that branch, opens/updates a PR to `main`, then runs integration tests on the feature branch
 
 ```bash
 gh workflow run package-connector-charts.yaml \
   --ref main \
-  -f jira_ticket=CONNECTOR-1645 \
+  -f branch_name=CONNECTOR-1645 \
   -f version_bump=patch
 ```
 
-Use `-f branch_name=CONNECTOR-1645` instead of `jira_ticket` when the branch name should differ from the ticket id.
+Optional `-f pr_title='My ticket title'` sets the PR title as `[CONNECTOR-1645] My ticket title`.
 
 **Manual run**
 
@@ -97,15 +97,15 @@ Charts not listed in overrides use `version_bump`. With `version_bump=none`, onl
 
 | Input | Purpose |
 |---|---|
-| `branch_name` | Feature branch and PR head (optional if `jira_ticket` is set) |
-| `jira_ticket` | Used as feature branch name when `branch_name` is empty; also prefixes the PR title |
+| `branch_name` | JIRA feature branch and PR head (e.g. `CONNECTOR-1645`) |
+| `pr_title` | Optional title after the JIRA prefix; default is `Bump connector Helm chart versions` |
 
-Set `branch_name` or `jira_ticket` when running from `main`. If the feature branch already exists it is reused; otherwise it is created from `main` on the first push.
+If the feature branch already exists it is reused; otherwise it is created from `main` on the first push.
 
 ```bash
 gh workflow run package-connector-charts.yaml \
   --ref main \
-  -f jira_ticket=CONNECTOR-1645 \
+  -f branch_name=CONNECTOR-1645 \
   -f version_bump=patch \
   -f 'chart_version_overrides={"aerospike-kafka-outbound":"6.1.0","aerospike-jms-outbound":"4.3.0"}'
 ```
