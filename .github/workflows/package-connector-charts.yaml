@@ -398,7 +398,7 @@ jobs:
           commit-message: ${{ steps.pr-metadata.outputs.title }}
           title: ${{ steps.pr-metadata.outputs.title }}
           body: ${{ steps.pr-metadata.outputs.body }}
-          reviewers: mphanias,abhilashmandaliya,vivekashub
+          reviewers: mphanias,abhilashmandaliya,VivekASHub
 
   integration-tests:
     needs: package-connector-charts

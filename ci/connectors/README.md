@@ -56,7 +56,7 @@ Optional `-f pr_title='Custom release title'` overrides the default suffix. When
 
 `[CONNECTOR-1645] [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - Aug'26`
 
-(month/year are set automatically from the current date in IST). Reviewers `mphanias`, `abhilashmandaliya`, and `vivekashub` are requested on every release PR.
+(month/year are set automatically from the current date in IST). Reviewers `mphanias`, `abhilashmandaliya`, and `VivekASHub` are requested on every release PR.
 
 **Manual run**
 
