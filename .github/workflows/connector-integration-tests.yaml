@@ -1,0 +1,286 @@
+name: Connector Integration Tests
+
+# Runs connector Helm chart integration tests on kind using the scripts under
+# ci/connectors/ and each chart's tests/integration-test/ directory.
+#
+# Triggers:
+# - workflow_call: invoked by package-connector-charts after packaging (works pre-merge)
+# - workflow_dispatch: manual run from any branch (requires workflow on default branch)
+# - pull_request: changed connector chart directories on internal PRs
+#
+# Requires repository secret FEATURES_CONF containing the Aerospike features.conf contents.
+
+on:
+  workflow_call:
+    inputs:
+      aerospike_elasticsearch_outbound:
+        type: boolean
+        required: true
+      aerospike_esp_outbound:
+        type: boolean
+        required: true
+      aerospike_jms_inbound:
+        type: boolean
+        required: true
+      aerospike_jms_outbound:
+        type: boolean
+        required: true
+      aerospike_kafka_outbound:
+        type: boolean
+        required: true
+      aerospike_pulsar_outbound:
+        type: boolean
+        required: true
+      aerospike_xdr_proxy:
+        type: boolean
+        required: true
+      git_ref:
+        description: Branch or ref to test (defaults to caller ref when empty)
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      aerospike_elasticsearch_outbound:
+        description: aerospike-elasticsearch-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_esp_outbound:
+        description: aerospike-esp-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_jms_inbound:
+        description: aerospike-jms-inbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_jms_outbound:
+        description: aerospike-jms-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_kafka_outbound:
+        description: aerospike-kafka-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_pulsar_outbound:
+        description: aerospike-pulsar-outbound
+        type: boolean
+        required: true
+        default: true
+      aerospike_xdr_proxy:
+        description: aerospike-xdr-proxy
+        type: boolean
+        required: true
+        default: true
+  pull_request:
+    paths:
+      - "aerospike-elasticsearch-outbound/**"
+      - "aerospike-esp-outbound/**"
+      - "aerospike-jms-inbound/**"
+      - "aerospike-jms-outbound/**"
+      - "aerospike-kafka-outbound/**"
+      - "aerospike-pulsar-outbound/**"
+      - "aerospike-xdr-proxy/**"
+      - "ci/connectors/**"
+      - ".github/workflows/connector-integration-tests.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: connector-integration-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      connectors_json: ${{ steps.build-matrix.outputs.connectors_json }}
+      has_connectors: ${{ steps.build-matrix.outputs.has_connectors }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Build connector test matrix
+        id: build-matrix
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          ES: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_elasticsearch_outbound && 'true' || 'false') || github.event.inputs.aerospike_elasticsearch_outbound }}
+          ESP: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_esp_outbound && 'true' || 'false') || github.event.inputs.aerospike_esp_outbound }}
+          JMS_IN: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_jms_inbound && 'true' || 'false') || github.event.inputs.aerospike_jms_inbound }}
+          JMS_OUT: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_jms_outbound && 'true' || 'false') || github.event.inputs.aerospike_jms_outbound }}
+          KAFKA: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_kafka_outbound && 'true' || 'false') || github.event.inputs.aerospike_kafka_outbound }}
+          PULSAR: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_pulsar_outbound && 'true' || 'false') || github.event.inputs.aerospike_pulsar_outbound }}
+          XDR: ${{ github.event_name == 'workflow_call' && (inputs.aerospike_xdr_proxy && 'true' || 'false') || github.event.inputs.aerospike_xdr_proxy }}
+        run: |
+          set -euo pipefail
+
+          all_connectors=(
+            aerospike-elasticsearch-outbound
+            aerospike-esp-outbound
+            aerospike-jms-inbound
+            aerospike-jms-outbound
+            aerospike-kafka-outbound
+            aerospike-pulsar-outbound
+            aerospike-xdr-proxy
+          )
+
+          selected=()
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] || [ "${EVENT_NAME}" = "workflow_call" ]; then
+            [ "${ES}" = "true" ] && selected+=("aerospike-elasticsearch-outbound")
+            [ "${ESP}" = "true" ] && selected+=("aerospike-esp-outbound")
+            [ "${JMS_IN}" = "true" ] && selected+=("aerospike-jms-inbound")
+            [ "${JMS_OUT}" = "true" ] && selected+=("aerospike-jms-outbound")
+            [ "${KAFKA}" = "true" ] && selected+=("aerospike-kafka-outbound")
+            [ "${PULSAR}" = "true" ] && selected+=("aerospike-pulsar-outbound")
+            [ "${XDR}" = "true" ] && selected+=("aerospike-xdr-proxy")
+          else
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              echo "Skipping fork pull request (secrets unavailable)."
+              echo 'connectors_json={"connector":[]}' >> "${GITHUB_OUTPUT}"
+              echo "has_connectors=false" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+
+            changed_files="$(git diff --name-only "origin/${BASE_REF}"...HEAD)"
+            for connector in "${all_connectors[@]}"; do
+              if echo "${changed_files}" | grep -q "^${connector}/"; then
+                selected+=("${connector}")
+              fi
+            done
+          fi
+
+          if [ "${#selected[@]}" -eq 0 ]; then
+            echo "No connectors selected for testing."
+            echo 'connectors_json={"connector":[]}' >> "${GITHUB_OUTPUT}"
+            echo "has_connectors=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          connectors_json="$(printf '%s\n' "${selected[@]}" | jq -R . | jq -s -c '{connector: .}')"
+          echo "connectors_json=${connectors_json}" >> "${GITHUB_OUTPUT}"
+          echo "has_connectors=true" >> "${GITHUB_OUTPUT}"
+          echo "Selected connectors:"
+          printf '  - %s\n' "${selected[@]}"
+
+  integration-test:
+    needs: prepare
+    if: needs.prepare.outputs.has_connectors == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.connectors_json) }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.git_ref != '' && inputs.git_ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.16.4
+
+      - name: Setup kind
+        uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0
+        with:
+          install_only: true
+          version: v0.26.0
+
+      - name: Install Aerospike features.conf
+        env:
+          FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${FEATURES_CONF}" ]; then
+            echo "::error::Missing repository secret FEATURES_CONF"
+            exit 1
+          fi
+
+          mkdir -p "${{ matrix.connector }}/kind/config"
+          printf '%s\n' "${FEATURES_CONF}" > "${{ matrix.connector }}/kind/config/features.conf"
+          chmod 600 "${{ matrix.connector }}/kind/config/features.conf"
+
+      - name: Install Kind cluster
+        run: |
+          set -o pipefail
+          bash "${{ matrix.connector }}/kind/install-kind.sh" 2>&1 | tee "/tmp/${{ matrix.connector }}-install.log"
+
+      - name: Run integration test
+        id: integration-test
+        run: |
+          set -o pipefail
+          test_output="/tmp/${{ matrix.connector }}-test.log"
+          set +e
+          bash "${{ matrix.connector }}/tests/integration-test/run-integration-test.sh" 2>&1 | tee "${test_output}"
+          test_exit_code=${PIPESTATUS[0]}
+          set -e
+
+          if grep -q "^INTEGRATION_TEST_FAILED$" "${test_output}"; then
+            echo "result=failed" >> "${GITHUB_OUTPUT}"
+            exit 1
+          fi
+
+          if [ "${test_exit_code}" -eq 0 ] || grep -q "^INTEGRATION_TEST_PASSED$" "${test_output}"; then
+            echo "result=passed" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          echo "result=failed" >> "${GITHUB_OUTPUT}"
+          exit 1
+
+      - name: Uninstall Kind cluster
+        if: always()
+        run: |
+          set -o pipefail
+          bash "${{ matrix.connector }}/kind/uninstall-kind.sh" 2>&1 | tee "/tmp/${{ matrix.connector }}-uninstall.log" || true
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        with:
+          name: integration-test-logs-${{ matrix.connector }}-${{ github.run_id }}
+          path: /tmp/${{ matrix.connector }}-*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  summary:
+    needs: [prepare, integration-test]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report no scheduled tests
+        if: needs.prepare.outputs.has_connectors != 'true'
+        run: echo "No connector integration tests were scheduled for this event."
+
+      - name: Report success
+        if: needs.prepare.outputs.has_connectors == 'true' && needs.integration-test.result == 'success'
+        run: echo "All selected connector integration tests passed."
+
+      - name: Report failure
+        if: needs.prepare.outputs.has_connectors == 'true' && needs.integration-test.result == 'failure'
+        run: |
+          echo "::error::One or more connector integration tests failed."
+          exit 1
