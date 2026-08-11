@@ -4,9 +4,13 @@ name: Connector Integration Tests
 # ci/connectors/ and each chart's tests/integration-test/ directory.
 #
 # Triggers:
-# - workflow_call: invoked by package-connector-charts after packaging (works pre-merge)
-# - workflow_dispatch: manual run from any branch (requires workflow on default branch)
-# - pull_request: changed connector chart directories on internal PRs
+# - workflow_call: invoked by package-connector-charts after packaging (primary release path)
+# - workflow_dispatch: manual run from any branch
+# - pull_request: only when connector-integration-tests.yaml itself changes (human CI PRs)
+#
+# Chart release PRs do not use pull_request; they run tests via workflow_call from
+# Package Connector Helm Charts to avoid duplicate runs and GitHub's approval gate
+# for pull_request workflows that use secrets on GITHUB_TOKEN-created commits.
 #
 # Requires repository secret FEATURES_CONF containing the Aerospike features.conf contents.
 
@@ -78,14 +82,6 @@ on:
         default: true
   pull_request:
     paths:
-      - "aerospike-elasticsearch-outbound/**"
-      - "aerospike-esp-outbound/**"
-      - "aerospike-jms-inbound/**"
-      - "aerospike-jms-outbound/**"
-      - "aerospike-kafka-outbound/**"
-      - "aerospike-pulsar-outbound/**"
-      - "aerospike-xdr-proxy/**"
-      - "ci/connectors/**"
       - ".github/workflows/connector-integration-tests.yaml"
 
 permissions:

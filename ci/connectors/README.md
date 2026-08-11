@@ -64,7 +64,7 @@ Manual runs require permission to trigger workflows on this repository (configur
 
 **Pull request runs**
 
-When a pull request changes connector chart files, the workflow runs integration tests only for the affected connector chart directories. Workflow or CI documentation-only changes do not schedule integration tests on the pull request.
+Pull requests only trigger this workflow when `.github/workflows/connector-integration-tests.yaml` itself changes (human-authored CI PRs). Chart release PRs run integration tests via **Package Connector Helm Charts** instead, which avoids GitHub's approval gate for `pull_request` workflows using secrets on bot-created commits.
 
 Fork pull requests are skipped automatically because repository secrets are unavailable.
 
