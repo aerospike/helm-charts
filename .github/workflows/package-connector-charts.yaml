@@ -3,15 +3,12 @@ name: Package Connector Helm Charts
 # Packages selected connector Helm charts into docs/, refreshes docs/index.yaml,
 # and opens a pull request to main.
 #
-# Intended release flow:
-#   1. Create a feature branch with chart updates from the connector release project
-#   2. Run integration tests from that branch
-#   3. Run this workflow from the same branch to package charts and open/update the PR
-#   4. Integration tests run automatically after packaging succeeds
-#   5. Review and merge to main only after tests and packaging look correct
-#
-# Optional: configure the "connector-helm-release" environment with required reviewers
-# for an additional approval gate before packaging commits are pushed.
+# Intended release flow (single workflow dispatch, typically from main):
+#   1. Set branch_name (or jira_ticket used as the feature branch name) and select charts
+#   2. Workflow checks out the feature branch if it exists, otherwise main to seed a new one
+#   3. Bump versions, package charts, refresh docs/index.yaml, push to the feature branch, open PR to main
+#   4. Integration tests run automatically on the feature branch after packaging succeeds
+#   5. Review and merge the PR to main after tests pass
 
 on:
   workflow_dispatch:
@@ -61,20 +58,12 @@ on:
         type: string
         required: false
         default: ""
-      branch_mode:
-        description: Branch handling mode for the release PR branch
-        type: choice
-        required: true
-        default: update_existing
-        options:
-          - create_new
-          - update_existing
       branch_name:
-        description: Release PR branch (leave empty to use the branch this workflow runs from)
+        description: Feature branch and PR head (defaults to jira_ticket)
         required: false
         default: ""
       jira_ticket:
-        description: JIRA ticket for the PR title (e.g. CONNECTOR-1558)
+        description: JIRA ticket used as feature branch name when branch_name is empty; also prefixes the PR title (e.g. CONNECTOR-1645)
         required: false
         default: ""
       pr_title:
@@ -95,49 +84,53 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       charts: ${{ steps.selected-charts.outputs.charts }}
-      release_branch: ${{ steps.release-branch.outputs.name }}
+      feature_branch: ${{ steps.feature-branch.outputs.name }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
-      - name: Checkout triggering branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.ref }}
-          fetch-depth: 0
-
-      - name: Resolve release branch
-        id: release-branch
+      - name: Resolve feature branch
+        id: feature-branch
         env:
           INPUT_BRANCH_NAME: ${{ github.event.inputs.branch_name }}
-          BRANCH_MODE: ${{ github.event.inputs.branch_mode }}
+          JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
         run: |
           set -euo pipefail
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
 
           if [ -n "${INPUT_BRANCH_NAME}" ]; then
-            target_branch="${INPUT_BRANCH_NAME}"
+            feature_branch="${INPUT_BRANCH_NAME}"
+          elif [ -n "${JIRA_TICKET}" ]; then
+            feature_branch="${JIRA_TICKET}"
           else
-            target_branch="${GITHUB_REF_NAME}"
+            feature_branch="${GITHUB_REF_NAME}"
           fi
 
-          echo "Triggering branch: ${GITHUB_REF_NAME}"
-          echo "Release PR branch: ${target_branch}"
-
-          if git ls-remote --heads origin "${target_branch}" | grep -q .; then
-            if [ "${BRANCH_MODE}" = "create_new" ] && [ "${target_branch}" != "${GITHUB_REF_NAME}" ]; then
-              echo "::error::Branch '${target_branch}' already exists. Choose a different branch name or use update_existing mode."
-              exit 1
-            fi
-            echo "Release branch exists and will be updated."
-          elif [ "${BRANCH_MODE}" = "create_new" ]; then
-            echo "Release branch will be created."
-          else
-            echo "Release branch does not exist yet; it will be created on first push."
+          if [ "${feature_branch}" = "main" ]; then
+            echo "::error::Set branch_name or jira_ticket so the workflow can use a feature branch (not main)."
+            exit 1
           fi
 
-          echo "name=${target_branch}" >> "${GITHUB_OUTPUT}"
+          echo "Feature branch: ${feature_branch}"
+
+          if git ls-remote --heads "${remote}" "${feature_branch}" | grep -q .; then
+            checkout_ref="${feature_branch}"
+            echo "Feature branch exists; checking it out for Helm updates."
+          else
+            checkout_ref="main"
+            echo "Feature branch does not exist yet; checking out main to create it."
+          fi
+
+          echo "name=${feature_branch}" >> "${GITHUB_OUTPUT}"
+          echo "checkout_ref=${checkout_ref}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout source branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.feature-branch.outputs.checkout_ref }}
+          fetch-depth: 0
 
       - name: Resolve selected charts
         id: selected-charts
@@ -344,7 +337,8 @@ jobs:
           JIRA_TICKET: ${{ github.event.inputs.jira_ticket }}
           PR_TITLE_INPUT: ${{ github.event.inputs.pr_title }}
           VERSION_SUMMARY: ${{ env.summary }}
-          RELEASE_BRANCH: ${{ steps.release-branch.outputs.name }}
+          FEATURE_BRANCH: ${{ steps.feature-branch.outputs.name }}
+          CHECKOUT_REF: ${{ steps.feature-branch.outputs.checkout_ref }}
         run: |
           set -euo pipefail
 
@@ -382,8 +376,8 @@ jobs:
             fi
             echo "- Regenerate \`docs/index.yaml\` with digests for the newly packaged charts"
             echo ""
-            echo "**Source branch:** \`${GITHUB_REF_NAME}\`"
-            echo "**Release PR branch:** \`${RELEASE_BRANCH}\`"
+            echo "**Feature branch:** \`${FEATURE_BRANCH}\`"
+            echo "**Checkout ref:** \`${CHECKOUT_REF}\`"
             echo ""
             if [ "${should_bump}" = "true" ] && [ -n "${VERSION_SUMMARY:-}" ]; then
               echo "## Version updates"
@@ -406,7 +400,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          branch: ${{ steps.release-branch.outputs.name }}
+          branch: ${{ steps.feature-branch.outputs.name }}
           delete-branch: false
           commit-message: ${{ steps.pr-metadata.outputs.title }}
           title: ${{ steps.pr-metadata.outputs.title }}
@@ -425,3 +419,4 @@ jobs:
       aerospike_kafka_outbound: ${{ github.event.inputs.aerospike_kafka_outbound == 'true' }}
       aerospike_pulsar_outbound: ${{ github.event.inputs.aerospike_pulsar_outbound == 'true' }}
       aerospike_xdr_proxy: ${{ github.event.inputs.aerospike_xdr_proxy == 'true' }}
+      git_ref: ${{ needs.package-connector-charts.outputs.feature_branch }}

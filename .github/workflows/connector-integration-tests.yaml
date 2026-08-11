@@ -34,6 +34,11 @@ on:
       aerospike_xdr_proxy:
         type: boolean
         required: true
+      git_ref:
+        description: Branch or ref to test (defaults to caller ref when empty)
+        type: string
+        required: false
+        default: ""
   workflow_dispatch:
     inputs:
       aerospike_elasticsearch_outbound:
@@ -189,6 +194,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.git_ref != '' && inputs.git_ref || github.ref }}
           fetch-depth: 0
 
       - name: Setup Helm

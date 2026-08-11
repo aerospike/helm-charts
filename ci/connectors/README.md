@@ -36,7 +36,23 @@ Uses the existing repository secret `FEATURES_CONF` containing the Aerospike `fe
 
 **Automatic run after packaging**
 
-When **Package Connector Helm Charts** completes successfully, it calls **Connector Integration Tests** as a reusable workflow for the packaged connectors (same commit/ref as the packaging run).
+When **Package Connector Helm Charts** completes successfully, it calls **Connector Integration Tests** on the feature branch that was just pushed.
+
+**End-to-end release from main**
+
+1. Open **Actions → Package Connector Helm Charts → Run workflow** on `main`
+2. Set `jira_ticket` (e.g. `CONNECTOR-1645`) — used as the feature branch name when `branch_name` is empty
+3. Select connectors and set `version_bump` (default `patch`)
+4. The workflow reuses the feature branch if it already exists, otherwise creates it from `main`, applies Helm updates on that branch, opens/updates a PR to `main`, then runs integration tests on the feature branch
+
+```bash
+gh workflow run package-connector-charts.yaml \
+  --ref main \
+  -f jira_ticket=CONNECTOR-1645 \
+  -f version_bump=patch
+```
+
+Use `-f branch_name=CONNECTOR-1645` instead of `jira_ticket` when the branch name should differ from the ticket id.
 
 **Manual run**
 
@@ -77,9 +93,19 @@ Example overrides (each value can be a bump mode or explicit semver):
 
 Charts not listed in overrides use `version_bump`. With `version_bump=none`, only charts listed in overrides are updated.
 
+**Branch inputs**
+
+| Input | Purpose |
+|---|---|
+| `branch_name` | Feature branch and PR head (optional if `jira_ticket` is set) |
+| `jira_ticket` | Used as feature branch name when `branch_name` is empty; also prefixes the PR title |
+
+Set `branch_name` or `jira_ticket` when running from `main`. If the feature branch already exists it is reused; otherwise it is created from `main` on the first push.
+
 ```bash
 gh workflow run package-connector-charts.yaml \
-  --ref <branch> \
+  --ref main \
+  -f jira_ticket=CONNECTOR-1645 \
   -f version_bump=patch \
   -f 'chart_version_overrides={"aerospike-kafka-outbound":"6.1.0","aerospike-jms-outbound":"4.3.0"}'
 ```
