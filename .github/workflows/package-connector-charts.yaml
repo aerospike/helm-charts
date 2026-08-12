@@ -412,7 +412,7 @@ jobs:
             title="[${FEATURE_BRANCH}] ${PR_TITLE_INPUT}"
           else
             release_month_year="$(TZ=Asia/Kolkata date +"%b'%y")"
-            title="[${FEATURE_BRANCH}] [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - ${release_month_year}"
+            title="[${FEATURE_BRANCH}] - [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - ${release_month_year}"
           fi
 
           {
