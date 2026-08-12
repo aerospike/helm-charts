@@ -103,16 +103,48 @@ jobs:
     outputs:
       connectors_json: ${{ steps.build-matrix.outputs.connectors_json }}
       has_connectors: ${{ steps.build-matrix.outputs.has_connectors }}
+      checkout_ref: ${{ steps.checkout-ref.outputs.ref }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
+      - name: Resolve checkout ref
+        id: checkout-ref
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_CALL_GIT_REF: ${{ inputs.git_ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          case "${EVENT_NAME}" in
+            workflow_call)
+              if [ -n "${WORKFLOW_CALL_GIT_REF}" ]; then
+                ref="${WORKFLOW_CALL_GIT_REF}"
+              else
+                ref="${GITHUB_REF#refs/heads/}"
+                ref="${ref#refs/tags/}"
+              fi
+              ;;
+            pull_request)
+              ref="${PR_HEAD_REF}"
+              ;;
+            *)
+              ref="${GITHUB_REF#refs/heads/}"
+              ref="${ref#refs/tags/}"
+              ;;
+          esac
+
+          echo "Checkout ref: ${ref}"
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout repository
         if: github.event_name == 'pull_request'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ steps.checkout-ref.outputs.ref }}
           fetch-depth: 0
 
       - name: Build connector test matrix
@@ -213,8 +245,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'workflow_call' && inputs.git_ref != '' && inputs.git_ref || github.ref }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
+
+      - name: Verify checked out chart versions
+        run: |
+          set -euo pipefail
+
+          echo "Checked out commit: $(git rev-parse HEAD)"
+          git log -1 --oneline
+          version="$(grep '^version:' "${{ matrix.connector }}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+          app_version="$(grep '^appVersion:' "${{ matrix.connector }}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+          echo "${{ matrix.connector }}: version=${version} appVersion=${app_version}"
 
       - name: Setup Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1

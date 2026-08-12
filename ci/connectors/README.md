@@ -54,7 +54,7 @@ gh workflow run package-connector-charts.yaml \
 
 Optional `-f pr_title='Custom release title'` overrides the default suffix. When omitted, the PR title is:
 
-`[CONNECTOR-1645] [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - Aug'26`
+`[CONNECTOR-1645] - [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - Aug'26`
 
 (month/year are set automatically from the current date in IST). Reviewers `mphanias`, `abhilashmandaliya`, and `VivekASHub` are requested on every release PR.
 
@@ -106,7 +106,7 @@ Charts not listed in overrides use `version_bump`. With `version_bump=none`, onl
 
 If the feature branch already exists it is reused; otherwise it is created from `main` on the first push. New `docs/index.yaml` entries use `Asia/Kolkata` timestamps to match prior releases.
 
-After packaging, the workflow verifies each `.tgz` with `helm show chart`, prints `sha256sum`, and confirms the digest matches `docs/index.yaml` (also included in the release PR body).
+After packaging, the workflow verifies each connector Docker image exists on Docker Hub (using `values.yaml` `image.repository` and `appVersion`), verifies each `.tgz` with `helm show chart`, prints `sha256sum`, and confirms the digest matches `docs/index.yaml` (also included in the release PR body). Integration tests checkout the pushed release commit (SHA when available), not the caller branch.
 
 ```bash
 gh workflow run package-connector-charts.yaml \
