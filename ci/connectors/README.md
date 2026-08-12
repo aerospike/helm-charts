@@ -70,7 +70,7 @@ Manual runs require permission to trigger workflows on this repository (configur
 
 Pull requests trigger this workflow when connector **test or CI** files change (`ci/connectors/**`, `aerospike-*/tests/**`, or `.github/workflows/connector-integration-tests.yaml`). Changes to chart packaging files alone (`Chart.yaml`, `README.md`, `docs/`) do not trigger it; those release PRs run tests via **Package Connector Helm Charts** instead.
 
-Fork pull requests are skipped automatically because repository secrets are unavailable.
+Fork and Dependabot pull requests are skipped automatically because repository secrets (including `FEATURES_CONF`) are unavailable on those `pull_request` runs. Re-running failed PR jobs or triggering **Connector Integration Tests** manually does not update PR checks; merge the skip fix to `main`, update the Dependabot branch, then re-run PR checks (or merge with admin override after a manual green run).
 
 Test logs are uploaded as workflow artifacts for 14 days.
 

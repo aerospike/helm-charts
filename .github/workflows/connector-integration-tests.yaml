@@ -158,6 +158,14 @@ jobs:
               exit 0
             fi
 
+            if [[ "${{ github.event.pull_request.head.ref }}" == dependabot/* ]] \
+              || [ "${{ github.event.pull_request.user.login }}" = "dependabot[bot]" ]; then
+              echo "Skipping Dependabot pull request (secrets unavailable for integration tests)."
+              echo 'connectors_json={"connector":[]}' >> "${GITHUB_OUTPUT}"
+              echo "has_connectors=false" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+
             changed_files="$(git diff --name-only "origin/${BASE_REF}"...HEAD)"
 
             if echo "${changed_files}" | grep -q '^ci/connectors/'; then
