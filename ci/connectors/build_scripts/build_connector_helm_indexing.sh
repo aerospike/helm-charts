@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export TZ=Asia/Kolkata
+
 # Merge index entries for packaged charts without resetting `created` on prior releases.
 # Pass chart directory names (same as helm package args); omit args for legacy full re-index.
 #

@@ -13,6 +13,23 @@ name: Package Connector Helm Charts
 on:
   workflow_dispatch:
     inputs:
+      branch_name:
+        description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
+        required: true
+      pr_title:
+        description: PR title suffix after the JIRA prefix (default - [Streaming] release title with current Mon'YY in IST)
+        required: false
+        default: ""
+      version_bump:
+        description: Default version bump (patch, minor, major, none) or explicit semver for all selected charts
+        type: string
+        required: false
+        default: patch
+      chart_version_overrides:
+        description: Optional JSON map of chart directory to bump mode or semver (overrides version_bump per chart)
+        type: string
+        required: false
+        default: ""
       aerospike_elasticsearch_outbound:
         description: aerospike-elasticsearch-outbound
         type: boolean
@@ -48,23 +65,6 @@ on:
         type: boolean
         required: true
         default: true
-      version_bump:
-        description: Default version bump (patch, minor, major, none) or explicit semver for all selected charts
-        type: string
-        required: false
-        default: patch
-      chart_version_overrides:
-        description: Optional JSON map of chart directory to bump mode or semver (overrides version_bump per chart)
-        type: string
-        required: false
-        default: ""
-      branch_name:
-        description: JIRA feature branch and PR head (e.g. CONNECTOR-1645)
-        required: true
-      pr_title:
-        description: PR title after the JIRA prefix (default - Bump connector Helm chart versions)
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -285,6 +285,7 @@ jobs:
       - name: Package selected connector charts
         env:
           CHARTS: ${{ steps.selected-charts.outputs.charts }}
+          TZ: Asia/Kolkata
         run: |
           set -euo pipefail
 
@@ -299,12 +300,13 @@ jobs:
       - name: Regenerate Helm repository index
         env:
           CHARTS: ${{ steps.selected-charts.outputs.charts }}
+          TZ: Asia/Kolkata
         run: |
           set -euo pipefail
 
           # Index only newly packaged charts so historical `created` timestamps
-          # in docs/index.yaml are preserved (helm repo index on docs/ re-reads
-          # every .tgz and resets created from file mtimes).
+          # in docs/index.yaml are preserved. TZ=Asia/Kolkata keeps new entries
+          # in +05:30 like prior releases (GHA default UTC otherwise).
           staging="$(mktemp -d)"
           trap 'rm -rf "${staging}"' EXIT
 
@@ -322,6 +324,70 @@ jobs:
           helm repo index "${staging}" --merge docs/index.yaml --url https://aerospike.github.io/helm-charts
           mv "${staging}/index.yaml" docs/index.yaml
 
+      - name: Verify packaged chart artifacts
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+        run: |
+          set -euo pipefail
+
+          verification_lines=()
+
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+
+            version="$(grep '^version:' "${chart}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+            app_version="$(grep '^appVersion:' "${chart}/Chart.yaml" | head -n1 | awk '{print $2}' | tr -d '"')"
+            tgz="docs/${chart}-${version}.tgz"
+
+            if [ ! -f "${tgz}" ]; then
+              echo "::error::Missing packaged chart ${tgz}"
+              exit 1
+            fi
+
+            echo "::group::${chart} ${version}"
+            echo "Chart.yaml: version=${version} appVersion=${app_version}"
+            echo "Artifact: ${tgz}"
+
+            file_digest="$(sha256sum "${tgz}" | awk '{print $1}')"
+            echo "sha256: ${file_digest}"
+
+            index_digest="$(ruby -ryaml -e "
+              index = YAML.load_file('docs/index.yaml')
+              entry = index.dig('entries', '${chart}')&.find { |e| e['version'].to_s == '${version}' }
+              abort('missing index entry') unless entry
+              puts entry['digest']
+            ")"
+
+            if [ "${file_digest}" != "${index_digest}" ]; then
+              echo "::error::Digest mismatch for ${tgz}: file=${file_digest} index=${index_digest}"
+              exit 1
+            fi
+
+            echo "index digest: ${index_digest} (matches)"
+
+            packaged_version="$(helm show chart "${tgz}" | awk '/^version:/ {print $2}' | tr -d '"')"
+            packaged_app_version="$(helm show chart "${tgz}" | awk '/^appVersion:/ {print $2}' | tr -d '"')"
+
+            if [ "${packaged_version}" != "${version}" ] || [ "${packaged_app_version}" != "${app_version}" ]; then
+              echo "::error::Packaged chart metadata mismatch for ${tgz}"
+              echo "expected version=${version} appVersion=${app_version}"
+              echo "got version=${packaged_version} appVersion=${packaged_app_version}"
+              exit 1
+            fi
+
+            echo "--- helm show chart ---"
+            helm show chart "${tgz}"
+            echo "::endgroup::"
+
+            verification_lines+=("| ${chart} | ${version} | \`${file_digest}\` | verified |")
+          done <<< "${CHARTS}"
+
+          {
+            echo "package_verification<<EOF"
+            printf '%s\n' "${verification_lines[@]}"
+            echo "EOF"
+          } >> "${GITHUB_ENV}"
+
       - name: Build pull request metadata
         id: pr-metadata
         env:
@@ -329,6 +395,7 @@ jobs:
           CHART_VERSION_OVERRIDES: ${{ github.event.inputs.chart_version_overrides }}
           PR_TITLE_INPUT: ${{ github.event.inputs.pr_title }}
           VERSION_SUMMARY: ${{ env.summary }}
+          PACKAGE_VERIFICATION: ${{ env.package_verification }}
           FEATURE_BRANCH: ${{ steps.feature-branch.outputs.name }}
           CHECKOUT_REF: ${{ steps.feature-branch.outputs.checkout_ref }}
         run: |
@@ -344,7 +411,8 @@ jobs:
           if [ -n "${PR_TITLE_INPUT}" ]; then
             title="[${FEATURE_BRANCH}] ${PR_TITLE_INPUT}"
           else
-            title="[${FEATURE_BRANCH}] Bump connector Helm chart versions"
+            release_month_year="$(TZ=Asia/Kolkata date +"%b'%y")"
+            title="[${FEATURE_BRANCH}] - [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - ${release_month_year}"
           fi
 
           {
@@ -376,6 +444,13 @@ jobs:
               echo "${VERSION_SUMMARY}"
               echo ""
             fi
+            if [ -n "${PACKAGE_VERIFICATION:-}" ]; then
+              echo "## Packaged artifacts"
+              echo "| Chart | Version | SHA256 | Status |"
+              echo "|---|---|---|---|"
+              echo "${PACKAGE_VERIFICATION}"
+              echo ""
+            fi
             echo "## Test plan"
             echo "- [ ] Verify \`helm repo index\` entries match packaged chart versions"
             echo "- [ ] Confirm chart versions in Chart.yaml match appVersion for selected connectors"
@@ -395,6 +470,7 @@ jobs:
           commit-message: ${{ steps.pr-metadata.outputs.title }}
           title: ${{ steps.pr-metadata.outputs.title }}
           body: ${{ steps.pr-metadata.outputs.body }}
+          reviewers: mphanias,abhilashmandaliya,VivekASHub
 
   integration-tests:
     needs: package-connector-charts

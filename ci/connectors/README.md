@@ -52,7 +52,11 @@ gh workflow run package-connector-charts.yaml \
   -f version_bump=patch
 ```
 
-Optional `-f pr_title='My ticket title'` sets the PR title as `[CONNECTOR-1645] My ticket title`.
+Optional `-f pr_title='Custom release title'` overrides the default suffix. When omitted, the PR title is:
+
+`[CONNECTOR-1645] [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - Aug'26`
+
+(month/year are set automatically from the current date in IST). Reviewers `mphanias`, `abhilashmandaliya`, and `VivekASHub` are requested on every release PR.
 
 **Manual run**
 
@@ -64,7 +68,7 @@ Manual runs require permission to trigger workflows on this repository (configur
 
 **Pull request runs**
 
-When a pull request changes connector chart files, the workflow runs integration tests only for the affected connector chart directories. Workflow or CI documentation-only changes do not schedule integration tests on the pull request.
+Pull requests trigger this workflow when connector **test or CI** files change (`ci/connectors/**`, `aerospike-*/tests/**`, or `.github/workflows/connector-integration-tests.yaml`). Changes to chart packaging files alone (`Chart.yaml`, `README.md`, `docs/`) do not trigger it; those release PRs run tests via **Package Connector Helm Charts** instead.
 
 Fork pull requests are skipped automatically because repository secrets are unavailable.
 
@@ -98,9 +102,11 @@ Charts not listed in overrides use `version_bump`. With `version_bump=none`, onl
 | Input | Purpose |
 |---|---|
 | `branch_name` | JIRA feature branch and PR head (e.g. `CONNECTOR-1645`) |
-| `pr_title` | Optional title after the JIRA prefix; default is `Bump connector Helm chart versions` |
+| `pr_title` | Optional title suffix after the JIRA prefix; default is `[Streaming] Aerospike Streaming Connectors - Security vulnerabilities - Mon'YY` (IST) |
 
-If the feature branch already exists it is reused; otherwise it is created from `main` on the first push.
+If the feature branch already exists it is reused; otherwise it is created from `main` on the first push. New `docs/index.yaml` entries use `Asia/Kolkata` timestamps to match prior releases.
+
+After packaging, the workflow verifies each `.tgz` with `helm show chart`, prints `sha256sum`, and confirms the digest matches `docs/index.yaml` (also included in the release PR body).
 
 ```bash
 gh workflow run package-connector-charts.yaml \
