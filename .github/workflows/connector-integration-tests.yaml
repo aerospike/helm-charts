@@ -35,7 +35,7 @@ on:
         type: boolean
         required: true
       git_ref:
-        description: Branch or ref to test (defaults to caller ref when empty)
+        description: Branch, tag, or SHA to test. Prefer this over github.ref; reusable workflows inherit the caller's event/ref (often main).
         type: string
         required: false
         default: ""
@@ -119,25 +119,20 @@ jobs:
         run: |
           set -euo pipefail
 
-          case "${EVENT_NAME}" in
-            workflow_call)
-              if [ -n "${WORKFLOW_CALL_GIT_REF}" ]; then
-                ref="${WORKFLOW_CALL_GIT_REF}"
-              else
-                ref="${GITHUB_REF#refs/heads/}"
-                ref="${ref#refs/tags/}"
-              fi
-              ;;
-            pull_request)
-              ref="${PR_HEAD_REF}"
-              ;;
-            *)
-              ref="${GITHUB_REF#refs/heads/}"
-              ref="${ref#refs/tags/}"
-              ;;
-          esac
+          # Prefer inputs.git_ref whenever it is set. A reusable workflow inherits
+          # the caller's github.event_name and github.ref (workflow_dispatch from
+          # main), so a `workflow_call` case never matches and tests would run
+          # against main instead of the packaged feature-branch SHA.
+          if [ -n "${WORKFLOW_CALL_GIT_REF}" ]; then
+            ref="${WORKFLOW_CALL_GIT_REF}"
+          elif [ "${EVENT_NAME}" = "pull_request" ] && [ -n "${PR_HEAD_REF}" ]; then
+            ref="${PR_HEAD_REF}"
+          else
+            ref="${GITHUB_REF#refs/heads/}"
+            ref="${ref#refs/tags/}"
+          fi
 
-          echo "Checkout ref: ${ref}"
+          echo "Checkout ref: ${ref} (event=${EVENT_NAME})"
           echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout repository
