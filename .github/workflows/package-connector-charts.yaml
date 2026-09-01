@@ -80,6 +80,7 @@ jobs:
     outputs:
       charts: ${{ steps.selected-charts.outputs.charts }}
       feature_branch: ${{ steps.feature-branch.outputs.name }}
+      git_ref: ${{ steps.test-git-ref.outputs.ref }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -282,6 +283,37 @@ jobs:
             echo "EOF"
           } >> "${GITHUB_ENV}"
 
+      - name: Verify connector Docker images exist
+        env:
+          CHARTS: ${{ steps.selected-charts.outputs.charts }}
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r chart; do
+            [ -n "${chart}" ] || continue
+
+            chart_yaml="${chart}/Chart.yaml"
+            values_yaml="${chart}/values.yaml"
+            app_version="$(grep '^appVersion:' "${chart_yaml}" | head -n1 | awk '{print $2}' | tr -d '"')"
+            repository="$(grep 'repository:' "${values_yaml}" | head -n1 | awk '{print $2}')"
+            image_tag="$(grep 'tag:' "${values_yaml}" | head -n1 | awk '{print $2}' | tr -d '"')"
+
+            if [ -z "${image_tag}" ]; then
+              image_tag="${app_version}"
+            fi
+
+            image="${repository}:${image_tag}"
+            echo "Checking Docker image ${image}"
+
+            http_code="$(curl -s -o /dev/null -w '%{http_code}' "https://hub.docker.com/v2/repositories/${repository}/tags/${image_tag}/")"
+            if [ "${http_code}" != "200" ]; then
+              echo "::error::Docker image not found: ${image} (HTTP ${http_code}). Publish the connector image before releasing this chart version."
+              exit 1
+            fi
+
+            echo "${image} exists"
+          done <<< "${CHARTS}"
+
       - name: Package selected connector charts
         env:
           CHARTS: ${{ steps.selected-charts.outputs.charts }}
@@ -409,7 +441,7 @@ jobs:
           fi
 
           if [ -n "${PR_TITLE_INPUT}" ]; then
-            title="[${FEATURE_BRANCH}] ${PR_TITLE_INPUT}"
+            title="[${FEATURE_BRANCH}] - ${PR_TITLE_INPUT}"
           else
             release_month_year="$(TZ=Asia/Kolkata date +"%b'%y")"
             title="[${FEATURE_BRANCH}] - [Streaming] Aerospike Streaming Connectors - Security vulnerabilities - ${release_month_year}"
@@ -461,6 +493,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Create or update pull request
+        id: create-pull-request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -471,6 +504,23 @@ jobs:
           title: ${{ steps.pr-metadata.outputs.title }}
           body: ${{ steps.pr-metadata.outputs.body }}
           reviewers: mphanias,abhilashmandaliya,VivekASHub
+
+      - name: Resolve integration test git ref
+        id: test-git-ref
+        env:
+          HEAD_SHA: ${{ steps.create-pull-request.outputs.pull-request-head-sha }}
+          FEATURE_BRANCH: ${{ steps.feature-branch.outputs.name }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${HEAD_SHA}" ]; then
+            ref="${HEAD_SHA}"
+          else
+            ref="${FEATURE_BRANCH}"
+          fi
+
+          echo "Integration tests will checkout: ${ref}"
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
 
   integration-tests:
     needs: package-connector-charts
@@ -485,4 +535,4 @@ jobs:
       aerospike_kafka_outbound: ${{ github.event.inputs.aerospike_kafka_outbound == 'true' }}
       aerospike_pulsar_outbound: ${{ github.event.inputs.aerospike_pulsar_outbound == 'true' }}
       aerospike_xdr_proxy: ${{ github.event.inputs.aerospike_xdr_proxy == 'true' }}
-      git_ref: ${{ needs.package-connector-charts.outputs.feature_branch }}
+      git_ref: ${{ needs.package-connector-charts.outputs.git_ref }}
