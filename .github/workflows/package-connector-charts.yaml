@@ -81,6 +81,7 @@ jobs:
       charts: ${{ steps.selected-charts.outputs.charts }}
       feature_branch: ${{ steps.feature-branch.outputs.name }}
       git_ref: ${{ steps.test-git-ref.outputs.ref }}
+      pr_number: ${{ steps.create-pull-request.outputs.pull-request-number }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -467,7 +468,7 @@ jobs:
             echo "- Regenerate \`docs/index.yaml\` with digests for the newly packaged charts"
             echo ""
             echo "**Feature branch:** \`${FEATURE_BRANCH}\`"
-            echo "**Checkout ref:** \`${CHECKOUT_REF}\`"
+            echo "**Packaged from:** \`${CHECKOUT_REF}\` (source branch seeded into \`${FEATURE_BRANCH}\`, not the ref under test)"
             echo ""
             if [ "${should_bump}" = "true" ] && [ -n "${VERSION_SUMMARY:-}" ]; then
               echo "## Version updates"
@@ -486,7 +487,7 @@ jobs:
             echo "## Test plan"
             echo "- [ ] Verify \`helm repo index\` entries match packaged chart versions"
             echo "- [ ] Confirm chart versions in Chart.yaml match appVersion for selected connectors"
-            echo "- [ ] Integration tests passed on the source branch before merge"
+            echo "- [ ] Integration tests passed on this PR head commit (see the **Integration test results** comment)"
             echo ""
             echo "Triggered by @${{ github.actor }} from workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "EOF"
@@ -536,3 +537,75 @@ jobs:
       aerospike_pulsar_outbound: ${{ github.event.inputs.aerospike_pulsar_outbound == 'true' }}
       aerospike_xdr_proxy: ${{ github.event.inputs.aerospike_xdr_proxy == 'true' }}
       git_ref: ${{ needs.package-connector-charts.outputs.git_ref }}
+
+  report-integration-tests:
+    needs: [package-connector-charts, integration-tests]
+    if: always() && needs.package-connector-charts.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Comment integration test results on the release pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.package-connector-charts.outputs.pr_number }}
+          TESTED_REF: ${{ needs.package-connector-charts.outputs.git_ref }}
+          TESTS_RESULT: ${{ needs.integration-tests.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "No release pull request was created or updated; nothing to report."
+            exit 0
+          fi
+
+          # Per-connector results come from this run's matrix jobs; the reusable
+          # workflow only reports one aggregate conclusion.
+          rows="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" --paginate \
+            --jq '.jobs[]
+                  | select(.name | test("^integration-tests / integration-test \\("))
+                  | "| \(.name | capture("\\((?<chart>[^)]+)\\)").chart) | \(.conclusion // "pending") | [logs](\(.html_url)) |"')"
+
+          marker="<!-- connector-integration-test-results -->"
+          comment_body="/tmp/integration-test-results.md"
+
+          {
+            echo "${marker}"
+            echo "## Integration test results"
+            echo ""
+            echo "**Overall:** \`${TESTS_RESULT}\`"
+            echo "**Tested commit:** \`${TESTED_REF}\` (this PR head, not \`main\`)"
+            echo "**Workflow run:** ${RUN_URL}"
+            echo ""
+            if [ -n "${rows}" ]; then
+              echo "| Chart | Result | Logs |"
+              echo "|---|---|---|"
+              echo "${rows}"
+            else
+              echo "No connector integration test jobs ran for this release."
+            fi
+          } > "${comment_body}"
+
+          jq -Rs '{body: .}' < "${comment_body}" > /tmp/integration-test-results.json
+
+          comment_id="$(MARKER="${marker}" gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
+            --jq '.[] | select((.body // "") | startswith(env.MARKER)) | .id' | tail -n1)"
+
+          if [ -n "${comment_id}" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              --input /tmp/integration-test-results.json >/dev/null
+            echo "Updated integration test results comment on PR #${PR_NUMBER}."
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --input /tmp/integration-test-results.json >/dev/null
+            echo "Posted integration test results comment on PR #${PR_NUMBER}."
+          fi
+
+          cat "${comment_body}" >> "${GITHUB_STEP_SUMMARY}"
