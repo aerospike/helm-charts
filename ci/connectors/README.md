@@ -36,7 +36,9 @@ Uses the existing repository secret `FEATURES_CONF` containing the Aerospike `fe
 
 **Automatic run after packaging**
 
-When **Package Connector Helm Charts** completes successfully, it calls **Connector Integration Tests** on the feature branch that was just pushed.
+When **Package Connector Helm Charts** completes successfully, it calls **Connector Integration Tests** on the exact commit it pushed to the feature branch (the release PR head SHA), then posts a per-chart **Integration test results** comment on that PR. The comment is updated in place on re-runs.
+
+The run itself is always attributed to the branch you dispatched from (usually `main`); the tested commit is reported in that comment.
 
 **End-to-end release from main**
 
